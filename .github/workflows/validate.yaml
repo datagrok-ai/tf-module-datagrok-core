@@ -33,6 +33,8 @@ jobs:
           tflint --init
           tflint -f compact
         working-directory: ${{ matrix.provider }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Set up Python 3.8
         uses: actions/setup-python@v1
