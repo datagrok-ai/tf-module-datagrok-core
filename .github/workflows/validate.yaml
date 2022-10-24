@@ -117,7 +117,10 @@ jobs:
 
       - name: Terraform Plan
         id: plan
-        run: terraform plan -no-color
+        run: |
+          terraform plan -no-color \
+            -var 'name=terraform' -var 'environment=plan' -var 'domain_name=check' \
+            -var 'docker_hub_user=test' -var 'docker_hub_password=test'
         working-directory: ${{ matrix.provider }}
 
       - uses: actions/github-script@v6
