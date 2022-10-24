@@ -64,6 +64,7 @@ jobs:
           directory: ${{ matrix.provider }}
           framework: terraform
           download_external_modules: true
+          skip_check: CKV_AWS_79,CKV2_AWS_38
         if: matrix.os == 'ubuntu-latest'
 
       - uses: hashicorp/setup-terraform@v2
