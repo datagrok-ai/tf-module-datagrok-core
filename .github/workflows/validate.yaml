@@ -14,6 +14,25 @@ jobs:
         provider: [aws]
 
     steps:
+      - name: Setup Infracost
+        if: github.event_name == 'pull_request'
+        uses: infracost/actions/setup@v2
+        with:
+          api-key: ${{ secrets.INFRACOST_API_KEY }}
+
+      - name: Checkout base branch
+        if: github.event_name == 'pull_request'
+        uses: actions/checkout@v3
+        with:
+          ref: '${{ github.event.pull_request.base.ref }}'
+
+      - name: Generate Infracost cost estimate baseline
+        if: github.event_name == 'pull_request'
+        run: |
+          infracost breakdown --path=${{ matrix.provider }} \
+                              --format=json \
+                              --out-file=/tmp/infracost-base.json
+
       - uses: actions/checkout@v2
         name: Checkout PR branch
 
@@ -140,26 +159,6 @@ jobs:
                 body: output
               })
             }
-
-      - name: Setup Infracost
-        if: github.event_name == 'pull_request'
-        uses: infracost/actions/setup@v2
-        with:
-          api-key: ${{ secrets.INFRACOST_API_KEY }}
-
-      - name: Checkout base branch
-        if: github.event_name == 'pull_request'
-        uses: actions/checkout@v3
-        with:
-          ref: '${{ github.event.pull_request.base.ref }}'
-
-      - name: Generate Infracost cost estimate baseline
-        if: github.event_name == 'pull_request'
-        run: |
-          infracost breakdown --path=${{ matrix.provider }} \
-                              --format=json \
-                              --out-file=/tmp/infracost-base.json
-
 
       - name: Generate Infracost diff
         if: github.event_name == 'pull_request'
