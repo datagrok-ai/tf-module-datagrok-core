@@ -28,10 +28,7 @@ jobs:
 
       - name: Generate Infracost cost estimate baseline
         if: github.event_name == 'pull_request'
-        run: |
-          infracost breakdown --path=${{ matrix.provider }} \
-                              --format=json \
-                              --out-file=/tmp/infracost-base.json
+        run: infracost breakdown --path=${{ matrix.provider }} --format=json --out-file=/tmp/infracost-base.json
 
       - uses: actions/checkout@v2
         name: Checkout PR branch
@@ -172,19 +169,16 @@ jobs:
       - name: Generate Infracost diff
         if: github.event_name == 'pull_request'
         run: |
-          infracost diff --path=${{ matrix.provider }} \
-                          --format=json \
-                          --compare-to=/tmp/infracost-base.json \
-                          --out-file=/tmp/infracost.json
+          infracost diff --path=${{ matrix.provider }} --format=json \
+            --compare-to=/tmp/infracost-base.json --out-file=/tmp/infracost.json
 
       - name: Post Infracost comment
         if: github.event_name == 'pull_request'
         run: |
           infracost comment github --path=/tmp/infracost.json \
-                                   --repo=$GITHUB_REPOSITORY \
-                                   --github-token=${{github.token}} \
-                                   --pull-request=${{github.event.pull_request.number}} \
-                                   --behavior=delete-and-new
+            --repo=$GITHUB_REPOSITORY --github-token=${{github.token}} \
+            --pull-request=${{github.event.pull_request.number}} \
+            --behavior=delete-and-new
 
       - name: Render terraform docs and push changes back
         uses: terraform-docs/gh-actions@v1
