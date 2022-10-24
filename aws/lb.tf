@@ -89,15 +89,15 @@ module "acm" {
 
   subject_alternative_names = var.subject_alternative_names
 
-  create_route53_records = var.route53_enabled
-  validate_certificate   = true
-  wait_for_validation    = true
+  create_route53_records  = var.route53_enabled
+  validate_certificate    = true
+  wait_for_validation     = true
   validation_record_fqdns = var.route53_enabled ? [] : distinct(
     [
-      for domain in compact(concat(
-        [
-          var.domain_name
-        ],
+    for domain in compact(concat(
+      [
+        var.domain_name
+      ],
       var.subject_alternative_names)) : "_f36e88adbd7b4c92a11a58ffc7f6808e.${replace(domain, "*.", "")}"
     ]
   )
@@ -137,7 +137,7 @@ module "lb_ext" {
       action_type = "redirect"
       port        = 80
       protocol    = "HTTP"
-      redirect = {
+      redirect    = {
         port        = 443
         protocol    = "HTTPS"
         status_code = "HTTP_301"
@@ -206,4 +206,72 @@ resource "aws_route53_record" "internal" {
     zone_id                = module.lb_int.lb_zone_id
     evaluate_target_health = true
   }
+}
+
+resource "aws_cloudwatch_log_group" "external" {
+  count             = var.enable_route53_logging ? 1 : 0
+  name              = "/aws/route53/${aws_route53_zone.external[0].name}"
+  retention_in_days = 7
+}
+
+data "aws_iam_policy_document" "external" {
+  count = var.enable_route53_logging ? 1 : 0
+  statement {
+    actions = [
+      "logs:CreateLogStream",
+      "logs:PutLogEvents",
+    ]
+    resources = [aws_cloudwatch_log_group.external[0].arn]
+    principals {
+      identifiers = ["route53.amazonaws.com"]
+      type        = "Service"
+    }
+  }
+}
+
+resource "aws_cloudwatch_log_resource_policy" "external" {
+  count           = var.enable_route53_logging ? 1 : 0
+  policy_document = data.aws_iam_policy_document.external[0].json
+  policy_name     = "${var.name}-${var.environment}-route53"
+}
+
+resource "aws_route53_query_log" "external" {
+  count                    = var.enable_route53_logging ? 1 : 0
+  depends_on               = [aws_cloudwatch_log_resource_policy.external]
+  cloudwatch_log_group_arn = aws_cloudwatch_log_group.external[0].arn
+  zone_id                  = aws_route53_zone.external[0].zone_id
+}
+
+resource "aws_cloudwatch_log_group" "internal" {
+  count             = var.enable_route53_logging ? 1 : 0
+  name              = "/aws/route53/${aws_route53_zone.internal[0].name}"
+  retention_in_days = 7
+}
+
+data "aws_iam_policy_document" "internal" {
+  count = var.enable_route53_logging ? 1 : 0
+  statement {
+    actions = [
+      "logs:CreateLogStream",
+      "logs:PutLogEvents",
+    ]
+    resources = [aws_cloudwatch_log_group.internal[0].arn]
+    principals {
+      identifiers = ["route53.amazonaws.com"]
+      type        = "Service"
+    }
+  }
+}
+
+resource "aws_cloudwatch_log_resource_policy" "internal" {
+  count           = var.enable_route53_logging ? 1 : 0
+  policy_document = data.aws_iam_policy_document.internal[0].json
+  policy_name     = "${var.name}-${var.environment}-route53-internal"
+}
+
+resource "aws_route53_query_log" "internal" {
+  count                    = var.enable_route53_logging ? 1 : 0
+  depends_on               = [aws_cloudwatch_log_resource_policy.internal]
+  cloudwatch_log_group_arn = aws_cloudwatch_log_group.internal[0].arn
+  zone_id                  = aws_route53_zone.external[0].zone_id
 }
