@@ -227,7 +227,7 @@ variable "lb_access_cidr_blocks" {
 variable "egress_rules" {
   description = "List of egress rules to restrict outbound traffic for ECS cluster"
   type        = list(any)
-  default     = [
+  default = [
     {
       from_port   = 0
       to_port     = 65535
