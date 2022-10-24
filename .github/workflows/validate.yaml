@@ -106,7 +106,7 @@ jobs:
 
       - name: Terraform Init
         id: init
-        run: terraform init
+        run: terraform init -backend=false
         working-directory: ${{ matrix.provider }}
 
       - name: Terraform Validate
