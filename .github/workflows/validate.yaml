@@ -199,3 +199,4 @@ jobs:
           output-file: README.md
           output-method: inject
           git-push: "true"
+        if: matrix.os == 'ubuntu-latest'
