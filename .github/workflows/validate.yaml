@@ -75,6 +75,11 @@ jobs:
         run: terraform fmt
         working-directory: ${{ matrix.provider }}
 
+      - name: Extract branch name
+        shell: bash
+        run: echo "::set-output name=branch::${GITHUB_REF#refs/heads/}"
+        id: extract_branch
+
       - name: Create Pull Request
         uses: peter-evans/create-pull-request@v4
         with:
@@ -82,6 +87,10 @@ jobs:
           title: Reformat terraform files
           body: Update terraform files to canonical format using `terraform fmt`
           branch: automated-terraform-fmt
+          branch-suffix: short-commit-hash
+          delete-branch: true
+          add-paths: ${{ matrix.provider }}
+          base: ${{ steps.extract_branch.outputs.branch }}
 
       - name: Terraform fmt
         id: fmt
