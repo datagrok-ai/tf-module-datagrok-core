@@ -337,7 +337,7 @@ variable "tags" {
 
 variable "domain_name" {
   type        = string
-  default     = null
+  default     = ""
   nullable    = true
   description = "This is the name of domain for datagrok endpoint. It is used for the external hosted zone in Route53. and to create ACM certificates."
 }

@@ -94,11 +94,11 @@ module "acm" {
   wait_for_validation     = true
   validation_record_fqdns = var.route53_enabled ? [] : distinct(
     [
-    for domain in concat(
+    for domain in compact(concat(
       [
         var.domain_name
       ],
-      var.subject_alternative_names) : "_f36e88adbd7b4c92a11a58ffc7f6808e.${replace(domain, "*.", "")}"
+      var.subject_alternative_names)) : "_f36e88adbd7b4c92a11a58ffc7f6808e.${replace(domain, "*.", "")}"
     ]
   )
 
