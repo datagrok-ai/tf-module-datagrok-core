@@ -227,7 +227,7 @@ variable "lb_access_cidr_blocks" {
 variable "egress_rules" {
   description = "List of egress rules to restrict outbound traffic for ECS cluster"
   type        = list(any)
-  default     = [
+  default = [
     {
       from_port   = 0
       to_port     = 65535
@@ -337,7 +337,7 @@ variable "tags" {
 
 variable "domain_name" {
   type        = string
-  default     = null
+  default     = ""
   nullable    = true
   description = "This is the name of domain for datagrok endpoint. It is used for the external hosted zone in Route53. and to create ACM certificates."
 }
@@ -586,4 +586,11 @@ variable "datagrok_startup_mode" {
   default     = "auto"
   nullable    = false
   description = "Datagrok startup mode. It can be 'start' (do not deploy required resources, start the server), 'deploy' (full redeploy of the required resources on every start of the server. Use with cautious, it can destroy you existing data.), 'auto' (checks of the required resources already exists, if the are, and starts the server, otherwise it will deploy the resources before the server start.)."
+}
+
+variable "enable_route53_logging" {
+  type        = bool
+  default     = true
+  nullable    = false
+  description = "Specifies whether Logging requests using server access logging for Datagrok Route53 zone are enabled. We recommend to set it to true for production stand."
 }

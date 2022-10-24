@@ -9,16 +9,16 @@ module "vpc" {
   cidr = var.cidr
 
   public_subnets = [
-  for zone in data.aws_availability_zones.available.names :
-  cidrsubnet(var.cidr, 7, index(data.aws_availability_zones.available.names, zone) + 1)
+    for zone in data.aws_availability_zones.available.names :
+    cidrsubnet(var.cidr, 7, index(data.aws_availability_zones.available.names, zone) + 1)
   ]
   private_subnets = [
-  for zone in data.aws_availability_zones.available.names :
-  cidrsubnet(var.cidr, 7, index(data.aws_availability_zones.available.names, zone) + 11)
+    for zone in data.aws_availability_zones.available.names :
+    cidrsubnet(var.cidr, 7, index(data.aws_availability_zones.available.names, zone) + 11)
   ]
   database_subnets = [
-  for zone in data.aws_availability_zones.available.names :
-  cidrsubnet(var.cidr, 7, index(data.aws_availability_zones.available.names, zone) + 21)
+    for zone in data.aws_availability_zones.available.names :
+    cidrsubnet(var.cidr, 7, index(data.aws_availability_zones.available.names, zone) + 21)
   ]
 
   enable_ipv6                            = false

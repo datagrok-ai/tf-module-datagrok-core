@@ -2,6 +2,7 @@ resource "aws_cloudwatch_log_group" "ecs" {
   count             = var.create_cloudwatch_log_group ? 1 : 0
   name              = "/aws/ecs/${local.full_name}"
   retention_in_days = 7
+  kms_key_id        = var.custom_kms_key ? (try(length(var.kms_key) > 0, false) ? var.kms_key : module.kms[0].key_arn) : null
   tags              = local.tags
 }
 module "sg" {
@@ -79,15 +80,15 @@ resource "aws_secretsmanager_secret_version" "docker_hub" {
   count         = try(length(var.docker_hub_secret_arn) > 0, false) ? 0 : 1
   secret_id     = aws_secretsmanager_secret.docker_hub[0].id
   secret_string = jsonencode({
-    "username": var.docker_hub_user,
-    "password": var.docker_hub_password
+    "username" : var.docker_hub_user,
+    "password" : var.docker_hub_password
   })
 }
 resource "aws_secretsmanager_secret" "docker_hub" {
   count                   = try(length(var.docker_hub_secret_arn) > 0, false) ? 0 : 1
   name_prefix             = "${local.full_name}_docker_hub"
   description             = "Docker Hub token to download images"
-  kms_key_id              = var.custom_kms_key ? ( try(length(var.kms_key) > 0, false) ? var.kms_key : module.kms[0].key_arn ) : null
+  kms_key_id              = var.custom_kms_key ? (try(length(var.kms_key) > 0, false) ? var.kms_key : module.kms[0].key_arn) : null
   recovery_window_in_days = 7
 }
 resource "aws_iam_policy" "exec" {
@@ -521,8 +522,8 @@ resource "aws_instance" "ec2" {
     throughput  = try(length(var.root_volume_throughput) > 0, false) ? var.root_volume_throughput : null
     volume_size = 50
   }
-
-  tags = merge({ Name = local.ec2_name }, local.tags)
+  ebs_optimized = true
+  tags          = merge({ Name = local.ec2_name }, local.tags)
 
   lifecycle {
     ignore_changes = [ami, user_data]

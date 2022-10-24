@@ -9,7 +9,7 @@ module "sns_topic" {
 }
 
 resource "aws_sns_topic_subscription" "email" {
-  for_each = var.monitoring_alarms && var.monitoring_email_alerts || var.monitoring_email_alerts_datagrok  ? toset(
+  for_each = var.monitoring_alarms && var.monitoring_email_alerts || var.monitoring_email_alerts_datagrok ? toset(
     compact(
       concat(
         var.monitoring_email_alerts_datagrok ? ["monitoring@datagrok.ai"] : [],
@@ -53,7 +53,7 @@ resource "aws_cloudwatch_metric_alarm" "datagrok_task_count" {
   evaluation_periods  = "1"
   treat_missing_data  = "ignore"
   alarm_description   = "This metric monitors ${local.ecs_name} ECS tasks count"
-  alarm_actions       = compact([
+  alarm_actions = compact([
     var.monitoring_slack_alerts ?
     module.notify_slack.slack_topic_arn :
     "",
@@ -81,7 +81,7 @@ resource "aws_cloudwatch_metric_alarm" "datagrok_task_count" {
       namespace   = "ECS/ContainerInsights"
       period      = "60"
       stat        = "Average"
-      dimensions  = {
+      dimensions = {
         ClusterName = module.ecs.cluster_name
         ServiceName = aws_ecs_service.datagrok.name
       }
@@ -96,7 +96,7 @@ resource "aws_cloudwatch_metric_alarm" "datagrok_task_count" {
       namespace   = "ECS/ContainerInsights"
       period      = "60"
       stat        = "Average"
-      dimensions  = {
+      dimensions = {
         ClusterName = module.ecs.cluster_name
         ServiceName = aws_ecs_service.datagrok.name
       }
@@ -112,14 +112,14 @@ resource "aws_cloudwatch_metric_alarm" "instance_count" {
   evaluation_periods  = "1"
   metric_name         = "ContainerInstanceCount"
   namespace           = "ECS/ContainerInsights"
-  dimensions          = {
+  dimensions = {
     ClusterName = module.ecs.cluster_name
   }
   period             = "60"
   statistic          = "Average"
   treat_missing_data = "ignore"
   alarm_description  = "${local.ecs_name} ECS EC2 instances count alarm"
-  alarm_actions      = compact([
+  alarm_actions = compact([
     var.monitoring_slack_alerts ?
     module.notify_slack.slack_topic_arn :
     "",
@@ -146,7 +146,7 @@ resource "aws_cloudwatch_metric_alarm" "high_cpu" {
   alarm_description   = "${local.ecs_name} ECS cluster CPU capacity alarm"
   metric_name         = "CPUUtilization"
   namespace           = "AWS/ECS"
-  dimensions          = {
+  dimensions = {
     ClusterName = module.ecs.cluster_name
   }
   alarm_actions = compact([
@@ -176,7 +176,7 @@ resource "aws_cloudwatch_metric_alarm" "high_ram" {
   alarm_description   = "${local.ecs_name} ECS cluster RAM capacity alarm"
   metric_name         = "MemoryUtilization"
   namespace           = "AWS/ECS"
-  dimensions          = {
+  dimensions = {
     ClusterName = module.ecs.cluster_name
   }
   alarm_actions = compact([
@@ -206,7 +206,7 @@ resource "aws_cloudwatch_metric_alarm" "lb_target" {
   statistic           = "Average"
   metric_name         = "HealthyHostCount"
   namespace           = "AWS/ApplicationELB"
-  dimensions          = {
+  dimensions = {
     TargetGroup  = module.lb_ext.target_group_arn_suffixes[count.index]
     LoadBalancer = module.lb_ext.lb_arn_suffix
   }
@@ -237,7 +237,7 @@ resource "aws_cloudwatch_metric_alarm" "datagrok_lb_5xx_count" {
   alarm_description   = "Average API 5XX load balancer error code count is too high"
   datapoints_to_alarm = 5
   treat_missing_data  = "ignore"
-  dimensions          = {
+  dimensions = {
     "LoadBalancer" = module.lb_ext.lb_arn_suffix
   }
   alarm_actions = compact([
@@ -266,7 +266,7 @@ resource "aws_cloudwatch_metric_alarm" "db_high_cpu" {
   threshold           = "90"
   alarm_description   = "${local.ecs_name} RDS average CPU utilization is too high."
   treat_missing_data  = "ignore"
-  dimensions          = {
+  dimensions = {
     DBInstanceIdentifier = module.db.db_instance_id
   }
   alarm_actions = compact([
@@ -295,7 +295,7 @@ resource "aws_cloudwatch_metric_alarm" "db_low_cpu_credit" {
   threshold           = "100"
   alarm_description   = "${local.ecs_name} RDS average CPU credit balance is too low, a negative performance impact is imminent."
   treat_missing_data  = "ignore"
-  dimensions          = {
+  dimensions = {
     DBInstanceIdentifier = module.db.db_instance_id
   }
   alarm_actions = compact([
@@ -324,7 +324,7 @@ resource "aws_cloudwatch_metric_alarm" "db_high_disk_queue" {
   threshold           = "64"
   alarm_description   = "${local.ecs_name} RDS average disk queue depth is too high, performance may be negatively impacted."
   treat_missing_data  = "ignore"
-  dimensions          = {
+  dimensions = {
     DBInstanceIdentifier = module.db.db_instance_id
   }
   alarm_actions = compact([
@@ -353,7 +353,7 @@ resource "aws_cloudwatch_metric_alarm" "db_low_disk_space" {
   threshold           = "5000000000"
   alarm_description   = "${local.ecs_name} RDS average free storage space is too low and may fill up soon."
   treat_missing_data  = "ignore"
-  dimensions          = {
+  dimensions = {
     DBInstanceIdentifier = module.db.db_instance_id
   }
   alarm_actions = compact([
@@ -378,7 +378,7 @@ resource "aws_cloudwatch_metric_alarm" "db_anomalous_connection" {
   threshold_metric_id = "e1"
   alarm_description   = "${local.ecs_name} RDS anomalous database connection count detected. Something unusual is happening."
   treat_missing_data  = "ignore"
-  alarm_actions       = compact([
+  alarm_actions = compact([
     var.monitoring_slack_alerts ?
     module.notify_slack.slack_topic_arn :
     "",
