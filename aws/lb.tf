@@ -212,6 +212,8 @@ resource "aws_cloudwatch_log_group" "external" {
   count             = var.enable_route53_logging ? 1 : 0
   name              = "/aws/route53/${aws_route53_zone.external[0].name}"
   retention_in_days = 7
+  kms_key_id        = var.custom_kms_key ? (try(length(var.kms_key) > 0, false) ? var.kms_key : module.kms[0].key_arn) : null
+  tags              = local.tags
 }
 
 data "aws_iam_policy_document" "external" {
@@ -246,6 +248,8 @@ resource "aws_cloudwatch_log_group" "internal" {
   count             = var.enable_route53_logging ? 1 : 0
   name              = "/aws/route53/${aws_route53_zone.internal[0].name}"
   retention_in_days = 7
+  kms_key_id        = var.custom_kms_key ? (try(length(var.kms_key) > 0, false) ? var.kms_key : module.kms[0].key_arn) : null
+  tags              = local.tags
 }
 
 data "aws_iam_policy_document" "internal" {
