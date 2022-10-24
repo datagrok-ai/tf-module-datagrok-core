@@ -15,32 +15,20 @@ jobs:
 
     steps:
       - name: Setup Infracost
-        if: github.event_name == 'pull_request'
+        if: ${{ github.event_name == 'pull_request' && matrix.os != 'windows-latest' }}
         uses: infracost/actions/setup@v2
         with:
           api-key: ${{ secrets.INFRACOST_API_KEY }}
 
       - name: Checkout base branch
-        if: github.event_name == 'pull_request'
+        if: ${{ github.event_name == 'pull_request' && matrix.os != 'windows-latest' }}
         uses: actions/checkout@v3
         with:
           ref: '${{ github.event.pull_request.base.ref }}'
 
-      - name: Set Infracost path
-        id: infracost_path
-        run: |
-          if [[ "${{ matrix.os }}" == "windows-latest" ]]; then
-            path='c:\windows\temp\'
-          else
-            path='/tmp/'
-          fi
-          echo "::set-output name=infracost_path::${path}"
-
       - name: Generate Infracost cost estimate baseline
-        if: github.event_name == 'pull_request'
-        run: |
-          infracost breakdown --path=${{ matrix.provider }} --format=json \
-            --out-file=${{ steps.infracost_path.outputs.infracost_path }}infracost-base.json
+        if: ${{ github.event_name == 'pull_request' && matrix.os != 'windows-latest' }}
+        run: infracost breakdown --path=${{ matrix.provider }} --format=json --out-file=/tmp/infracost-base.json
 
       - uses: actions/checkout@v2
         name: Checkout PR branch
@@ -179,16 +167,15 @@ jobs:
             }
 
       - name: Generate Infracost diff
-        if: github.event_name == 'pull_request'
+        if: ${{ github.event_name == 'pull_request' && matrix.os != 'windows-latest' }}
         run: |
           infracost diff --path=${{ matrix.provider }} --format=json \
-            --compare-to=${{ steps.infracost_path.outputs.infracost_path }}infracost-base.json \
-            --out-file=${{ steps.infracost_path.outputs.infracost_path }}infracost.json
+            --compare-to=/tmp/infracost-base.json --out-file=/tmp/infracost.json
 
       - name: Post Infracost comment
-        if: github.event_name == 'pull_request'
+        if: ${{ github.event_name == 'pull_request' && matrix.os != 'windows-latest' }}
         run: |
-          infracost comment github --path=${{ steps.infracost_path.outputs.infracost_path }}infracost.json \
+          infracost comment github --path=/tmp/infracost.json \
             --repo=$GITHUB_REPOSITORY --github-token=${{github.token}} \
             --pull-request=${{github.event.pull_request.number}} \
             --behavior=delete-and-new
