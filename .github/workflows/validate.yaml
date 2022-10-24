@@ -45,6 +45,7 @@ jobs:
         with:
           directory: ${{ matrix.provider }}
           framework: terraform
+        if: matrix.os == 'ubuntu-latest'
 
       - uses: hashicorp/setup-terraform@v2
 
@@ -138,49 +139,43 @@ jobs:
             }
 
       - name: Setup Infracost
+        if: github.event_name == 'pull_request'
         uses: infracost/actions/setup@v2
-        # See https://github.com/infracost/actions/tree/master/setup for other inputs
-        # If you can't use this action, see Docker images in https://infracost.io/cicd
         with:
           api-key: ${{ secrets.INFRACOST_API_KEY }}
 
-      # Checkout the base branch of the pull request (e.g. main/master).
       - name: Checkout base branch
+        if: github.event_name == 'pull_request'
         uses: actions/checkout@v3
         with:
           ref: '${{ github.event.pull_request.base.ref }}'
 
       - name: Generate Infracost cost estimate baseline
+        if: github.event_name == 'pull_request'
         run: |
           infracost breakdown --path=${{ matrix.provider }} \
                               --format=json \
                               --out-file=/tmp/infracost-base.json
 
 
-      # Generate an Infracost diff and save it to a JSON file.
       - name: Generate Infracost diff
+        if: github.event_name == 'pull_request'
         run: |
           infracost diff --path=${{ matrix.provider }} \
                           --format=json \
                           --compare-to=/tmp/infracost-base.json \
                           --out-file=/tmp/infracost.json
 
-      # Posts a comment to the PR using the 'update' behavior.
-      # This creates a single comment and updates it. The "quietest" option.
-      # The other valid behaviors are:
-      #   delete-and-new - Delete previous comments and create a new one.
-      #   hide-and-new - Minimize previous comments and create a new one.
-      #   new - Create a new cost estimate comment on every push.
-      # See https://www.infracost.io/docs/features/cli_commands/#comment-on-pull-requests for other options.
       - name: Post Infracost comment
+        if: github.event_name == 'pull_request'
         run: |
           infracost comment github --path=/tmp/infracost.json \
                                    --repo=$GITHUB_REPOSITORY \
                                    --github-token=${{github.token}} \
                                    --pull-request=${{github.event.pull_request.number}} \
-                                   --behavior=update
+                                   --behavior=delete-and-new
 
-      - name: Render terraform docs and push changes back to PR
+      - name: Render terraform docs and push changes back
         uses: terraform-docs/gh-actions@v1
         with:
           working-dir: ${{ matrix.provider }}
