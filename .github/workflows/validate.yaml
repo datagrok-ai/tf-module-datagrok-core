@@ -59,7 +59,7 @@ jobs:
 
       - name: Test with Checkov
         id: checkov
-        uses: bridgecrewio/checkov-action@v10
+        uses: bridgecrewio/checkov-action@v12.1347.0
         with:
           directory: ${{ matrix.provider }}
           framework: terraform
