@@ -18,8 +18,8 @@ module "log_bucket" {
 
   lifecycle_rule = [
     {
-      id         = "expiration_rule"
-      enabled    = true
+      id      = "expiration_rule"
+      enabled = true
       expiration = {
         days = 7
       }
