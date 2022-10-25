@@ -115,18 +115,8 @@ jobs:
         continue-on-error: true
         working-directory: ${{ matrix.provider }}
 
-      - name: Terraform Plan
-        id: plan
-        run: |
-          terraform plan -no-color \
-            -var 'name=terraform' -var 'environment=plan' -var 'domain_name=check' \
-            -var 'docker_hub_user=test' -var 'docker_hub_password=test'
-        working-directory: ${{ matrix.provider }}
-
       - uses: actions/github-script@v6
         if: github.event_name == 'pull_request'
-        env:
-          PLAN: "terraform\n${{ steps.plan.outputs.stdout }}"
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
@@ -137,7 +127,7 @@ jobs:
               issue_number: context.issue.number,
             })
             const botComment = comments.find(comment => {
-              return comment.user.type === 'Bot' && comment.body.includes('Terraform Format and Style')
+              return comment.user.type === 'Bot' && comment.body.includes('Terraform Format and Style') && comment.body.includes('${{ matrix.provider }}')
             })
             
             // 2. Prepare format of the comment
@@ -152,17 +142,7 @@ jobs:
             
             </details>
             
-            #### Terraform Plan 📖\`${{ steps.plan.outcome }}\`
-            
-            <details><summary>Show Plan</summary>
-            
-            \`\`\`\n
-            ${process.env.PLAN}
-            \`\`\`
-            
-            </details>
-            
-            *Pusher: @${{ github.actor }}, Action: \`${{ github.event_name }}\`, Working Directory: \`${{ env.tf_actions_working_dir }}\`, Workflow: \`${{ github.workflow }}\`*`;
+            *Pusher: @${{ github.actor }}, Action: \`${{ github.event_name }}\`, Working Directory: \`${{ matrix.provider }}\`, Workflow: \`${{ github.workflow }}\`*`;
             
             // 3. If we have a comment, update it, otherwise create a new one
             if (botComment) {
