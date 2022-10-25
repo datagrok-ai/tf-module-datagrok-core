@@ -16,19 +16,19 @@ jobs:
 
     steps:
       - name: Setup Infracost
-        if: ${{ github.event_name == 'pull_request' && matrix.os != 'windows-latest' }}
+        if: ${{ github.event_name == 'pull_request' && matrix.os == 'ubuntu-latest' }}
         uses: infracost/actions/setup@v2
         with:
           api-key: ${{ secrets.INFRACOST_API_KEY }}
 
       - name: Checkout base branch
-        if: ${{ github.event_name == 'pull_request' && matrix.os != 'windows-latest' }}
+        if: ${{ github.event_name == 'pull_request' && matrix.os == 'ubuntu-latest' }}
         uses: actions/checkout@v3
         with:
           ref: '${{ github.event.pull_request.base.ref }}'
 
       - name: Generate Infracost cost estimate baseline
-        if: ${{ github.event_name == 'pull_request' && matrix.os != 'windows-latest' }}
+        if: ${{ github.event_name == 'pull_request' && matrix.os == 'ubuntu-latest' }}
         run: infracost breakdown --path=${{ matrix.provider }} --format=json --out-file=/tmp/infracost-base.json
 
       - uses: actions/checkout@v2
@@ -162,13 +162,13 @@ jobs:
             }
 
       - name: Generate Infracost diff
-        if: ${{ github.event_name == 'pull_request' && matrix.os != 'windows-latest' }}
+        if: ${{ github.event_name == 'pull_request' && matrix.os == 'ubuntu-latest' }}
         run: |
           infracost diff --path=${{ matrix.provider }} --format=json \
             --compare-to=/tmp/infracost-base.json --out-file=/tmp/infracost.json
 
       - name: Post Infracost comment
-        if: ${{ github.event_name == 'pull_request' && matrix.os != 'windows-latest' }}
+        if: ${{ github.event_name == 'pull_request' && matrix.os == 'ubuntu-latest' }}
         run: |
           infracost comment github --path=/tmp/infracost.json \
             --repo=$GITHUB_REPOSITORY --github-token=${{github.token}} \
