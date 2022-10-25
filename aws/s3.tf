@@ -15,6 +15,16 @@ module "log_bucket" {
   attach_lb_log_delivery_policy         = true
   attach_deny_insecure_transport_policy = true
   attach_require_latest_tls_policy      = true
+
+  lifecycle_rule = [
+    {
+      enabled    = true
+      expiration = {
+        days = 7
+      }
+    }
+  ]
+  tags = local.tags
 }
 data "aws_iam_policy_document" "bucket_policy" {
   statement {
