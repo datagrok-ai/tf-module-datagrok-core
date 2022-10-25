@@ -122,8 +122,10 @@ module "datagrok_core" {
 | <a name="input_custom_kms_key"></a> [custom\_kms\_key](#input\_custom\_kms\_key) | Specifies whether a custom KMS key should be used to encrypt instead of the default. We recommend to set it to true for production stand. | `bool` | `false` | no |
 | <a name="input_data_subnet_ids"></a> [data\_subnet\_ids](#input\_data\_subnet\_ids) | The IDs of data subnets to place resources. Required if 'vpc\_id' is specified. | `list(string)` | `[]` | no |
 | <a name="input_database_subnet_group"></a> [database\_subnet\_group](#input\_database\_subnet\_group) | The ID of database subnet group to place datagrok DB. Required if 'vpc\_id' is specified. | `string` | `null` | no |
-| <a name="input_datagrok_cpu"></a> [datagrok\_cpu](#input\_datagrok\_cpu) | Number of cpu units used by the Datagrok FARGATE task. | `number` | `2048` | no |
-| <a name="input_datagrok_memory"></a> [datagrok\_memory](#input\_datagrok\_memory) | Amount (in MiB) of memory used by the Datagrok FARGATE task. | `number` | `4096` | no |
+| <a name="input_datagrok_container_cpu"></a> [datagrok\_container\_cpu](#input\_datagrok\_container\_cpu) | The number of cpu units the Amazon ECS container agent reserves for the Datagrok container. | `number` | `1024` | no |
+| <a name="input_datagrok_container_memory_reservation"></a> [datagrok\_container\_memory\_reservation](#input\_datagrok\_container\_memory\_reservation) | The soft limit (in MiB) of memory to reserve for the Datagrok container. | `number` | `1024` | no |
+| <a name="input_datagrok_cpu"></a> [datagrok\_cpu](#input\_datagrok\_cpu) | Number of cpu units used by the Datagrok FARGATE task. The hard limit of CPU units to present for the task. | `number` | `2048` | no |
+| <a name="input_datagrok_memory"></a> [datagrok\_memory](#input\_datagrok\_memory) | Amount (in MiB) of memory used by the Datagrok FARGATE task. The hard limit of memory (in MiB) to present to the task. | `number` | `4096` | no |
 | <a name="input_datagrok_startup_mode"></a> [datagrok\_startup\_mode](#input\_datagrok\_startup\_mode) | Datagrok startup mode. It can be 'start' (do not deploy required resources, start the server), 'deploy' (full redeploy of the required resources on every start of the server. Use with cautious, it can destroy you existing data.), 'auto' (checks of the required resources already exists, if the are, and starts the server, otherwise it will deploy the resources before the server start.). | `string` | `"auto"` | no |
 | <a name="input_db_name"></a> [db\_name](#input\_db\_name) | The database name in RDS. | `string` | `null` | no |
 | <a name="input_docker_datagrok_tag"></a> [docker\_datagrok\_tag](#input\_docker\_datagrok\_tag) | Tag from Docker Hub for datagrok/datagrok image | `string` | `"latest"` | no |
@@ -200,6 +202,7 @@ module "datagrok_core" {
 | <a name="output_cloudwatch_log_group_name"></a> [cloudwatch\_log\_group\_name](#output\_cloudwatch\_log\_group\_name) | The name of the CloudWatch Log group |
 | <a name="output_database_subnet_group"></a> [database\_subnet\_group](#output\_database\_subnet\_group) | ID of database subnet group |
 | <a name="output_database_subnets"></a> [database\_subnets](#output\_database\_subnets) | List of IDs of database subnets |
+| <a name="output_docker_hub_secret"></a> [docker\_hub\_secret](#output\_docker\_hub\_secret) | The ARN of the Secret for Docker Hub Authorisation |
 | <a name="output_log_bucket"></a> [log\_bucket](#output\_log\_bucket) | The ID of the S3 bucket for logs |
 | <a name="output_private_subnets"></a> [private\_subnets](#output\_private\_subnets) | List of IDs of private subnets |
 | <a name="output_public_subnets"></a> [public\_subnets](#output\_public\_subnets) | List of IDs of public subnets |
