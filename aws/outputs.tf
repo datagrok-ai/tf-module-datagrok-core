@@ -83,16 +83,6 @@ output "docker_hub_secret" {
   value       = try(aws_secretsmanager_secret.docker_hub[0].arn, var.docker_hub_secret_arn)
 }
 
-output "route53_internal_cloudwatch_log_group_name" {
-  description = "The name of the CloudWatch Log group for Internal Route53 Zone"
-  value       = try(aws_cloudwatch_log_group.internal[0].arn, "")
-}
-
-output "route53_internal_cloudwatch_log_group_arn" {
-  description = "The ARN of the CloudWatch Log group for Internal Route53 Zone"
-  value       = try(aws_cloudwatch_log_group.internal[0].arn, "")
-}
-
 output "route53_external_cloudwatch_log_group_name" {
   description = "The name of the CloudWatch Log group for External Route53 Zone"
   value       = try(aws_cloudwatch_log_group.external[0].name, "")
