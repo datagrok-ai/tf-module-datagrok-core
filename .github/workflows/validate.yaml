@@ -173,7 +173,7 @@ jobs:
           infracost comment github --path=/tmp/infracost.json \
             --repo=$GITHUB_REPOSITORY --github-token=${{github.token}} \
             --pull-request=${{github.event.pull_request.number}} \
-            --behavior=delete-and-new
+            --behavior=update
 
       - name: Render terraform docs and push changes back
         uses: terraform-docs/gh-actions@v1
