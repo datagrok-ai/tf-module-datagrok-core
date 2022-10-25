@@ -314,20 +314,6 @@ variable "docker_hub_secret_arn" {
   description = "The ARN of AWS Secret which contains Docker Hub Token to access Docker Hub and download datagrok images. If not specified the secret will be created using docker_hub_password variable"
 }
 
-variable "datagrok_memory" {
-  type        = number
-  default     = 4096
-  nullable    = false
-  description = "Amount (in MiB) of memory used by the Datagrok FARGATE task."
-}
-
-variable "datagrok_cpu" {
-  type        = number
-  default     = 2048
-  nullable    = false
-  description = "Number of cpu units used by the Datagrok FARGATE task."
-}
-
 variable "tags" {
   type        = map(string)
   default     = {}
@@ -593,4 +579,32 @@ variable "enable_route53_logging" {
   default     = true
   nullable    = false
   description = "Specifies whether Logging requests using server access logging for Datagrok Route53 zone are enabled. We recommend to set it to true for production stand."
+}
+
+variable "datagrok_container_memory_reservation" {
+  type = number
+  default = 1024
+  nullable = false
+  description = "The soft limit (in MiB) of memory to reserve for the Datagrok container."
+}
+
+variable "datagrok_container_cpu" {
+  type = number
+  default = 1024
+  nullable = false
+  description = "The number of cpu units the Amazon ECS container agent reserves for the Datagrok container."
+}
+
+variable "datagrok_memory" {
+  type        = number
+  default     = 4096
+  nullable    = false
+  description = "Amount (in MiB) of memory used by the Datagrok FARGATE task. The hard limit of memory (in MiB) to present to the task."
+}
+
+variable "datagrok_cpu" {
+  type        = number
+  default     = 2048
+  nullable    = false
+  description = "Number of cpu units used by the Datagrok FARGATE task. The hard limit of CPU units to present for the task."
 }

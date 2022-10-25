@@ -262,8 +262,8 @@ EOF
           containerPort = 8080
         }
       ]
-      memoryReservation = 1024
-      cpu               = 1024
+      memoryReservation = var.datagrok_container_memory_reservation
+      cpu               = var.datagrok_container_cpu
     }
   ])
   cpu                      = var.ecs_launch_type == "FARGATE" ? var.datagrok_cpu : null
