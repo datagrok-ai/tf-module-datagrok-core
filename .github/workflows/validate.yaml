@@ -14,13 +14,13 @@ jobs:
         provider: [aws]
 
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
         if: ${{ github.event_name == 'pull_request' }}
         name: Checkout PR branch
         with:
           ref: ${{ github.head_ref }}
 
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
         if: ${{ github.event_name != 'pull_request' }}
         name: Checkout
         with:
@@ -41,7 +41,7 @@ jobs:
       - name: Create Pull Request
         uses: peter-evans/create-pull-request@v4
         with:
-          commit-message: terraform fmt
+          commit-message: "GitHub Actions: Refactor: Automated formatting of terraform code"
           title: Reformat terraform files
           body: Update terraform files to canonical format using `terraform fmt`
           branch: automated-terraform-fmt
@@ -58,13 +58,13 @@ jobs:
         provider: [aws]
 
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
         if: ${{ github.event_name == 'pull_request' }}
         name: Checkout PR branch
         with:
           ref: ${{ github.head_ref }}
 
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
         if: ${{ github.event_name != 'pull_request' }}
         name: Checkout
         with:
@@ -109,7 +109,7 @@ jobs:
         if: ${{ github.event_name == 'pull_request' }}
         run: infracost breakdown --path=${{ matrix.provider }} --format=json --out-file=/tmp/infracost-base.json
 
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
         if: ${{ github.event_name == 'pull_request' }}
         name: Checkout PR branch
         with:
@@ -129,6 +129,7 @@ jobs:
             --pull-request=${{ github.event.pull_request.number }} \
             --behavior=update
 
+
   validate:
     runs-on: ${{ matrix.os }}
 
@@ -139,13 +140,13 @@ jobs:
         provider: [aws]
 
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
         if: ${{ github.event_name == 'pull_request' }}
         name: Checkout PR branch
         with:
           ref: ${{ github.head_ref }}
 
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
         if: ${{ github.event_name != 'pull_request' }}
         name: Checkout
         with:
@@ -173,7 +174,7 @@ jobs:
         working-directory: ${{ matrix.provider }}
 
       - uses: actions/github-script@v6
-        if: ${{ github.event_name == 'pull_request' && matrix.os == 'ubuntu-latest' }}
+        if: ${{ github.event_name == 'pull_request' }}
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
@@ -219,6 +220,7 @@ jobs:
             }
 
 
+
   docs:
     runs-on: ubuntu-latest
 
@@ -228,13 +230,13 @@ jobs:
         provider: [aws]
 
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
         if: ${{ github.event_name == 'pull_request' }}
         name: Checkout PR branch
         with:
           ref: ${{ github.head_ref }}
 
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
         if: ${{ github.event_name != 'pull_request' }}
         name: Checkout
         with:
@@ -247,6 +249,7 @@ jobs:
           output-file: README.md
           output-method: inject
           git-push: "true"
+          git-commit-message: "GitHub Actions: Docs: Automated update of README.md"
 
   tflint:
     runs-on: ${{ matrix.os }}
@@ -258,13 +261,13 @@ jobs:
         provider: [aws]
 
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
         if: ${{ github.event_name == 'pull_request' }}
         name: Checkout PR branch
         with:
           ref: ${{ github.head_ref }}
 
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
         if: ${{ github.event_name != 'pull_request' }}
         name: Checkout
         with:
