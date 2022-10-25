@@ -40,6 +40,8 @@ jobs:
       - uses: actions/checkout@v2
         if: ${{ github.event_name != 'pull_request' }}
         name: Checkout
+        with:
+          fetch-depth: 0
 
       - uses: actions/cache@v2
         name: Cache plugin dir
@@ -80,15 +82,18 @@ jobs:
           terraform_version: ">=1.2.0"
 
       - name: Terraform Format
+        if: ${{ matrix.os == 'ubuntu-latest' }}
         run: terraform fmt
         working-directory: ${{ matrix.provider }}
 
       - name: Extract branch name
+        if: ${{ matrix.os == 'ubuntu-latest' }}
         shell: bash
         run: echo "::set-output name=branch::${GITHUB_REF#refs/heads/}"
         id: extract_branch
 
       - name: Create Pull Request
+        if: ${{ matrix.os == 'ubuntu-latest' }}
         uses: peter-evans/create-pull-request@v4
         with:
           commit-message: terraform fmt
