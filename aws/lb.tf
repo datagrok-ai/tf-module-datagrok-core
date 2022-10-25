@@ -229,7 +229,7 @@ data "aws_iam_policy_document" "external" {
       "logs:CreateLogStream",
       "logs:PutLogEvents",
     ]
-    resources = [aws_cloudwatch_log_group.external[0].arn]
+    resources = ["arn:aws:logs:*:*:log-group:/aws/route53/*"]
     principals {
       identifiers = ["route53.amazonaws.com"]
       type        = "Service"
