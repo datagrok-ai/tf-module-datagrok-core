@@ -1,5 +1,6 @@
 name: Validate
 on:
+  workflow_dispatch: { }
   push:
     branches: [main]
   pull_request:
@@ -219,8 +220,6 @@ jobs:
               })
             }
 
-
-
   docs:
     runs-on: ubuntu-latest
 
@@ -291,3 +290,68 @@ jobs:
         working-directory: ${{ matrix.provider }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  tfsec:
+    runs-on: ubuntu-latest
+
+    strategy:
+      fail-fast: false
+      matrix:
+        provider: [aws]
+
+    permissions:
+      actions: read
+      contents: read
+      pull-requests: write
+      security-events: write
+      statuses: write
+
+    steps:
+      - uses: actions/checkout@v3
+        if: ${{ github.event_name == 'pull_request' }}
+        name: Checkout PR branch
+        with:
+          ref: ${{ github.head_ref }}
+
+      - uses: actions/checkout@v3
+        if: ${{ github.event_name != 'pull_request' }}
+        name: Checkout
+        with:
+          fetch-depth: 0
+
+      - uses: hashicorp/setup-terraform@v2
+        with:
+          terraform_version: ">=1.2.0"
+
+      - name: Terraform Init
+        id: init
+        run: terraform init -backend=false
+        working-directory: ${{ matrix.provider }}
+
+      - name: tfsec
+        if: ${{ github.event_name == 'pull_request' }}
+        uses: aquasecurity/tfsec-pr-commenter-action@v1.2.0
+        with:
+          github_token: ${{ github.token }}
+          working_directory: ${{ matrix.provider }}
+
+      - name: tfsec
+        if: ${{ github.event_name != 'pull_request' }}
+        uses: aquasecurity/tfsec-sarif-action@master
+        with:
+          sarif_file: tfsec.sarif
+          working_directory: ${{ matrix.provider }}
+
+      - name: 'Upload Artifact'
+        if: ${{ github.event_name != 'pull_request' }}
+        uses: actions/upload-artifact@v2
+        with:
+          name: ${{ matrix.provider }}_tfsec.sarif
+          path: tfsec.sarif
+          retention-days: 7
+
+      - name: Upload SARIF file
+        if: ${{ github.event_name != 'pull_request' }}
+        uses: github/codeql-action/upload-sarif@v2
+        with:
+          sarif_file: tfsec.sarif
