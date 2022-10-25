@@ -582,16 +582,16 @@ variable "enable_route53_logging" {
 }
 
 variable "datagrok_container_memory_reservation" {
-  type = number
-  default = 1024
-  nullable = false
+  type        = number
+  default     = 1024
+  nullable    = false
   description = "The soft limit (in MiB) of memory to reserve for the Datagrok container."
 }
 
 variable "datagrok_container_cpu" {
-  type = number
-  default = 1024
-  nullable = false
+  type        = number
+  default     = 1024
+  nullable    = false
   description = "The number of cpu units the Amazon ECS container agent reserves for the Datagrok container."
 }
 
