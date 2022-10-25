@@ -117,7 +117,7 @@ module "lb_ext" {
 
   access_logs = var.enable_bucket_logging ? {
     bucket  = try(length(var.log_bucket) > 0, false) ? var.log_bucket : module.log_bucket.s3_bucket_id
-    prefix  = "lb-ext"
+    prefix  = "lb"
     enabled = true
   } : { bucket = "", enabled = false }
 
@@ -160,7 +160,7 @@ module "lb_int" {
 
   access_logs = var.enable_bucket_logging ? {
     bucket  = try(length(var.log_bucket) > 0, false) ? var.log_bucket : module.log_bucket.s3_bucket_id
-    prefix  = "lb-int"
+    prefix  = "lb"
     enabled = true
   } : { bucket = "", enabled = false }
 
