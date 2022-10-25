@@ -159,7 +159,7 @@ jobs:
       - name: Terraform fmt
         id: fmt
         run: terraform fmt -check
-        continue-on-error: true
+        continue-on-error: ${{ github.event_name == 'pull_request' }}
         working-directory: ${{ matrix.provider }}
 
       - name: Terraform Init
@@ -170,7 +170,7 @@ jobs:
       - name: Terraform Validate
         id: validate
         run: terraform validate -no-color
-        continue-on-error: true
+        continue-on-error: ${{ github.event_name == 'pull_request' }}
         working-directory: ${{ matrix.provider }}
 
       - uses: actions/github-script@v6
