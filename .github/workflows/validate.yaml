@@ -1,0 +1,293 @@
+name: Validate
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  fmt:
+    runs-on: ubuntu-latest
+
+    strategy:
+      fail-fast: false
+      matrix:
+        provider: [aws]
+
+    steps:
+      - uses: actions/checkout@v3
+        if: ${{ github.event_name == 'pull_request' }}
+        name: Checkout PR branch
+        with:
+          ref: ${{ github.head_ref }}
+
+      - uses: actions/checkout@v3
+        if: ${{ github.event_name != 'pull_request' }}
+        name: Checkout
+        with:
+          fetch-depth: 0
+
+      - uses: hashicorp/setup-terraform@v2
+        with:
+          terraform_version: ">=1.2.0"
+
+      - name: Terraform Format
+        run: terraform fmt
+        working-directory: ${{ matrix.provider }}
+
+      - name: Extract branch name
+        run: echo "branch=${GITHUB_REF#refs/heads/}" >> $GITHUB_OUTPUT
+        id: extract_branch
+
+      - name: Create Pull Request
+        uses: peter-evans/create-pull-request@v4
+        with:
+          commit-message: "GitHub Actions: Refactor: Automated formatting of terraform code"
+          title: Reformat terraform files
+          body: Update terraform files to canonical format using `terraform fmt`
+          branch: automated-terraform-fmt
+          branch-suffix: short-commit-hash
+          delete-branch: true
+          add-paths: ${{ matrix.provider }}
+
+  checkov:
+    runs-on: ubuntu-latest
+
+    strategy:
+      fail-fast: false
+      matrix:
+        provider: [aws]
+
+    steps:
+      - uses: actions/checkout@v3
+        if: ${{ github.event_name == 'pull_request' }}
+        name: Checkout PR branch
+        with:
+          ref: ${{ github.head_ref }}
+
+      - uses: actions/checkout@v3
+        if: ${{ github.event_name != 'pull_request' }}
+        name: Checkout
+        with:
+          fetch-depth: 0
+
+      - name: Set up Python 3.8 for Checkov
+        uses: actions/setup-python@v1
+        with:
+          python-version: 3.8
+
+      - name: Test with Checkov
+        id: checkov
+        uses: bridgecrewio/checkov-action@v12.1347.0
+        with:
+          directory: ${{ matrix.provider }}
+          framework: terraform
+          download_external_modules: true
+          skip_check: CKV_AWS_79,CKV2_AWS_38
+
+  costs:
+    runs-on: ubuntu-latest
+
+    strategy:
+      fail-fast: false
+      matrix:
+        provider: [aws]
+
+    steps:
+      - name: Setup Infracost
+        if: ${{ github.event_name == 'pull_request' }}
+        uses: infracost/actions/setup@v2
+        with:
+          api-key: ${{ secrets.INFRACOST_API_KEY }}
+
+      - name: Checkout base branch
+        if: ${{ github.event_name == 'pull_request' }}
+        uses: actions/checkout@v3
+        with:
+          ref: '${{ github.event.pull_request.base.ref }}'
+
+      - name: Generate Infracost cost estimate baseline
+        if: ${{ github.event_name == 'pull_request' }}
+        run: infracost breakdown --path=${{ matrix.provider }} --format=json --out-file=/tmp/infracost-base.json
+
+      - uses: actions/checkout@v3
+        if: ${{ github.event_name == 'pull_request' }}
+        name: Checkout PR branch
+        with:
+          ref: ${{ github.head_ref }}
+
+      - name: Generate Infracost diff
+        if: ${{ github.event_name == 'pull_request' }}
+        run: |
+          infracost diff --path=${{ matrix.provider }} --format=json \
+            --compare-to=/tmp/infracost-base.json --out-file=/tmp/infracost.json
+
+      - name: Post Infracost comment
+        if: ${{ github.event_name == 'pull_request' }}
+        run: |
+          infracost comment github --path=/tmp/infracost.json \
+            --repo=$GITHUB_REPOSITORY --github-token=${{ github.token }} \
+            --pull-request=${{ github.event.pull_request.number }} \
+            --behavior=update
+
+
+  validate:
+    runs-on: ${{ matrix.os }}
+
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+        provider: [aws]
+
+    steps:
+      - uses: actions/checkout@v3
+        if: ${{ github.event_name == 'pull_request' }}
+        name: Checkout PR branch
+        with:
+          ref: ${{ github.head_ref }}
+
+      - uses: actions/checkout@v3
+        if: ${{ github.event_name != 'pull_request' }}
+        name: Checkout
+        with:
+          fetch-depth: 0
+
+      - uses: hashicorp/setup-terraform@v2
+        with:
+          terraform_version: ">=1.2.0"
+
+      - name: Terraform fmt
+        id: fmt
+        run: terraform fmt -check
+        continue-on-error: true
+        working-directory: ${{ matrix.provider }}
+
+      - name: Terraform Init
+        id: init
+        run: terraform init -backend=false
+        working-directory: ${{ matrix.provider }}
+
+      - name: Terraform Validate
+        id: validate
+        run: terraform validate -no-color
+        continue-on-error: true
+        working-directory: ${{ matrix.provider }}
+
+      - uses: actions/github-script@v6
+        if: ${{ github.event_name == 'pull_request' }}
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            // 1. Retrieve existing bot comments for the PR
+            const { data: comments } = await github.rest.issues.listComments({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+            })
+            const botComment = comments.find(comment => {
+              return comment.user.type === 'Bot' && comment.body.includes('Terraform Format and Style') && comment.body.includes('${{ matrix.provider }}') && comment.body.includes('${{ matrix.os }}')
+            })
+
+            // 2. Prepare format of the comment
+            const output = `#### Terraform Format and Style 🖌\`${{ steps.fmt.outcome }}\`
+            #### Terraform Initialization ⚙️\`${{ steps.init.outcome }}\`
+            #### Terraform Validation 🤖\`${{ steps.validate.outcome }}\`
+            <details><summary>Validation Output</summary>
+
+            \`\`\`\n
+            ${{ steps.validate.outputs.stdout }}
+            \`\`\`
+
+            </details>
+
+            *Pusher: @${{ github.actor }}, Action: \`${{ github.event_name }}\`, OS: \`${{ matrix.os }}\`, Working Directory: \`${{ matrix.provider }}\`, Workflow: \`${{ github.workflow }}\`*`;
+
+            // 3. If we have a comment, update it, otherwise create a new one
+            if (botComment) {
+              github.rest.issues.updateComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                comment_id: botComment.id,
+                body: output
+              })
+            } else {
+              github.rest.issues.createComment({
+                issue_number: context.issue.number,
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                body: output
+              })
+            }
+
+
+
+  docs:
+    runs-on: ubuntu-latest
+
+    strategy:
+      fail-fast: false
+      matrix:
+        provider: [aws]
+
+    steps:
+      - uses: actions/checkout@v3
+        if: ${{ github.event_name == 'pull_request' }}
+        name: Checkout PR branch
+        with:
+          ref: ${{ github.head_ref }}
+
+      - uses: actions/checkout@v3
+        if: ${{ github.event_name != 'pull_request' }}
+        name: Checkout
+        with:
+          fetch-depth: 0
+
+      - name: Render terraform docs and push changes back
+        uses: terraform-docs/gh-actions@v1
+        with:
+          working-dir: ${{ matrix.provider }}
+          output-file: README.md
+          output-method: inject
+          git-push: "true"
+          git-commit-message: "GitHub Actions: Docs: Automated update of README.md"
+
+  tflint:
+    runs-on: ${{ matrix.os }}
+
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+        provider: [aws]
+
+    steps:
+      - uses: actions/checkout@v3
+        if: ${{ github.event_name == 'pull_request' }}
+        name: Checkout PR branch
+        with:
+          ref: ${{ github.head_ref }}
+
+      - uses: actions/checkout@v3
+        if: ${{ github.event_name != 'pull_request' }}
+        name: Checkout
+        with:
+          fetch-depth: 0
+
+      - uses: actions/cache@v2
+        name: Cache TFLint plugin dir
+        with:
+          path: ~/.tflint.d/plugins
+          key: ${{ matrix.os }}-tflint-${{ hashFiles('.tflint.hcl') }}
+
+      - uses: terraform-linters/setup-tflint@v2
+        name: Setup TFLint
+        with:
+          tflint_version: v0.42.0
+
+      - name: Run TFLint
+        run: |
+          tflint --init
+          tflint -f compact
+        working-directory: ${{ matrix.provider }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

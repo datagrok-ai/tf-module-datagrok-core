@@ -2,6 +2,7 @@ resource "aws_cloudwatch_log_group" "ecs" {
   count             = var.create_cloudwatch_log_group ? 1 : 0
   name              = "/aws/ecs/${local.full_name}"
   retention_in_days = 7
+  kms_key_id        = var.custom_kms_key ? (try(length(var.kms_key) > 0, false) ? var.kms_key : module.kms[0].key_arn) : null
   tags              = local.tags
 }
 module "sg" {
@@ -12,7 +13,7 @@ module "sg" {
   description = "${local.ecs_name} Datagrok ECS Security Group"
   vpc_id      = try(length(var.vpc_id) > 0, false) ? var.vpc_id : module.vpc[0].vpc_id
 
-  egress_with_cidr_blocks  = var.egress_rules
+  egress_with_cidr_blocks = var.egress_rules
   ingress_with_cidr_blocks = [
     {
       from_port   = 0
@@ -31,7 +32,7 @@ module "ecs" {
 
   cluster_configuration = {
     execute_command_configuration = {
-      logging           = "OVERRIDE"
+      logging = "OVERRIDE"
       log_configuration = {
         cloud_watch_log_group_name     = var.create_cloudwatch_log_group ? aws_cloudwatch_log_group.ecs[0].name : var.cloudwatch_log_group_name
         cloud_watch_encryption_enabled = var.custom_kms_key
@@ -76,18 +77,18 @@ resource "random_password" "admin_password" {
 #POLICY
 #}
 resource "aws_secretsmanager_secret_version" "docker_hub" {
-  count         = try(length(var.docker_hub_secret_arn) > 0, false) ? 0 : 1
-  secret_id     = aws_secretsmanager_secret.docker_hub[0].id
+  count     = try(length(var.docker_hub_secret_arn) > 0, false) ? 0 : 1
+  secret_id = aws_secretsmanager_secret.docker_hub[0].id
   secret_string = jsonencode({
-    "username": var.docker_hub_user,
-    "password": var.docker_hub_password
+    "username" : var.docker_hub_user,
+    "password" : var.docker_hub_password
   })
 }
 resource "aws_secretsmanager_secret" "docker_hub" {
   count                   = try(length(var.docker_hub_secret_arn) > 0, false) ? 0 : 1
   name_prefix             = "${local.full_name}_docker_hub"
   description             = "Docker Hub token to download images"
-  kms_key_id              = var.custom_kms_key ? ( try(length(var.kms_key) > 0, false) ? var.kms_key : module.kms[0].key_arn ) : null
+  kms_key_id              = var.custom_kms_key ? (try(length(var.kms_key) > 0, false) ? var.kms_key : module.kms[0].key_arn) : null
   recovery_window_in_days = 7
 }
 resource "aws_iam_policy" "exec" {
@@ -95,13 +96,13 @@ resource "aws_iam_policy" "exec" {
   description = "Datagrok execution policy for ECS task"
 
   policy = jsonencode({
-    "Version"   = "2012-10-17",
+    "Version" = "2012-10-17",
     "Statement" = [
       {
         "Action"    = ["secretsmanager:GetSecretValue"],
         "Condition" = {},
         "Effect"    = "Allow",
-        "Resource"  = [
+        "Resource" = [
           try(length(var.docker_hub_secret_arn) > 0, false) ? var.docker_hub_secret_arn : aws_secretsmanager_secret.docker_hub[0].arn
         ]
       },
@@ -110,7 +111,7 @@ resource "aws_iam_policy" "exec" {
           "logs:CreateLogStream",
           "logs:PutLogEvents"
         ],
-        "Effect"   = "Allow",
+        "Effect" = "Allow",
         "Resource" = [
           var.create_cloudwatch_log_group ? aws_cloudwatch_log_group.ecs[0].arn : var.cloudwatch_log_group_arn,
           "${var.create_cloudwatch_log_group ? aws_cloudwatch_log_group.ecs[0].arn : var.cloudwatch_log_group_arn}:log-stream:*"
@@ -123,12 +124,12 @@ resource "aws_iam_role" "exec" {
   name = "${local.ecs_name}_exec"
 
   assume_role_policy = jsonencode({
-    Version   = "2012-10-17"
+    Version = "2012-10-17"
     Statement = [
       {
-        Action    = "sts:AssumeRole"
-        Effect    = "Allow"
-        Sid       = ""
+        Action = "sts:AssumeRole"
+        Effect = "Allow"
+        Sid    = ""
         Principal = {
           Service = ["ecs-tasks.amazonaws.com", "ec2.amazonaws.com"]
         }
@@ -144,7 +145,7 @@ resource "aws_iam_policy" "task" {
   description = "Datagrok policy to access AWS resources from tasks"
 
   policy = jsonencode({
-    "Version"   = "2012-10-17",
+    "Version" = "2012-10-17",
     "Statement" = [
       {
         "Action" = [
@@ -155,7 +156,7 @@ resource "aws_iam_policy" "task" {
         ],
         "Condition" = {},
         "Effect"    = "Allow",
-        "Resource"  = [
+        "Resource" = [
           module.s3_bucket.s3_bucket_arn,
           "${module.s3_bucket.s3_bucket_arn}/*"
         ]
@@ -167,12 +168,12 @@ resource "aws_iam_role" "task" {
   name = "${local.ecs_name}_task"
 
   assume_role_policy = jsonencode({
-    Version   = "2012-10-17"
+    Version = "2012-10-17"
     Statement = [
       {
-        Action    = "sts:AssumeRole"
-        Effect    = "Allow"
-        Sid       = ""
+        Action = "sts:AssumeRole"
+        Effect = "Allow"
+        Sid    = ""
         Principal = {
           Service = ["ecs-tasks.amazonaws.com", "ec2.amazonaws.com"]
         }
@@ -189,14 +190,14 @@ resource "aws_ecs_task_definition" "datagrok" {
 
   container_definitions = jsonencode([
     {
-      name    = "resolv_conf"
+      name = "resolv_conf"
       command = [
         "${data.aws_region.current.name}.compute.internal",
         "datagrok.${var.name}.${var.environment}.internal",
         "datagrok.${var.name}.${var.environment}.local"
       ]
-      essential        = false
-      image            = "docker/ecs-searchdomain-sidecar:1.0"
+      essential = false
+      image     = "docker/ecs-searchdomain-sidecar:1.0"
       logConfiguration = {
         "LogDriver" : "awslogs",
         "Options" : {
@@ -208,8 +209,8 @@ resource "aws_ecs_task_definition" "datagrok" {
       memoryReservation = 100
     },
     {
-      name                  = "datagrok"
-      image                 = "docker.io/datagrok/datagrok:${var.docker_datagrok_tag}"
+      name  = "datagrok"
+      image = "docker.io/datagrok/datagrok:${var.docker_datagrok_tag}"
       repositoryCredentials = {
         credentialsParameter = try(length(var.docker_hub_secret_arn) > 0, false) ? var.docker_hub_secret_arn : aws_secretsmanager_secret.docker_hub[0].arn
       }
@@ -245,7 +246,7 @@ EOF
           "containerName" : "resolv_conf"
         }
       ]
-      essential        = true
+      essential = true
       logConfiguration = {
         "LogDriver" : "awslogs",
         "Options" : {
@@ -435,7 +436,7 @@ resource "aws_iam_policy" "ec2" {
   description = "Datagrok execution policy for EC2 instance to run ECS tasks"
 
   policy = jsonencode({
-    "Version"   = "2012-10-17",
+    "Version" = "2012-10-17",
     "Statement" = [
       {
         "Action" = [
@@ -467,12 +468,12 @@ resource "aws_iam_role" "ec2" {
   name = "${local.ec2_name}_ec2"
 
   assume_role_policy = jsonencode({
-    Version   = "2012-10-17"
+    Version = "2012-10-17"
     Statement = [
       {
-        Action    = "sts:AssumeRole"
-        Effect    = "Allow"
-        Sid       = ""
+        Action = "sts:AssumeRole"
+        Effect = "Allow"
+        Sid    = ""
         Principal = {
           Service = ["ec2.amazonaws.com"]
         }
@@ -493,7 +494,7 @@ resource "aws_instance" "ec2" {
   ami           = try(length(var.ami_id) > 0, false) ? var.ami_id : data.aws_ami.aws_optimized_ecs[0].id
   instance_type = var.instance_type
   key_name      = try(length(var.key_pair_name) > 0, false) ? var.key_pair_name : aws_key_pair.ec2[0].key_name
-  user_data     = base64encode(templatefile("${path.module}/user_data.sh.tpl", {
+  user_data = base64encode(templatefile("${path.module}/user_data.sh.tpl", {
     ecs_cluster_name = module.ecs.cluster_name
   }))
   availability_zone                    = data.aws_availability_zones.available.names[0]
@@ -521,8 +522,8 @@ resource "aws_instance" "ec2" {
     throughput  = try(length(var.root_volume_throughput) > 0, false) ? var.root_volume_throughput : null
     volume_size = 50
   }
-
-  tags = merge({ Name = local.ec2_name }, local.tags)
+  ebs_optimized = true
+  tags          = merge({ Name = local.ec2_name }, local.tags)
 
   lifecycle {
     ignore_changes = [ami, user_data]

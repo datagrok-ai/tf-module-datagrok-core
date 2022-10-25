@@ -71,7 +71,7 @@ module "db" {
   monitoring_role_description           = "${local.rds_name} RDS monitoring role"
 
   create_db_parameter_group = true
-  parameters                = [
+  parameters = [
     {
       name  = "autovacuum"
       value = 1
