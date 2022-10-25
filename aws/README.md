@@ -206,6 +206,10 @@ module "datagrok_core" {
 | <a name="output_log_bucket"></a> [log\_bucket](#output\_log\_bucket) | The ID of the S3 bucket for logs |
 | <a name="output_private_subnets"></a> [private\_subnets](#output\_private\_subnets) | List of IDs of private subnets |
 | <a name="output_public_subnets"></a> [public\_subnets](#output\_public\_subnets) | List of IDs of public subnets |
+| <a name="output_route53_external_cloudwatch_log_group_arn"></a> [route53\_external\_cloudwatch\_log\_group\_arn](#output\_route53\_external\_cloudwatch\_log\_group\_arn) | The ARN of the CloudWatch Log group for External Route53 Zone |
+| <a name="output_route53_external_cloudwatch_log_group_name"></a> [route53\_external\_cloudwatch\_log\_group\_name](#output\_route53\_external\_cloudwatch\_log\_group\_name) | The name of the CloudWatch Log group for External Route53 Zone |
+| <a name="output_route53_internal_cloudwatch_log_group_arn"></a> [route53\_internal\_cloudwatch\_log\_group\_arn](#output\_route53\_internal\_cloudwatch\_log\_group\_arn) | The ARN of the CloudWatch Log group for Internal Route53 Zone |
+| <a name="output_route53_internal_cloudwatch_log_group_name"></a> [route53\_internal\_cloudwatch\_log\_group\_name](#output\_route53\_internal\_cloudwatch\_log\_group\_name) | The name of the CloudWatch Log group for Internal Route53 Zone |
 | <a name="output_route_53_external_zone"></a> [route\_53\_external\_zone](#output\_route\_53\_external\_zone) | The ID of the Route53 public zone for Datagrok |
 | <a name="output_route_53_internal_zone"></a> [route\_53\_internal\_zone](#output\_route\_53\_internal\_zone) | The ID of the Route53 internal zone for Datagrok |
 | <a name="output_service_discovery_namespace"></a> [service\_discovery\_namespace](#output\_service\_discovery\_namespace) | The ID of the CloudMap for Datagrok |
