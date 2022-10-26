@@ -19,16 +19,16 @@ module "datagrok_core" {
 | Name | Version |
 |------|---------|
 | <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.2.0 |
-| <a name="requirement_aws"></a> [aws](#requirement\_aws) | ~> 4.27.0 |
-| <a name="requirement_random"></a> [random](#requirement\_random) | ~> 3.3.2 |
+| <a name="requirement_aws"></a> [aws](#requirement\_aws) | >= 4.36.1 |
+| <a name="requirement_random"></a> [random](#requirement\_random) | >= 3.4.3 |
 
 ## Providers
 
 | Name | Version |
 |------|---------|
-| <a name="provider_aws"></a> [aws](#provider\_aws) | ~> 4.27.0 |
-| <a name="provider_aws.datagrok-cloudwatch-r53-external"></a> [aws.datagrok-cloudwatch-r53-external](#provider\_aws.datagrok-cloudwatch-r53-external) | ~> 4.27.0 |
-| <a name="provider_random"></a> [random](#provider\_random) | ~> 3.3.2 |
+| <a name="provider_aws"></a> [aws](#provider\_aws) | >= 4.36.1 |
+| <a name="provider_aws.datagrok-cloudwatch-r53-external"></a> [aws.datagrok-cloudwatch-r53-external](#provider\_aws.datagrok-cloudwatch-r53-external) | >= 4.36.1 |
+| <a name="provider_random"></a> [random](#provider\_random) | >= 3.4.3 |
 
 ## Modules
 
