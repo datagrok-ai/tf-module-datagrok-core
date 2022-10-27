@@ -5,19 +5,19 @@ module "vpc" {
 
   name = local.vpc_name
 
-  azs  = data.aws_availability_zones.available.names
+  azs  = slice(data.aws_availability_zones.available.names, 0, 3)
   cidr = var.cidr
 
   public_subnets = [
-    for zone in data.aws_availability_zones.available.names :
+    for zone in slice(data.aws_availability_zones.available.names, 0, 3) :
     cidrsubnet(var.cidr, 7, index(data.aws_availability_zones.available.names, zone) + 1)
   ]
   private_subnets = [
-    for zone in data.aws_availability_zones.available.names :
+    for zone in slice(data.aws_availability_zones.available.names, 0, 3) :
     cidrsubnet(var.cidr, 7, index(data.aws_availability_zones.available.names, zone) + 11)
   ]
   database_subnets = [
-    for zone in data.aws_availability_zones.available.names :
+    for zone in slice(data.aws_availability_zones.available.names, 0, 3) :
     cidrsubnet(var.cidr, 7, index(data.aws_availability_zones.available.names, zone) + 21)
   ]
 
