@@ -1,3 +1,53 @@
+output "name" {
+  description = "The name for a stand."
+  value       = var.name
+}
+
+output "environment" {
+  description = "The environment of a stand."
+  value       = var.environment
+}
+
+output "domain_name" {
+  description = "This is the name of domain for datagrok endpoint. It is used for the external hosted zone in Route53 and to create ACM certificates."
+  value       = var.domain_name
+}
+
+output "full_name" {
+  description = "The full name of a stand."
+  value       = local.full_name
+}
+
+output "vpc_name" {
+  description = "The VPC name for a stand."
+  value       = try(length(var.vpc_id) > 0, false) ? "" : local.vpc_name
+}
+
+output "ecs_name" {
+  description = "The ECS Cluster name of a stand."
+  value       = try(module.ecs.cluster_name, "")
+}
+
+output "lb_name" {
+  description = "The Load Balancer name of a stand."
+  value       = local.lb_name
+}
+
+output "ec2_name" {
+  description = "The EC2 instance name of a stand."
+  value       = var.ecs_launch_type == "EC2" ? local.ec2_name : ""
+}
+
+output "sns_topic_name" {
+  description = "The SNS Topic name of a stand."
+  value       = try(length(var.monitoring_sns_topic_arn) > 0, false) ? "": local.sns_topic_name
+}
+
+output "r53_record" {
+  description = "The Route53 record for a stand."
+  value       = local.r53_record
+}
+
 output "vpc_id" {
   description = "The ID of the VPC"
   value       = try(module.vpc[0].vpc_id, var.vpc_id)
