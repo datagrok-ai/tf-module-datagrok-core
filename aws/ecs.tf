@@ -167,7 +167,9 @@ resource "aws_iam_policy" "ecr" {
         ],
         "Condition" = {},
         "Effect"    = "Allow",
-        "Resource"  = aws_ecr_repository.datagrok[*].repository_url
+        "Resource" = toset([
+          for ecr in aws_ecr_repository.datagrok : ecr.repository_url
+        ])
       }
     ]
   })
