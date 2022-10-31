@@ -57,6 +57,7 @@ resource "random_password" "admin_password" {
   length  = 16
   special = false
 }
+
 # TODO: check AWS principal (autoscaling group) for ecs
 #resource "aws_secretsmanager_secret_policy" "docker_hub" {
 #  count      = try(length(var.docker_hub_secret_arn) > 0, false) ? 0 : 1
@@ -76,6 +77,7 @@ resource "random_password" "admin_password" {
 #}
 #POLICY
 #}
+
 resource "aws_secretsmanager_secret_version" "docker_hub" {
   count     = try(length(var.docker_hub_secret_arn) > 0, false) ? 0 : 1
   secret_id = aws_secretsmanager_secret.docker_hub[0].id
@@ -91,6 +93,41 @@ resource "aws_secretsmanager_secret" "docker_hub" {
   kms_key_id              = var.custom_kms_key ? (try(length(var.kms_key) > 0, false) ? var.kms_key : module.kms[0].key_arn) : null
   recovery_window_in_days = 7
 }
+
+resource "aws_ecr_repository" "datagrok" {
+  for_each             = var.ecr_enabled ? toset(["datagrok"]) : []
+  name                 = each.key
+  image_tag_mutability = var.ecr_image_tag_mutable ? "MUTABLE" : "IMMUTABLE"
+  force_delete         = !var.termination_protection
+  encryption_configuration {
+    encryption_type = "KMS"
+    kms_key         = var.custom_kms_key ? (try(length(var.kms_key) > 0, false) ? var.kms_key : module.kms[0].key_arn) : null
+  }
+  image_scanning_configuration {
+    scan_on_push = var.ecr_image_scan_on_push
+  }
+}
+
+# https://github.com/mathspace/terraform-aws-ecr-docker-image/blob/master/hash.shÏ
+#data "external" "datagrok_hash" {
+#  for_each = var.ecr_enabled ? toset(["datagrok"]) : []
+#  program  = ["${path.module}/docker_hash.sh", var.docker_datagrok_image, var.docker_datagrok_tag]
+#}
+
+resource "null_resource" "datagrok_push" {
+  #  for_each = var.ecr_enabled ? toset(["datagrok"]) : []
+  count = var.ecr_enabled ? 1 : 0
+  triggers = {
+    tag   = var.docker_datagrok_tag == "latest" ? "${var.docker_datagrok_tag}-${timestamp()}" : var.docker_datagrok_tag
+    image = var.docker_datagrok_image
+  }
+
+  provisioner "local-exec" {
+    command     = "${path.module}/ecr_push.sh --tag ${var.docker_datagrok_tag} --image ${var.docker_datagrok_image} --ecr ${aws_ecr_repository.datagrok["datagrok"].repository_url}"
+    interpreter = ["bash", "-c"]
+  }
+}
+
 resource "aws_iam_policy" "exec" {
   name        = "${local.ecs_name}_exec"
   description = "Datagrok execution policy for ECS task"
@@ -210,7 +247,7 @@ resource "aws_ecs_task_definition" "datagrok" {
     },
     {
       name  = "datagrok"
-      image = "docker.io/datagrok/datagrok:${var.docker_datagrok_tag}"
+      image = var.ecr_enabled ? "${aws_ecr_repository.datagrok["datagrok"].repository_url}:${var.docker_datagrok_tag}" : "${var.docker_datagrok_image}:${var.docker_datagrok_tag}"
       repositoryCredentials = {
         credentialsParameter = try(length(var.docker_hub_secret_arn) > 0, false) ? var.docker_hub_secret_arn : aws_secretsmanager_secret.docker_hub[0].arn
       }

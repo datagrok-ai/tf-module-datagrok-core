@@ -433,13 +433,6 @@ variable "key_pair_name" {
   description = "Existing SSH Key Pair name for access to EC2 instance. If not set public_key is required."
 }
 
-variable "docker_datagrok_tag" {
-  type        = string
-  default     = "latest"
-  nullable    = false
-  description = "Tag from Docker Hub for datagrok/datagrok image"
-}
-
 variable "cloudwatch_log_group_name" {
   type        = string
   default     = null
@@ -607,4 +600,36 @@ variable "datagrok_cpu" {
   default     = 2048
   nullable    = false
   description = "Number of cpu units used by the Datagrok FARGATE task. The hard limit of CPU units to present for the task."
+}
+
+variable "ecr_enabled" {
+  type     = bool
+  default  = false
+  nullable = false
+}
+
+variable "ecr_image_tag_mutable" {
+  type     = bool
+  default  = true
+  nullable = false
+}
+
+variable "ecr_image_scan_on_push" {
+  type     = bool
+  default  = true
+  nullable = false
+}
+
+variable "docker_datagrok_image" {
+  type        = string
+  default     = "docker.io/datagrok/datagrok"
+  nullable    = false
+  description = "Datagrok Docker Image registry location. By default the official image from Docker Hub will be used."
+}
+
+variable "docker_datagrok_tag" {
+  type        = string
+  default     = "latest"
+  nullable    = false
+  description = "Tag from Docker Hub for datagrok/datagrok image"
 }
