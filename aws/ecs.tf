@@ -79,7 +79,7 @@ resource "random_password" "admin_password" {
 #}
 
 resource "aws_secretsmanager_secret_version" "docker_hub" {
-  count     = var.docker_hub_credentials.create_secret && !var.ecr_enabled ? 1 : 0
+  count     = try(var.docker_hub_credentials.create_secret, false) && !var.ecr_enabled ? 1 : 0
   secret_id = aws_secretsmanager_secret.docker_hub[0].id
   secret_string = jsonencode({
     "username" : sensitive(var.docker_hub_credentials.user),
@@ -87,7 +87,7 @@ resource "aws_secretsmanager_secret_version" "docker_hub" {
   })
 }
 resource "aws_secretsmanager_secret" "docker_hub" {
-  count                   = var.docker_hub_credentials.create_secret && !var.ecr_enabled ? 1 : 0
+  count                   = try(var.docker_hub_credentials.create_secret, false) && !var.ecr_enabled ? 1 : 0
   name_prefix             = "${local.full_name}_docker_hub"
   description             = "Docker Hub token to download images"
   kms_key_id              = var.custom_kms_key ? (try(length(var.kms_key) > 0, false) ? var.kms_key : module.kms[0].key_arn) : null
@@ -174,7 +174,7 @@ resource "aws_iam_policy" "ecr" {
 }
 
 resource "aws_iam_policy" "docker_hub" {
-  count       = var.docker_hub_credentials.create_secret && !var.ecr_enabled ? 1 : 0
+  count       = try(var.docker_hub_credentials.create_secret, false) && !var.ecr_enabled ? 1 : 0
   name        = "${local.ecs_name}_docker_hub"
   description = "Datagrok Dcoker Hub credentials policy for ECS task"
 
@@ -186,7 +186,7 @@ resource "aws_iam_policy" "docker_hub" {
         "Condition" = {},
         "Effect"    = "Allow",
         "Resource" = [
-          var.docker_hub_credentials.create_secret ? aws_secretsmanager_secret.docker_hub[0].arn : var.docker_hub_credentials.secret_arn
+          try(var.docker_hub_credentials.create_secret, false) ? aws_secretsmanager_secret.docker_hub[0].arn : try(var.docker_hub_credentials.secret_arn, "")
         ]
       }
     ]
@@ -292,7 +292,7 @@ resource "aws_ecs_task_definition" "datagrok" {
       name  = "datagrok"
       image = var.ecr_enabled ? "${aws_ecr_repository.datagrok["datagrok"].repository_url}:${var.docker_datagrok_tag}" : "${var.docker_datagrok_image}:${var.docker_datagrok_tag}"
       repositoryCredentials = {
-        credentialsParameter = var.docker_hub_credentials.create_secret ? aws_secretsmanager_secret.docker_hub[0].arn : var.docker_hub_credentials.secret_arn
+        credentialsParameter = try(var.docker_hub_credentials.create_secret, false) ? aws_secretsmanager_secret.docker_hub[0].arn : try(var.docker_hub_credentials.secret_arn, "")
       }
       environment = [
         {

@@ -130,7 +130,7 @@ output "sns_topic" {
 
 output "docker_hub_secret" {
   description = "The ARN of the Secret for Docker Hub Authorisation"
-  value       = try(aws_secretsmanager_secret.docker_hub[0].arn, var.docker_hub_credentials.secret_arn)
+  value       = var.ecr_enabled ? try(aws_secretsmanager_secret.docker_hub[0].arn, var.docker_hub_credentials.secret_arn) : ""
 }
 
 output "route53_external_cloudwatch_log_group_name" {

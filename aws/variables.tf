@@ -298,11 +298,10 @@ variable "docker_hub_credentials" {
     user          = optional(string)
     secret_arn    = optional(string)
   })
-  default = {
-    create_secret = true
-  }
+  default  = null
+  nullable = true
   validation {
-    condition     = (var.docker_hub_credentials.password != null && var.docker_hub_credentials.user != null) || var.docker_hub_credentials.secret_arn != null
+    condition     = try((var.docker_hub_credentials.create_secret && var.docker_hub_credentials.password != null && var.docker_hub_credentials.user != null) || (!var.docker_hub_credentials.create_secret && var.docker_hub_credentials.secret_arn != null), var.docker_hub_credentials == null)
     error_message = "The Docker Hub credentials should be specified. Either user-password pair or AWS Secret ARN."
   }
   description = "Docker Hub credentials to download images.\n`create_secret` - Specifies if new secret with Docker Hub credentials will be created.\n`user` - Docker Hub User to access Docker Hub and download datagrok images. Can be ommited if `secret_arn` is specified\n`password` - Docker Hub Token to access Docker Hub and download datagrok images. Can be ommited if `secret_arn` is specified\n`secret_arn` - The ARN of AWS Secret which contains Docker Hub Token to access Docker Hub and download datagrok images. If not specified the secret will be created using `user` and `password` variables\nEither user(`user`) - password(`password`) pair or AWS Secret ARN (`secret_arn`) should be specified."
