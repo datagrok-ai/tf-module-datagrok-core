@@ -79,7 +79,7 @@ resource "random_password" "admin_password" {
 #}
 
 resource "aws_secretsmanager_secret_version" "docker_hub" {
-  count     = var.docker_hub_credentials.create_secret ? 1 : 0
+  count     = var.docker_hub_credentials.create_secret && !var.ecr_enabled ? 1 : 0
   secret_id = aws_secretsmanager_secret.docker_hub[0].id
   secret_string = jsonencode({
     "username" : sensitive(var.docker_hub_credentials.user),
@@ -87,7 +87,7 @@ resource "aws_secretsmanager_secret_version" "docker_hub" {
   })
 }
 resource "aws_secretsmanager_secret" "docker_hub" {
-  count                   = var.docker_hub_credentials.create_secret ? 1 : 0
+  count                   = var.docker_hub_credentials.create_secret && !var.ecr_enabled ? 1 : 0
   name_prefix             = "${local.full_name}_docker_hub"
   description             = "Docker Hub token to download images"
   kms_key_id              = var.custom_kms_key ? (try(length(var.kms_key) > 0, false) ? var.kms_key : module.kms[0].key_arn) : null
@@ -136,14 +136,6 @@ resource "aws_iam_policy" "exec" {
     "Version" = "2012-10-17",
     "Statement" = [
       {
-        "Action"    = ["secretsmanager:GetSecretValue"],
-        "Condition" = {},
-        "Effect"    = "Allow",
-        "Resource" = [
-          var.docker_hub_credentials.create_secret ? aws_secretsmanager_secret.docker_hub[0].arn : var.docker_hub_credentials.secret_arn
-        ]
-      },
-      {
         "Action" = [
           "logs:CreateLogStream",
           "logs:PutLogEvents"
@@ -157,6 +149,50 @@ resource "aws_iam_policy" "exec" {
     ]
   })
 }
+
+resource "aws_iam_policy" "ecr" {
+  count       = var.ecr_enabled ? 1 : 0
+  name        = "${local.ecs_name}_ecr"
+  description = "Datagrok ECR pull policy for ECS task"
+
+  policy = jsonencode({
+    "Version" = "2012-10-17",
+    "Statement" = [
+      {
+        "Action" = [
+          "ecr:BatchCheckLayerAvailability",
+          "ecr:BatchGetImage",
+          "ecr:GetDownloadUrlForLayer",
+          "ecr:GetAuthorizationToken"
+        ],
+        "Condition" = {},
+        "Effect"    = "Allow",
+        "Resource"  = aws_ecr_repository.datagrok[*].repository_url
+      }
+    ]
+  })
+}
+
+resource "aws_iam_policy" "docker_hub" {
+  count       = var.docker_hub_credentials.create_secret && !var.ecr_enabled ? 1 : 0
+  name        = "${local.ecs_name}_docker_hub"
+  description = "Datagrok Dcoker Hub credentials policy for ECS task"
+
+  policy = jsonencode({
+    "Version" = "2012-10-17",
+    "Statement" = [
+      {
+        "Action"    = ["secretsmanager:GetSecretValue"],
+        "Condition" = {},
+        "Effect"    = "Allow",
+        "Resource" = [
+          var.docker_hub_credentials.create_secret ? aws_secretsmanager_secret.docker_hub[0].arn : var.docker_hub_credentials.secret_arn
+        ]
+      }
+    ]
+  })
+}
+
 resource "aws_iam_role" "exec" {
   name = "${local.ecs_name}_exec"
 
@@ -173,7 +209,10 @@ resource "aws_iam_role" "exec" {
       },
     ]
   })
-  managed_policy_arns = [aws_iam_policy.exec.arn]
+  managed_policy_arns = compact([
+    aws_iam_policy.exec.arn,
+    var.ecr_enabled ? aws_iam_policy.ecr[0].arn : aws_iam_policy.docker_hub[0].arn
+  ])
 
   tags = local.tags
 }
@@ -217,7 +256,11 @@ resource "aws_iam_role" "task" {
       },
     ]
   })
-  managed_policy_arns = [aws_iam_policy.exec.arn, aws_iam_policy.task.arn]
+  managed_policy_arns = compact([
+    aws_iam_policy.exec.arn,
+    aws_iam_policy.task.arn,
+    var.ecr_enabled ? aws_iam_policy.ecr[0].arn : aws_iam_policy.docker_hub[0].arn
+  ])
   #  managed_policy_arns = [aws_iam_policy.task.arn]
 
   tags = local.tags
@@ -517,7 +560,11 @@ resource "aws_iam_role" "ec2" {
       },
     ]
   })
-  managed_policy_arns = [aws_iam_policy.exec.arn, aws_iam_policy.ec2.arn]
+  managed_policy_arns = compact([
+    aws_iam_policy.exec.arn,
+    aws_iam_policy.ec2.arn,
+    var.ecr_enabled ? aws_iam_policy.ecr[0].arn : aws_iam_policy.docker_hub[0].arn
+  ])
 
   tags = local.tags
 }
