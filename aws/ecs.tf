@@ -79,15 +79,15 @@ resource "random_password" "admin_password" {
 #}
 
 resource "aws_secretsmanager_secret_version" "docker_hub" {
-  count     = try(length(var.docker_hub_secret_arn) > 0, false) ? 0 : 1
+  count     = var.docker_hub_credentials.create_secret ? 1 : 0
   secret_id = aws_secretsmanager_secret.docker_hub[0].id
   secret_string = jsonencode({
-    "username" : var.docker_hub_user,
-    "password" : var.docker_hub_password
+    "username" : sensitive(var.docker_hub_credentials.user),
+    "password" : sensitive(var.docker_hub_credentials.password)
   })
 }
 resource "aws_secretsmanager_secret" "docker_hub" {
-  count                   = try(length(var.docker_hub_secret_arn) > 0, false) ? 0 : 1
+  count                   = var.docker_hub_credentials.create_secret ? 1 : 0
   name_prefix             = "${local.full_name}_docker_hub"
   description             = "Docker Hub token to download images"
   kms_key_id              = var.custom_kms_key ? (try(length(var.kms_key) > 0, false) ? var.kms_key : module.kms[0].key_arn) : null
@@ -140,7 +140,7 @@ resource "aws_iam_policy" "exec" {
         "Condition" = {},
         "Effect"    = "Allow",
         "Resource" = [
-          try(length(var.docker_hub_secret_arn) > 0, false) ? var.docker_hub_secret_arn : aws_secretsmanager_secret.docker_hub[0].arn
+          var.docker_hub_credentials.create_secret ? aws_secretsmanager_secret.docker_hub[0].arn : var.docker_hub_credentials.secret_arn
         ]
       },
       {
@@ -249,7 +249,7 @@ resource "aws_ecs_task_definition" "datagrok" {
       name  = "datagrok"
       image = var.ecr_enabled ? "${aws_ecr_repository.datagrok["datagrok"].repository_url}:${var.docker_datagrok_tag}" : "${var.docker_datagrok_image}:${var.docker_datagrok_tag}"
       repositoryCredentials = {
-        credentialsParameter = try(length(var.docker_hub_secret_arn) > 0, false) ? var.docker_hub_secret_arn : aws_secretsmanager_secret.docker_hub[0].arn
+        credentialsParameter = var.docker_hub_credentials.create_secret ? aws_secretsmanager_secret.docker_hub[0].arn : var.docker_hub_credentials.secret_arn
       }
       environment = [
         {
