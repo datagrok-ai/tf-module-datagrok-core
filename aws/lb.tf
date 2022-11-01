@@ -154,7 +154,7 @@ module "lb_int" {
   name                       = "${local.lb_name}-int"
   load_balancer_type         = "application"
   vpc_id                     = try(module.vpc[0].vpc_id, var.vpc_id)
-  subnets                    = try( module.vpc[0].private_subnets, var.private_subnet_ids)
+  subnets                    = try(module.vpc[0].private_subnets, var.private_subnet_ids)
   security_groups            = [module.lb_int_sg.security_group_id]
   drop_invalid_header_fields = true
 
