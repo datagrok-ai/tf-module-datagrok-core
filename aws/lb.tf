@@ -214,7 +214,7 @@ provider "aws" {
 }
 
 resource "aws_cloudwatch_log_group" "external" {
-  provider          = "aws.datagrok-cloudwatch-r53-external"
+  provider          = aws.datagrok-cloudwatch-r53-external
   count             = var.route53_enabled && var.enable_route53_logging && var.create_route53_external_zone ? 1 : 0
   name              = "/aws/route53/${aws_route53_zone.external[0].name}"
   retention_in_days = 7
@@ -238,7 +238,7 @@ data "aws_iam_policy_document" "external" {
 }
 
 resource "aws_cloudwatch_log_resource_policy" "external" {
-  provider        = "aws.datagrok-cloudwatch-r53-external"
+  provider        = aws.datagrok-cloudwatch-r53-external
   count           = var.route53_enabled && var.enable_route53_logging && var.create_route53_external_zone ? 1 : 0
   policy_document = data.aws_iam_policy_document.external[0].json
   policy_name     = "${var.name}-${var.environment}-route53"
