@@ -4,7 +4,7 @@ module "lb_ext_sg" {
 
   name        = "${local.lb_name}-lb-ext"
   description = "${local.lb_name} Datagrok LB Security Group"
-  vpc_id      = try(length(var.vpc_id) > 0, false) ? var.vpc_id : module.vpc[0].vpc_id
+  vpc_id      = try(module.vpc[0].vpc_id, var.vpc_id)
 
   egress_with_source_security_group_id = [
     {
@@ -39,7 +39,7 @@ module "lb_int_sg" {
 
   name        = "${local.lb_name}-lb-int"
   description = "${local.lb_name}-int Datagrok LB Security Group"
-  vpc_id      = try(length(var.vpc_id) > 0, false) ? var.vpc_id : module.vpc[0].vpc_id
+  vpc_id      = try(module.vpc[0].vpc_id, var.vpc_id)
 
   egress_with_source_security_group_id = [
     {
@@ -57,14 +57,14 @@ module "lb_int_sg" {
       to_port     = 8080
       protocol    = "tcp"
       description = "Access to Datagrok Nginx"
-      cidr_blocks = try(length(var.vpc_id) > 0, false) ? var.cidr : module.vpc[0].vpc_cidr_block
+      cidr_blocks = try(module.vpc[0].vpc_cidr_block, var.cidr)
     },
     {
       from_port   = 80
       to_port     = 80
       protocol    = "tcp"
       description = "Access to Datagrok Nginx"
-      cidr_blocks = try(length(var.vpc_id) > 0, false) ? var.cidr : module.vpc[0].vpc_cidr_block
+      cidr_blocks = try(module.vpc[0].vpc_cidr_block, var.cidr)
     },
   ]
 }
@@ -110,8 +110,8 @@ module "lb_ext" {
 
   name                       = "${local.lb_name}-ext"
   load_balancer_type         = "application"
-  vpc_id                     = try(length(var.vpc_id) > 0, false) ? var.vpc_id : module.vpc[0].vpc_id
-  subnets                    = try(length(var.vpc_id) > 0, false) ? var.public_subnet_ids : module.vpc[0].public_subnets
+  vpc_id                     = try(module.vpc[0].vpc_id, var.vpc_id)
+  subnets                    = try(module.vpc[0].public_subnets, var.public_subnet_ids)
   security_groups            = [module.lb_ext_sg.security_group_id]
   drop_invalid_header_fields = true
 
@@ -153,8 +153,8 @@ module "lb_int" {
 
   name                       = "${local.lb_name}-int"
   load_balancer_type         = "application"
-  vpc_id                     = try(length(var.vpc_id) > 0, false) ? var.vpc_id : module.vpc[0].vpc_id
-  subnets                    = try(length(var.vpc_id) > 0, false) ? var.private_subnet_ids : module.vpc[0].private_subnets
+  vpc_id                     = try(module.vpc[0].vpc_id, var.vpc_id)
+  subnets                    = try( module.vpc[0].private_subnets, var.private_subnet_ids)
   security_groups            = [module.lb_int_sg.security_group_id]
   drop_invalid_header_fields = true
 

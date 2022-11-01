@@ -46,7 +46,7 @@ data "aws_iam_policy_document" "bucket_policy" {
     ]
     condition {
       test     = "StringNotEquals"
-      values   = [try(length(var.vpc_id) > 0, false) ? var.vpc_endpoint_id : module.vpc_endpoint[0].endpoints["s3"].id]
+      values   = [try(module.vpc_endpoint[0].endpoints["s3"].id, var.vpc_endpoint_id)]
       variable = "aws:SourceVpce"
     }
   }

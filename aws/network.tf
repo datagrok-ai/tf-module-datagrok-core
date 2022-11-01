@@ -1,30 +1,30 @@
 module "vpc" {
-  count   = try(length(var.vpc_id) > 0, false) ? 0 : 1
+  count   = var.vpc_create ? 1 : 0
   source  = "registry.terraform.io/terraform-aws-modules/vpc/aws"
   version = "~> 3.14.2"
 
   name = local.vpc_name
 
-  azs  = slice(data.aws_availability_zones.available.names, 0, 3)
+  azs  = slice(data.aws_availability_zones.available.names, 0, var.vpc_subnets_count)
   cidr = var.cidr
 
   public_subnets = [
-    for zone in slice(data.aws_availability_zones.available.names, 0, 3) :
-    cidrsubnet(var.cidr, 7, index(data.aws_availability_zones.available.names, zone) + 1)
+  for zone in slice(data.aws_availability_zones.available.names, 0, var.vpc_subnets_count) :
+  cidrsubnet(var.cidr, 7, index(data.aws_availability_zones.available.names, zone) + 1)
   ]
   private_subnets = [
-    for zone in slice(data.aws_availability_zones.available.names, 0, 3) :
-    cidrsubnet(var.cidr, 7, index(data.aws_availability_zones.available.names, zone) + 11)
+  for zone in slice(data.aws_availability_zones.available.names, 0, var.vpc_subnets_count) :
+  cidrsubnet(var.cidr, 7, index(data.aws_availability_zones.available.names, zone) + 11)
   ]
   database_subnets = [
-    for zone in slice(data.aws_availability_zones.available.names, 0, 3) :
-    cidrsubnet(var.cidr, 7, index(data.aws_availability_zones.available.names, zone) + 21)
+  for zone in slice(data.aws_availability_zones.available.names, 0, var.vpc_subnets_count) :
+  cidrsubnet(var.cidr, 7, index(data.aws_availability_zones.available.names, zone) + 21)
   ]
 
   enable_ipv6                            = false
   create_igw                             = true
   enable_nat_gateway                     = true
-  single_nat_gateway                     = false
+  single_nat_gateway                     = var.vpc_single_nat_gateway
   one_nat_gateway_per_az                 = false
   map_public_ip_on_launch                = true
   create_database_subnet_group           = true
@@ -47,7 +47,7 @@ module "vpc" {
   tags = local.tags
 }
 data "aws_iam_policy_document" "vpc_endpoint_policy" {
-  count = try(length(var.vpc_id) > 0, false) ? 0 : 1
+  count = var.vpc_create ? 1 : 0
   statement {
     actions = [
       "s3:PutObject",
@@ -69,7 +69,7 @@ data "aws_iam_policy_document" "vpc_endpoint_policy" {
   }
 }
 module "vpc_endpoint" {
-  count   = try(length(var.vpc_id) > 0, false) ? 0 : 1
+  count   = var.vpc_create ? 1 : 0
   source  = "registry.terraform.io/terraform-aws-modules/vpc/aws//modules/vpc-endpoints"
   version = "~> 3.14.2"
 

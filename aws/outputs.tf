@@ -20,7 +20,7 @@ output "full_name" {
 
 output "vpc_name" {
   description = "The VPC name for a stand."
-  value       = try(length(var.vpc_id) > 0, false) ? "" : local.vpc_name
+  value       = var.vpc_create ? local.vpc_name : ""
 }
 
 output "ecs_name" {
