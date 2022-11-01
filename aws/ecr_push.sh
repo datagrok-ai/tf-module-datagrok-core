@@ -15,44 +15,42 @@ function help() {
   echo "--tag     Image tag to publish from Docker Hub to ECR repository, for example, latest"
 }
 
-while [[ $# -gt 0 ]]
-do
-    key="$1"
-    case $key in
-        --image)
-        image=$2
-        shift
-        ;;
-        --ecr)
-        ecr=$2
-        shift
-        ;;
-        --tag)
-        tag=${2:-latest}
-        shift
-        ;;
-        *)
-        echo "option \'$1\' is not understood!"
-        help
-        exit -1
-        break
-        ;;
-    esac
+while [[ $# -gt 0 ]]; do
+  key="$1"
+  case $key in
+  --image)
+    image=$2
     shift
+    ;;
+  --ecr)
+    ecr=$2
+    shift
+    ;;
+  --tag)
+    tag=${2:-latest}
+    shift
+    ;;
+  *)
+    echo "option \'$1\' is not understood!"
+    help
+    exit -1
+    break
+    ;;
+  esac
+  shift
 done
 
-
-if [ -z "${image}" ] || [ -z "${ecr}" ]
-then
+if [ -z "${image}" ] || [ -z "${ecr}" ]; then
   echo 'You need to specify both Docker Hub image and ECR repository URL'
   help
   exit 1
 fi
 
 region="$(echo "${ecr}" | awk -F'.' '{print $4}')"
+ecr_url="$(echo "${ecr}" | awk -F'/' '{print $1}')"
 
 echo "Login to ECR Repository: ${ecr}"
-aws ecr get-login-password --region "${region}" | docker login --username AWS --password-stdin "${ecr}"
+aws ecr get-login-password --region "${region}" | docker login --username AWS --password-stdin "${ecr_url}"
 echo "Pull image from Docker Hub: ${image}:${tag}"
 docker pull "${image}:${tag}"
 echo "Copy image from Docker Hub ${image}:${tag} to ECR ${ecr}:${tag}"
