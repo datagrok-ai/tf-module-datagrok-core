@@ -77,7 +77,14 @@ resource "random_password" "admin_password" {
 #}
 #POLICY
 #}
-
+resource "aws_secretsmanager_secret" "docker_hub" {
+  count                   = try(var.docker_hub_credentials.create_secret, false) && !var.ecr_enabled ? 1 : 0
+  name_prefix             = "${local.full_name}_docker_hub"
+  description             = "Docker Hub token to download images"
+  kms_key_id              = var.custom_kms_key ? (try(length(var.kms_key) > 0, false) ? var.kms_key : module.kms[0].key_arn) : null
+  recovery_window_in_days = 7
+  tags                    = local.tags
+}
 resource "aws_secretsmanager_secret_version" "docker_hub" {
   count     = try(var.docker_hub_credentials.create_secret, false) && !var.ecr_enabled ? 1 : 0
   secret_id = aws_secretsmanager_secret.docker_hub[0].id
@@ -85,13 +92,6 @@ resource "aws_secretsmanager_secret_version" "docker_hub" {
     "username" : sensitive(var.docker_hub_credentials.user),
     "password" : sensitive(var.docker_hub_credentials.password)
   })
-}
-resource "aws_secretsmanager_secret" "docker_hub" {
-  count                   = try(var.docker_hub_credentials.create_secret, false) && !var.ecr_enabled ? 1 : 0
-  name_prefix             = "${local.full_name}_docker_hub"
-  description             = "Docker Hub token to download images"
-  kms_key_id              = var.custom_kms_key ? (try(length(var.kms_key) > 0, false) ? var.kms_key : module.kms[0].key_arn) : null
-  recovery_window_in_days = 7
 }
 
 resource "aws_ecr_repository" "datagrok" {
@@ -106,6 +106,7 @@ resource "aws_ecr_repository" "datagrok" {
   image_scanning_configuration {
     scan_on_push = var.ecr_image_scan_on_push
   }
+  tags = local.tags
 }
 
 # https://github.com/mathspace/terraform-aws-ecr-docker-image/blob/master/hash.shÏ
@@ -126,6 +127,8 @@ resource "null_resource" "datagrok_push" {
     command     = "${path.module}/ecr_push.sh --tag ${var.docker_datagrok_tag} --image ${var.docker_datagrok_image} --ecr ${aws_ecr_repository.datagrok["datagrok"].repository_url}"
     interpreter = ["bash", "-c"]
   }
+
+  depends_on = [aws_ecr_repository.datagrok]
 }
 
 resource "aws_iam_policy" "exec" {

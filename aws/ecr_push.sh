@@ -51,7 +51,11 @@ fi
 
 region="$(echo "${ecr}" | awk -F'.' '{print $4}')"
 
+echo "Login to ECR Repository: ${ecr}"
 aws ecr get-login-password --region "${region}" | docker login --username AWS --password-stdin "${ecr}"
+echo "Pull image from Docker Hub: ${image}:${tag}"
 docker pull "${image}:${tag}"
+echo "Copy image from Docker Hub ${image}:${tag} to ECR ${ecr}:${tag}"
 docker tag "${image}:${tag}" "${ecr}:${tag}"
+echo "Push image to ECR ${ecr}:${tag}"
 docker push "${ecr}:${tag}"
