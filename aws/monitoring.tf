@@ -39,7 +39,7 @@ module "notify_slack" {
   sns_topic_kms_key_id = local.create_kms ? module.kms[0].key_id : null
   sns_topic_tags       = local.tags
   kms_key_arn          = local.create_kms ? module.kms[0].key_id : null
-  slack_webhook_url    = local.create_kms ? aws_kms_ciphertext.slack_url[0].ciphertext_blob : var.monitoring_slack_webhook_url
+  slack_webhook_url    = local.create_kms ? aws_kms_ciphertext.slack_url[0].ciphertext_blob : var.monitoring.slack_webhook_url
   slack_channel        = var.monitoring.slack_channel
   slack_username       = var.monitoring.slack_username
   slack_emoji          = var.monitoring.slack_emoji
