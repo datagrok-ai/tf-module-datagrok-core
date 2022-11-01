@@ -226,7 +226,7 @@ resource "aws_cloudwatch_metric_alarm" "lb_target" {
 
 resource "aws_cloudwatch_metric_alarm" "datagrok_lb_5xx_count" {
   count               = var.monitoring_alarms ? 1 : 0
-  alarm_name          = "${local.ecs_name}-datagrok-lb-5xx"
+  alarm_name          = "${local.lb_name}-datagrok-lb-5xx"
   comparison_operator = "GreaterThanThreshold"
   evaluation_periods  = "5"
   metric_name         = "HTTPCode_ELB_5XX_Count"
@@ -256,7 +256,7 @@ resource "aws_cloudwatch_metric_alarm" "datagrok_lb_5xx_count" {
 
 resource "aws_cloudwatch_metric_alarm" "db_high_cpu" {
   count               = var.monitoring_alarms ? 1 : 0
-  alarm_name          = "${local.ecs_name}-db-high-cpu"
+  alarm_name          = "${local.rds_name}-db-high-cpu"
   comparison_operator = "GreaterThanThreshold"
   evaluation_periods  = 1
   metric_name         = "CPUUtilization"
@@ -285,7 +285,7 @@ resource "aws_cloudwatch_metric_alarm" "db_high_cpu" {
 
 resource "aws_cloudwatch_metric_alarm" "db_low_cpu_credit" {
   count               = var.monitoring_alarms && length(regexall("(t2|t3)", var.rds_instance_class)) > 0 ? 1 : 0
-  alarm_name          = "${local.ecs_name}-db-low-cpu-credit"
+  alarm_name          = "${local.rds_name}-db-low-cpu-credit"
   comparison_operator = "LessThanThreshold"
   evaluation_periods  = "1"
   metric_name         = "CPUCreditBalance"
@@ -314,7 +314,7 @@ resource "aws_cloudwatch_metric_alarm" "db_low_cpu_credit" {
 
 resource "aws_cloudwatch_metric_alarm" "db_high_disk_queue" {
   count               = var.monitoring_alarms ? 1 : 0
-  alarm_name          = "${local.ecs_name}-db-high-disk-queue"
+  alarm_name          = "${local.rds_name}-db-high-disk-queue"
   comparison_operator = "GreaterThanThreshold"
   evaluation_periods  = "1"
   metric_name         = "DiskQueueDepth"
@@ -343,7 +343,7 @@ resource "aws_cloudwatch_metric_alarm" "db_high_disk_queue" {
 
 resource "aws_cloudwatch_metric_alarm" "db_low_disk_space" {
   count               = var.monitoring_alarms ? 1 : 0
-  alarm_name          = "${local.ecs_name}-db-low-disk-space"
+  alarm_name          = "${local.rds_name}-db-low-disk-space"
   comparison_operator = "LessThanThreshold"
   evaluation_periods  = "1"
   metric_name         = "FreeStorageSpace"
@@ -372,7 +372,7 @@ resource "aws_cloudwatch_metric_alarm" "db_low_disk_space" {
 
 resource "aws_cloudwatch_metric_alarm" "db_anomalous_connection" {
   count               = var.monitoring_alarms ? 1 : 0
-  alarm_name          = "${local.ecs_name}-db-anomaly-connections"
+  alarm_name          = "${local.rds_name}-db-anomaly-connections"
   comparison_operator = "GreaterThanUpperThreshold"
   evaluation_periods  = "1"
   threshold_metric_id = "e1"

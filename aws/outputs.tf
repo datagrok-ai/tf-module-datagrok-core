@@ -40,7 +40,7 @@ output "ec2_name" {
 
 output "sns_topic_name" {
   description = "The SNS Topic name of a stand."
-  value       = try(length(var.monitoring_sns_topic_arn) > 0, false) ? "": local.sns_topic_name
+  value       = try(length(var.monitoring_sns_topic_arn) > 0, false) ? "" : local.sns_topic_name
 }
 
 output "r53_record" {
