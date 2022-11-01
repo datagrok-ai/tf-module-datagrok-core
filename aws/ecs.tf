@@ -296,8 +296,8 @@ resource "aws_ecs_task_definition" "datagrok" {
     {
       name  = "datagrok"
       image = var.ecr_enabled ? "${aws_ecr_repository.datagrok["datagrok"].repository_url}:${var.docker_datagrok_tag}" : "${var.docker_datagrok_image}:${var.docker_datagrok_tag}"
-      repositoryCredentials = {
-        credentialsParameter = try(var.docker_hub_credentials.create_secret, false) ? aws_secretsmanager_secret.docker_hub[0].arn : try(var.docker_hub_credentials.secret_arn, "")
+      repositoryCredentials = var.ecr_enabled ? {} : {
+        credentialsParameter = try(aws_secretsmanager_secret.docker_hub[0].arn, var.docker_hub_credentials.secret_arn)
       }
       environment = [
         {
