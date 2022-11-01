@@ -649,5 +649,5 @@ variable "docker_datagrok_tag" {
   type        = string
   default     = "latest"
   nullable    = false
-  description = "Tag from Docker Hub for datagrok/datagrok image"
+  description = "Tag from Docker Registry for Datagrok Docker Image"
 }

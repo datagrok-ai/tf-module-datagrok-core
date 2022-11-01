@@ -17,6 +17,13 @@ locals {
   create_kms         = var.custom_kms_key && !try(length(var.kms_key) > 0, false)
   admin_password_key = var.set_admin_password ? ("\"adminPassword\": " + try(length(var.admin_password) > 0, false) ? "\"${var.admin_password}\"" : "\"${random_password.admin_password[0].result}\"") : ""
 
+  images = {
+    datagrok = {
+      image = var.docker_datagrok_image
+      tag   = var.docker_datagrok_tag
+    }
+  }
+
   targets = [
     {
       name             = "datagrok"

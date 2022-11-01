@@ -94,8 +94,8 @@ resource "aws_secretsmanager_secret_version" "docker_hub" {
   })
 }
 
-resource "aws_ecr_repository" "datagrok" {
-  for_each             = var.ecr_enabled ? toset(["datagrok"]) : []
+resource "aws_ecr_repository" "ecr" {
+  for_each             = var.ecr_enabled ? local.images : {}
   name                 = each.key
   image_tag_mutability = var.ecr_image_tag_mutable ? "MUTABLE" : "IMMUTABLE"
   force_delete         = !var.termination_protection
@@ -110,25 +110,24 @@ resource "aws_ecr_repository" "datagrok" {
 }
 
 # https://github.com/mathspace/terraform-aws-ecr-docker-image/blob/master/hash.shÏ
-#data "external" "datagrok_hash" {
-#  for_each = var.ecr_enabled ? toset(["datagrok"]) : []
-#  program  = ["${path.module}/docker_hash.sh", var.docker_datagrok_image, var.docker_datagrok_tag]
+#data "external" "docker_hash" {
+#  for_each = var.ecr_enabled ? local.images : {}
+#  program  = ["${path.module}/docker_hash.sh", each.value["image"], each.value["tag"]]
 #}
 
-resource "null_resource" "datagrok_push" {
-  #  for_each = var.ecr_enabled ? toset(["datagrok"]) : []
-  count = var.ecr_enabled ? 1 : 0
+resource "null_resource" "ecr_push" {
+  for_each = var.ecr_enabled ? local.images : {}
   triggers = {
-    tag   = var.docker_datagrok_tag == "latest" ? "${var.docker_datagrok_tag}-${timestamp()}" : var.docker_datagrok_tag
-    image = var.docker_datagrok_image
+    tag   = each.value["tag"] == "latest" ? "${each.value["tag"]}-${timestamp()}" : each.value["tag"]
+    image = each.value["image"]
   }
 
   provisioner "local-exec" {
-    command     = "${path.module}/ecr_push.sh --tag ${var.docker_datagrok_tag} --image ${var.docker_datagrok_image} --ecr ${aws_ecr_repository.datagrok["datagrok"].repository_url}"
+    command     = "${path.module}/ecr_push.sh --tag ${each.value["tag"]} --image ${each.value["image"]} --ecr ${aws_ecr_repository.ecr[each.key].repository_url}"
     interpreter = ["bash", "-c"]
   }
 
-  depends_on = [aws_ecr_repository.datagrok]
+  depends_on = [aws_ecr_repository.ecr]
 }
 
 resource "aws_iam_policy" "exec" {
@@ -171,7 +170,7 @@ resource "aws_iam_policy" "ecr" {
         "Condition" = {},
         "Effect"    = "Allow",
         "Resource" = toset([
-          for ecr in aws_ecr_repository.datagrok : ecr.arn
+          for ecr in aws_ecr_repository.ecr : ecr.arn
         ])
       }
     ]
@@ -181,7 +180,7 @@ resource "aws_iam_policy" "ecr" {
 resource "aws_iam_policy" "docker_hub" {
   count       = try(var.docker_hub_credentials.create_secret, false) && !var.ecr_enabled ? 1 : 0
   name        = "${local.ecs_name}_docker_hub"
-  description = "Datagrok Dcoker Hub credentials policy for ECS task"
+  description = "Datagrok Docker Hub credentials policy for ECS task"
 
   policy = jsonencode({
     "Version" = "2012-10-17",
@@ -295,7 +294,7 @@ resource "aws_ecs_task_definition" "datagrok" {
     },
     merge({
       name  = "datagrok"
-      image = var.ecr_enabled ? "${aws_ecr_repository.datagrok["datagrok"].repository_url}:${var.docker_datagrok_tag}" : "${var.docker_datagrok_image}:${var.docker_datagrok_tag}"
+      image = var.ecr_enabled ? "${aws_ecr_repository.ecr["datagrok"].repository_url}:${var.docker_datagrok_tag}" : "${var.docker_datagrok_image}:${var.docker_datagrok_tag}"
       environment = [
         {
           name  = "GROK_MODE",
