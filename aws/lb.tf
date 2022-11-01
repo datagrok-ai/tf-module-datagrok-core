@@ -81,7 +81,7 @@ resource "aws_route53_zone" "external" {
 module "acm" {
   source  = "registry.terraform.io/terraform-aws-modules/acm/aws"
   version = "~> 3.5.0"
-  count   = try(length(var.acm_cert_arn) > 0, false) ? 0 : 1
+  count   = var.acm_cert_create ? 1 : 0
 
   domain_name       = var.domain_name
   zone_id           = var.route53_enabled && var.create_route53_external_zone ? aws_route53_zone.external[0].zone_id : data.aws_route53_zone.external[0].zone_id
@@ -115,8 +115,8 @@ module "lb_ext" {
   security_groups            = [module.lb_ext_sg.security_group_id]
   drop_invalid_header_fields = true
 
-  access_logs = var.enable_bucket_logging ? {
-    bucket  = try(length(var.log_bucket) > 0, false) ? var.log_bucket : module.log_bucket.s3_bucket_id
+  access_logs = var.bucket_logging.enabled ? {
+    bucket  = var.bucket_logging.create_log_bucket ? module.log_bucket.s3_bucket_id : var.bucket_logging.log_bucket
     prefix  = "lb"
     enabled = true
   } : { bucket = "", enabled = false }
@@ -127,7 +127,7 @@ module "lb_ext" {
     {
       port               = 443
       protocol           = "HTTPS"
-      certificate_arn    = try(length(var.acm_cert_arn) > 0, false) ? var.acm_cert_arn : module.acm[0].acm_certificate_arn
+      certificate_arn    = try(module.acm[0].acm_certificate_arn, var.acm_cert_arn)
       target_group_index = 0
     }
   ]
@@ -158,8 +158,8 @@ module "lb_int" {
   security_groups            = [module.lb_int_sg.security_group_id]
   drop_invalid_header_fields = true
 
-  access_logs = var.enable_bucket_logging ? {
-    bucket  = try(length(var.log_bucket) > 0, false) ? var.log_bucket : module.log_bucket.s3_bucket_id
+  access_logs = var.bucket_logging.enabled ? {
+    bucket  = var.bucket_logging.create_log_bucket ? module.log_bucket.s3_bucket_id : var.bucket_logging.log_bucket
     prefix  = "lb"
     enabled = true
   } : { bucket = "", enabled = false }
@@ -218,7 +218,7 @@ resource "aws_cloudwatch_log_group" "external" {
   count             = var.route53_enabled && var.enable_route53_logging && var.create_route53_external_zone ? 1 : 0
   name              = "/aws/route53/${aws_route53_zone.external[0].name}"
   retention_in_days = 7
-  kms_key_id        = var.custom_kms_key ? (try(length(var.kms_key) > 0, false) ? var.kms_key : module.kms[0].key_arn) : null
+  kms_key_id        = var.custom_kms_key ? try(module.kms[0].key_arn, var.kms_key) : null
   tags              = local.tags
 }
 

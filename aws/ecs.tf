@@ -2,7 +2,7 @@ resource "aws_cloudwatch_log_group" "ecs" {
   count             = var.create_cloudwatch_log_group ? 1 : 0
   name              = "/aws/ecs/${local.full_name}"
   retention_in_days = 7
-  kms_key_id        = var.custom_kms_key ? (try(length(var.kms_key) > 0, false) ? var.kms_key : module.kms[0].key_arn) : null
+  kms_key_id        = var.custom_kms_key ? try(module.kms[0].key_arn, var.kms_key) : null
   tags              = local.tags
 }
 module "sg" {
@@ -81,7 +81,7 @@ resource "aws_secretsmanager_secret" "docker_hub" {
   count                   = try(var.docker_hub_credentials.create_secret, false) && !var.ecr_enabled ? 1 : 0
   name_prefix             = "${local.full_name}_docker_hub"
   description             = "Docker Hub token to download images"
-  kms_key_id              = var.custom_kms_key ? (try(length(var.kms_key) > 0, false) ? var.kms_key : module.kms[0].key_arn) : null
+  kms_key_id              = var.custom_kms_key ? try(module.kms[0].key_arn, var.kms_key) : null
   recovery_window_in_days = 7
   tags                    = local.tags
 }
@@ -101,7 +101,7 @@ resource "aws_ecr_repository" "ecr" {
   force_delete         = !var.termination_protection
   encryption_configuration {
     encryption_type = "KMS"
-    kms_key         = var.custom_kms_key ? (try(length(var.kms_key) > 0, false) ? var.kms_key : module.kms[0].key_arn) : null
+    kms_key         = var.custom_kms_key ? try(module.kms[0].key_arn, var.kms_key) : null
   }
   image_scanning_configuration {
     scan_on_push = var.ecr_image_scan_on_push
@@ -190,7 +190,7 @@ resource "aws_iam_policy" "docker_hub" {
         "Condition" = {},
         "Effect"    = "Allow",
         "Resource" = [
-          try(var.docker_hub_credentials.create_secret, false) ? aws_secretsmanager_secret.docker_hub[0].arn : try(var.docker_hub_credentials.secret_arn, "")
+          try(aws_secretsmanager_secret.docker_hub[0].arn, var.docker_hub_credentials.secret_arn)
         ]
       }
     ]
@@ -283,11 +283,11 @@ resource "aws_ecs_task_definition" "datagrok" {
       essential = false
       image     = "docker/ecs-searchdomain-sidecar:1.0"
       logConfiguration = {
-        "LogDriver" : "awslogs",
-        "Options" : {
-          "awslogs-group" : var.create_cloudwatch_log_group ? aws_cloudwatch_log_group.ecs[0].name : var.cloudwatch_log_group_name
-          "awslogs-region" : data.aws_region.current.name
-          "awslogs-stream-prefix" : "datagrok"
+        LogDriver = "awslogs"
+        Options = {
+          awslogs-group         = var.create_cloudwatch_log_group ? aws_cloudwatch_log_group.ecs[0].name : var.cloudwatch_log_group_name
+          awslogs-region        = data.aws_region.current.name
+          awslogs-stream-prefix = "datagrok"
         }
       }
       memoryReservation = 100
@@ -310,7 +310,7 @@ resource "aws_ecs_task_definition" "datagrok" {
   "dbPort": "${module.db.db_instance_port}",
   "db": "datagrok",
   "dbLogin": "datagrok",
-  "dbPassword": "${try(length(var.rds_dg_password) > 0, false) ? var.rds_dg_password : random_password.db_datagrok_password[0].result}",
+  "dbPassword": "${try(random_password.db_datagrok_password[0].result, var.rds_dg_password)}",
   "dbAdminLogin": "${var.rds_master_username}",
   "dbAdminPassword": "${module.db.db_instance_password}",
   "dbSsl": false,
@@ -360,7 +360,7 @@ EOF
   requires_compatibilities = [var.ecs_launch_type]
 }
 resource "aws_service_discovery_private_dns_namespace" "datagrok" {
-  count       = !try(length(var.service_discovery_namespace) > 0, false) && var.ecs_launch_type == "FARGATE" ? 1 : 0
+  count       = var.service_discovery_namespace.create && var.ecs_launch_type == "FARGATE" ? 1 : 0
   name        = "datagrok.${var.name}.${var.environment}.local"
   description = "Datagrok Service Discovery"
   vpc         = try(module.vpc[0].vpc_id, var.vpc_id)
@@ -371,7 +371,7 @@ resource "aws_service_discovery_service" "datagrok" {
   description = "Datagrok service discovery entry for 'datlas' server"
 
   dns_config {
-    namespace_id = try(length(var.service_discovery_namespace) > 0, false) ? var.service_discovery_namespace : aws_service_discovery_private_dns_namespace.datagrok[0].id
+    namespace_id = var.service_discovery_namespace.create ? aws_service_discovery_private_dns_namespace.datagrok[0].id : var.service_discovery_namespace
 
     dns_records {
       ttl  = 10
@@ -496,7 +496,7 @@ resource "aws_ecs_service" "datagrok" {
 }
 
 data "aws_ami" "aws_optimized_ecs" {
-  count       = var.ecs_launch_type == "EC2" ? 1 : 0
+  count       = !try(length(var.ami_id) > 0, false) && var.ecs_launch_type == "EC2" ? 1 : 0
   most_recent = true
   filter {
     name   = "name"
@@ -581,9 +581,9 @@ resource "aws_iam_instance_profile" "ec2_profile" {
 }
 resource "aws_instance" "ec2" {
   count         = var.ecs_launch_type == "EC2" ? 1 : 0
-  ami           = try(length(var.ami_id) > 0, false) ? var.ami_id : data.aws_ami.aws_optimized_ecs[0].id
+  ami           = try(data.aws_ami.aws_optimized_ecs[0].id, var.ami_id)
   instance_type = var.instance_type
-  key_name      = try(length(var.key_pair_name) > 0, false) ? var.key_pair_name : aws_key_pair.ec2[0].key_name
+  key_name      = try(aws_key_pair.ec2[0].key_name, var.key_pair_name)
   user_data = base64encode(templatefile("${path.module}/user_data.sh.tpl", {
     ecs_cluster_name = module.ecs.cluster_name
   }))
@@ -607,7 +607,7 @@ resource "aws_instance" "ec2" {
   }
   root_block_device {
     encrypted   = true
-    kms_key_id  = var.custom_kms_key ? (try(length(var.kms_key) > 0, false) ? var.kms_key : module.kms[0].key_arn) : null
+    kms_key_id  = var.custom_kms_key ? try(module.kms[0].key_arn, var.kms_key) : null
     volume_type = "gp3"
     throughput  = try(length(var.root_volume_throughput) > 0, false) ? var.root_volume_throughput : null
     volume_size = 50

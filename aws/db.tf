@@ -47,7 +47,7 @@ module "db" {
   publicly_accessible            = false
   storage_encrypted              = true
   storage_type                   = "gp2"
-  kms_key_id                     = var.custom_kms_key ? (try(length(var.kms_key) > 0, false) ? var.kms_key : module.kms[0].key_arn) : null
+  kms_key_id                     = var.custom_kms_key ? try(module.kms[0].key_arn, var.kms_key) : null
   multi_az                       = var.rds_multi_az
   create_db_subnet_group         = false
   db_subnet_group_name           = try(module.vpc[0].database_subnet_group, var.database_subnet_group)
