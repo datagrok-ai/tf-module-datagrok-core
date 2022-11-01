@@ -6,13 +6,13 @@ locals {
     Terraform   = "true"
   })
   full_name          = "${var.name}-${var.environment}"
-  vpc_name           = try(var.vpc_name, "${var.name}-${var.environment}")
-  rds_name           = try(var.rds_name, "${var.name}-${var.environment}")
-  s3_name            = try(var.s3_name, "${var.name}-${var.environment}")
-  ecs_name           = try(var.ecs_name, "${var.name}-${var.environment}")
-  lb_name            = try(var.lb_name, "${var.name}-${var.environment}")
-  ec2_name           = try(var.ec2_name, "${var.name}-${var.environment}")
-  sns_topic_name     = try(var.sns_topic_name, "${var.name}-${var.environment}")
+  vpc_name           = coalesce(var.vpc_name, "${var.name}-${var.environment}")
+  rds_name           = coalesce(var.rds_name, "${var.name}-${var.environment}")
+  s3_name            = coalesce(var.s3_name, "${var.name}-${var.environment}")
+  ecs_name           = coalesce(var.ecs_name, "${var.name}-${var.environment}")
+  lb_name            = coalesce(var.lb_name, "${var.name}-${var.environment}")
+  ec2_name           = coalesce(var.ec2_name, "${var.name}-${var.environment}")
+  sns_topic_name     = coalesce(var.sns_topic_name, "${var.name}-${var.environment}")
   r53_record         = var.route53_enabled ? try("${var.route53_record_name}.${var.domain_name}", "${var.name}-${var.environment}.${var.domain_name}") : ""
   create_kms         = var.custom_kms_key && !try(length(var.kms_key) > 0, false)
   admin_password_key = var.set_admin_password ? ("\"adminPassword\": " + try(length(var.admin_password) > 0, false) ? "\"${var.admin_password}\"" : "\"${random_password.admin_password[0].result}\"") : ""
