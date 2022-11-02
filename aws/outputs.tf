@@ -1,3 +1,63 @@
+output "name" {
+  description = "The name for a stand."
+  value       = var.name
+}
+
+output "environment" {
+  description = "The environment of a stand."
+  value       = var.environment
+}
+
+output "domain_name" {
+  description = "This is the name of domain for datagrok endpoint. It is used for the external hosted zone in Route53 and to create ACM certificates."
+  value       = var.domain_name
+}
+
+output "full_name" {
+  description = "The full name of a stand."
+  value       = local.full_name
+}
+
+output "vpc_name" {
+  description = "The VPC name for a stand."
+  value       = var.vpc_create ? local.vpc_name : ""
+}
+
+output "ecs_name" {
+  description = "The ECS Cluster name of a stand."
+  value       = module.ecs.cluster_name
+}
+
+output "lb_name" {
+  description = "The Load Balancer name of a stand."
+  value       = local.lb_name
+}
+
+output "rds_name" {
+  description = "The RDS name of a stand."
+  value       = local.rds_name
+}
+
+output "s3_name" {
+  description = "The S3 Bucket name of a stand."
+  value       = local.s3_name
+}
+
+output "ec2_name" {
+  description = "The EC2 instance name of a stand."
+  value       = var.ecs_launch_type == "EC2" ? local.ec2_name : ""
+}
+
+output "sns_topic_name" {
+  description = "The SNS Topic name of a stand."
+  value       = var.monitoring.create_sns_topic ? local.sns_topic_name : ""
+}
+
+output "r53_record" {
+  description = "The Route53 record for a stand."
+  value       = local.r53_record
+}
+
 output "vpc_id" {
   description = "The ID of the VPC"
   value       = try(module.vpc[0].vpc_id, var.vpc_id)
@@ -55,7 +115,7 @@ output "cloudwatch_log_group_arn" {
 
 output "log_bucket" {
   description = "The ID of the S3 bucket for logs"
-  value       = try(module.log_bucket.s3_bucket_id, var.log_bucket)
+  value       = var.bucket_logging.create_log_bucket ? module.log_bucket.s3_bucket_id : var.bucket_logging.log_bucket
 }
 
 output "service_discovery_namespace" {
@@ -75,12 +135,12 @@ output "route_53_internal_zone" {
 
 output "sns_topic" {
   description = "The ARN of the SNS topic from which messages will be sent"
-  value       = try(module.sns_topic.sns_topic_arn, var.monitoring_sns_topic_arn)
+  value       = coalesce(module.sns_topic.sns_topic_arn, var.monitoring.sns_topic_arn)
 }
 
 output "docker_hub_secret" {
   description = "The ARN of the Secret for Docker Hub Authorisation"
-  value       = try(aws_secretsmanager_secret.docker_hub[0].arn, var.docker_hub_secret_arn)
+  value       = try(aws_secretsmanager_secret.docker_hub[0].arn, var.docker_hub_credentials.secret_arn, "")
 }
 
 output "route53_external_cloudwatch_log_group_name" {
@@ -91,4 +151,14 @@ output "route53_external_cloudwatch_log_group_name" {
 output "route53_external_cloudwatch_log_group_arn" {
   description = "The ARN of the CloudWatch Log group for External Route53 Zone"
   value       = try(aws_cloudwatch_log_group.external[0].arn, "")
+}
+
+output "alb_external_arn" {
+  description = "The ARN of the external Application Load balancer"
+  value       = module.lb_ext.lb_arn
+}
+
+output "alb_internal_arn" {
+  description = "The ARN of the external Application Load balancer"
+  value       = module.lb_int.lb_arn
 }

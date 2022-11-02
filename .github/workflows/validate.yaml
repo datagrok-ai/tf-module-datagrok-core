@@ -247,7 +247,8 @@ jobs:
           working-dir: ${{ matrix.provider }}
           output-file: README.md
           output-method: inject
-          git-push: "true"
+          git-push: ${{ github.event_name != 'pull_request' }}
+          fail-on-diff: ${{ github.event_name == 'pull_request' }}
           git-commit-message: "GitHub Actions: Docs: Automated update of README.md"
 
   tflint:

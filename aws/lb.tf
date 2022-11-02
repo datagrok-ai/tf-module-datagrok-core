@@ -4,7 +4,7 @@ module "lb_ext_sg" {
 
   name        = "${local.lb_name}-lb-ext"
   description = "${local.lb_name} Datagrok LB Security Group"
-  vpc_id      = try(length(var.vpc_id) > 0, false) ? var.vpc_id : module.vpc[0].vpc_id
+  vpc_id      = try(module.vpc[0].vpc_id, var.vpc_id)
 
   egress_with_source_security_group_id = [
     {
@@ -39,7 +39,7 @@ module "lb_int_sg" {
 
   name        = "${local.lb_name}-lb-int"
   description = "${local.lb_name}-int Datagrok LB Security Group"
-  vpc_id      = try(length(var.vpc_id) > 0, false) ? var.vpc_id : module.vpc[0].vpc_id
+  vpc_id      = try(module.vpc[0].vpc_id, var.vpc_id)
 
   egress_with_source_security_group_id = [
     {
@@ -57,14 +57,14 @@ module "lb_int_sg" {
       to_port     = 8080
       protocol    = "tcp"
       description = "Access to Datagrok Nginx"
-      cidr_blocks = try(length(var.vpc_id) > 0, false) ? var.cidr : module.vpc[0].vpc_cidr_block
+      cidr_blocks = try(module.vpc[0].vpc_cidr_block, var.cidr)
     },
     {
       from_port   = 80
       to_port     = 80
       protocol    = "tcp"
       description = "Access to Datagrok Nginx"
-      cidr_blocks = try(length(var.vpc_id) > 0, false) ? var.cidr : module.vpc[0].vpc_cidr_block
+      cidr_blocks = try(module.vpc[0].vpc_cidr_block, var.cidr)
     },
   ]
 }
@@ -81,7 +81,7 @@ resource "aws_route53_zone" "external" {
 module "acm" {
   source  = "registry.terraform.io/terraform-aws-modules/acm/aws"
   version = "~> 3.5.0"
-  count   = try(length(var.acm_cert_arn) > 0, false) ? 0 : 1
+  count   = var.acm_cert_create ? 1 : 0
 
   domain_name       = var.domain_name
   zone_id           = var.route53_enabled && var.create_route53_external_zone ? aws_route53_zone.external[0].zone_id : data.aws_route53_zone.external[0].zone_id
@@ -110,13 +110,13 @@ module "lb_ext" {
 
   name                       = "${local.lb_name}-ext"
   load_balancer_type         = "application"
-  vpc_id                     = try(length(var.vpc_id) > 0, false) ? var.vpc_id : module.vpc[0].vpc_id
-  subnets                    = try(length(var.vpc_id) > 0, false) ? var.public_subnet_ids : module.vpc[0].public_subnets
+  vpc_id                     = try(module.vpc[0].vpc_id, var.vpc_id)
+  subnets                    = try(module.vpc[0].public_subnets, var.public_subnet_ids)
   security_groups            = [module.lb_ext_sg.security_group_id]
   drop_invalid_header_fields = true
 
-  access_logs = var.enable_bucket_logging ? {
-    bucket  = try(length(var.log_bucket) > 0, false) ? var.log_bucket : module.log_bucket.s3_bucket_id
+  access_logs = var.bucket_logging.enabled ? {
+    bucket  = var.bucket_logging.create_log_bucket ? module.log_bucket.s3_bucket_id : var.bucket_logging.log_bucket
     prefix  = "lb"
     enabled = true
   } : { bucket = "", enabled = false }
@@ -127,7 +127,7 @@ module "lb_ext" {
     {
       port               = 443
       protocol           = "HTTPS"
-      certificate_arn    = try(length(var.acm_cert_arn) > 0, false) ? var.acm_cert_arn : module.acm[0].acm_certificate_arn
+      certificate_arn    = try(module.acm[0].acm_certificate_arn, var.acm_cert_arn)
       target_group_index = 0
     }
   ]
@@ -153,13 +153,13 @@ module "lb_int" {
 
   name                       = "${local.lb_name}-int"
   load_balancer_type         = "application"
-  vpc_id                     = try(length(var.vpc_id) > 0, false) ? var.vpc_id : module.vpc[0].vpc_id
-  subnets                    = try(length(var.vpc_id) > 0, false) ? var.private_subnet_ids : module.vpc[0].private_subnets
+  vpc_id                     = try(module.vpc[0].vpc_id, var.vpc_id)
+  subnets                    = try(module.vpc[0].private_subnets, var.private_subnet_ids)
   security_groups            = [module.lb_int_sg.security_group_id]
   drop_invalid_header_fields = true
 
-  access_logs = var.enable_bucket_logging ? {
-    bucket  = try(length(var.log_bucket) > 0, false) ? var.log_bucket : module.log_bucket.s3_bucket_id
+  access_logs = var.bucket_logging.enabled ? {
+    bucket  = var.bucket_logging.create_log_bucket ? module.log_bucket.s3_bucket_id : var.bucket_logging.log_bucket
     prefix  = "lb"
     enabled = true
   } : { bucket = "", enabled = false }
@@ -214,12 +214,13 @@ provider "aws" {
 }
 
 resource "aws_cloudwatch_log_group" "external" {
-  provider          = "aws.datagrok-cloudwatch-r53-external"
+  provider          = aws.datagrok-cloudwatch-r53-external
   count             = var.route53_enabled && var.enable_route53_logging && var.create_route53_external_zone ? 1 : 0
   name              = "/aws/route53/${aws_route53_zone.external[0].name}"
   retention_in_days = 7
-  kms_key_id        = var.custom_kms_key ? (try(length(var.kms_key) > 0, false) ? var.kms_key : module.kms[0].key_arn) : null
-  tags              = local.tags
+  #checkov:skip=CKV_AWS_158:The KMS key is configurable
+  kms_key_id = var.custom_kms_key ? try(module.kms[0].key_arn, var.kms_key) : null
+  tags       = local.tags
 }
 
 data "aws_iam_policy_document" "external" {
@@ -238,7 +239,7 @@ data "aws_iam_policy_document" "external" {
 }
 
 resource "aws_cloudwatch_log_resource_policy" "external" {
-  provider        = "aws.datagrok-cloudwatch-r53-external"
+  provider        = aws.datagrok-cloudwatch-r53-external
   count           = var.route53_enabled && var.enable_route53_logging && var.create_route53_external_zone ? 1 : 0
   policy_document = data.aws_iam_policy_document.external[0].json
   policy_name     = "${var.name}-${var.environment}-route53"

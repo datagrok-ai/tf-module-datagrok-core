@@ -2,8 +2,9 @@ resource "aws_cloudwatch_log_group" "ecs" {
   count             = var.create_cloudwatch_log_group ? 1 : 0
   name              = "/aws/ecs/${local.full_name}"
   retention_in_days = 7
-  kms_key_id        = var.custom_kms_key ? (try(length(var.kms_key) > 0, false) ? var.kms_key : module.kms[0].key_arn) : null
-  tags              = local.tags
+  #checkov:skip=CKV_AWS_158:The KMS key is configurable
+  kms_key_id = var.custom_kms_key ? try(module.kms[0].key_arn, var.kms_key) : null
+  tags       = local.tags
 }
 module "sg" {
   source  = "registry.terraform.io/terraform-aws-modules/security-group/aws"
@@ -11,7 +12,7 @@ module "sg" {
 
   name        = local.ecs_name
   description = "${local.ecs_name} Datagrok ECS Security Group"
-  vpc_id      = try(length(var.vpc_id) > 0, false) ? var.vpc_id : module.vpc[0].vpc_id
+  vpc_id      = try(module.vpc[0].vpc_id, var.vpc_id)
 
   egress_with_cidr_blocks = var.egress_rules
   ingress_with_cidr_blocks = [
@@ -20,7 +21,7 @@ module "sg" {
       to_port     = 65535
       protocol    = "tcp"
       description = "Access from within Security Group. Internal communications."
-      cidr_blocks = try(length(var.vpc_id) > 0, false) ? var.cidr : module.vpc[0].vpc_cidr_block
+      cidr_blocks = try(module.vpc[0].vpc_cidr_block, var.cidr)
     },
   ]
 }
@@ -57,6 +58,7 @@ resource "random_password" "admin_password" {
   length  = 16
   special = false
 }
+
 # TODO: check AWS principal (autoscaling group) for ecs
 #resource "aws_secretsmanager_secret_policy" "docker_hub" {
 #  count      = try(length(var.docker_hub_secret_arn) > 0, false) ? 0 : 1
@@ -76,21 +78,62 @@ resource "random_password" "admin_password" {
 #}
 #POLICY
 #}
+
+resource "aws_secretsmanager_secret" "docker_hub" {
+  count       = try(var.docker_hub_credentials.create_secret, false) && !var.ecr_enabled ? 1 : 0
+  name_prefix = "${local.full_name}_docker_hub"
+  description = "Docker Hub token to download images"
+  #checkov:skip=CKV_AWS_149:The KMS key is configurable
+  kms_key_id              = var.custom_kms_key ? try(module.kms[0].key_arn, var.kms_key) : null
+  recovery_window_in_days = 7
+  tags                    = local.tags
+}
 resource "aws_secretsmanager_secret_version" "docker_hub" {
-  count     = try(length(var.docker_hub_secret_arn) > 0, false) ? 0 : 1
+  count     = try(var.docker_hub_credentials.create_secret, false) && !var.ecr_enabled ? 1 : 0
   secret_id = aws_secretsmanager_secret.docker_hub[0].id
   secret_string = jsonencode({
-    "username" : var.docker_hub_user,
-    "password" : var.docker_hub_password
+    "username" : sensitive(var.docker_hub_credentials.user),
+    "password" : sensitive(var.docker_hub_credentials.password)
   })
 }
-resource "aws_secretsmanager_secret" "docker_hub" {
-  count                   = try(length(var.docker_hub_secret_arn) > 0, false) ? 0 : 1
-  name_prefix             = "${local.full_name}_docker_hub"
-  description             = "Docker Hub token to download images"
-  kms_key_id              = var.custom_kms_key ? (try(length(var.kms_key) > 0, false) ? var.kms_key : module.kms[0].key_arn) : null
-  recovery_window_in_days = 7
+
+resource "aws_ecr_repository" "ecr" {
+  for_each = var.ecr_enabled ? local.images : {}
+  name     = each.key
+  #checkov:skip=CKV_AWS_51:The ECR Image Tags immutability is configurable
+  image_tag_mutability = var.ecr_image_tag_mutable ? "MUTABLE" : "IMMUTABLE"
+  force_delete         = !var.termination_protection
+  encryption_configuration {
+    encryption_type = "KMS"
+    kms_key         = var.custom_kms_key ? try(module.kms[0].key_arn, var.kms_key) : null
+  }
+  image_scanning_configuration {
+    scan_on_push = var.ecr_image_scan_on_push
+  }
+  tags = local.tags
 }
+
+# https://github.com/mathspace/terraform-aws-ecr-docker-image/blob/master/hash.shÏ
+#data "external" "docker_hash" {
+#  for_each = var.ecr_enabled ? local.images : {}
+#  program  = ["${path.module}/docker_hash.sh", each.value["image"], each.value["tag"]]
+#}
+
+resource "null_resource" "ecr_push" {
+  for_each = var.ecr_enabled ? local.images : {}
+  triggers = {
+    tag   = each.value["tag"] == "latest" ? "${each.value["tag"]}-${timestamp()}" : each.value["tag"]
+    image = each.value["image"]
+  }
+
+  provisioner "local-exec" {
+    command     = "${path.module}/ecr_push.sh --tag ${each.value["tag"]} --image ${each.value["image"]} --ecr ${aws_ecr_repository.ecr[each.key].repository_url}"
+    interpreter = ["bash", "-c"]
+  }
+
+  depends_on = [aws_ecr_repository.ecr]
+}
+
 resource "aws_iam_policy" "exec" {
   name        = "${local.ecs_name}_exec"
   description = "Datagrok execution policy for ECS task"
@@ -98,14 +141,6 @@ resource "aws_iam_policy" "exec" {
   policy = jsonencode({
     "Version" = "2012-10-17",
     "Statement" = [
-      {
-        "Action"    = ["secretsmanager:GetSecretValue"],
-        "Condition" = {},
-        "Effect"    = "Allow",
-        "Resource" = [
-          try(length(var.docker_hub_secret_arn) > 0, false) ? var.docker_hub_secret_arn : aws_secretsmanager_secret.docker_hub[0].arn
-        ]
-      },
       {
         "Action" = [
           "logs:CreateLogStream",
@@ -120,6 +155,52 @@ resource "aws_iam_policy" "exec" {
     ]
   })
 }
+
+resource "aws_iam_policy" "ecr" {
+  count       = var.ecr_enabled ? 1 : 0
+  name        = "${local.ecs_name}_ecr"
+  description = "Datagrok ECR pull policy for ECS task"
+
+  policy = jsonencode({
+    "Version" = "2012-10-17",
+    "Statement" = [
+      {
+        "Action" = [
+          "ecr:BatchCheckLayerAvailability",
+          "ecr:BatchGetImage",
+          "ecr:GetDownloadUrlForLayer",
+          "ecr:GetAuthorizationToken"
+        ],
+        "Condition" = {},
+        "Effect"    = "Allow",
+        "Resource" = toset([
+          for ecr in aws_ecr_repository.ecr : ecr.arn
+        ])
+      }
+    ]
+  })
+}
+
+resource "aws_iam_policy" "docker_hub" {
+  count       = try(var.docker_hub_credentials.create_secret, false) && !var.ecr_enabled ? 1 : 0
+  name        = "${local.ecs_name}_docker_hub"
+  description = "Datagrok Docker Hub credentials policy for ECS task"
+
+  policy = jsonencode({
+    "Version" = "2012-10-17",
+    "Statement" = [
+      {
+        "Action"    = ["secretsmanager:GetSecretValue"],
+        "Condition" = {},
+        "Effect"    = "Allow",
+        "Resource" = [
+          try(aws_secretsmanager_secret.docker_hub[0].arn, var.docker_hub_credentials.secret_arn)
+        ]
+      }
+    ]
+  })
+}
+
 resource "aws_iam_role" "exec" {
   name = "${local.ecs_name}_exec"
 
@@ -136,7 +217,10 @@ resource "aws_iam_role" "exec" {
       },
     ]
   })
-  managed_policy_arns = [aws_iam_policy.exec.arn]
+  managed_policy_arns = compact([
+    aws_iam_policy.exec.arn,
+    var.ecr_enabled ? aws_iam_policy.ecr[0].arn : aws_iam_policy.docker_hub[0].arn
+  ])
 
   tags = local.tags
 }
@@ -180,7 +264,11 @@ resource "aws_iam_role" "task" {
       },
     ]
   })
-  managed_policy_arns = [aws_iam_policy.exec.arn, aws_iam_policy.task.arn]
+  managed_policy_arns = compact([
+    aws_iam_policy.exec.arn,
+    aws_iam_policy.task.arn,
+    var.ecr_enabled ? aws_iam_policy.ecr[0].arn : aws_iam_policy.docker_hub[0].arn
+  ])
   #  managed_policy_arns = [aws_iam_policy.task.arn]
 
   tags = local.tags
@@ -199,21 +287,18 @@ resource "aws_ecs_task_definition" "datagrok" {
       essential = false
       image     = "docker/ecs-searchdomain-sidecar:1.0"
       logConfiguration = {
-        "LogDriver" : "awslogs",
-        "Options" : {
-          "awslogs-group" : var.create_cloudwatch_log_group ? aws_cloudwatch_log_group.ecs[0].name : var.cloudwatch_log_group_name
-          "awslogs-region" : data.aws_region.current.name
-          "awslogs-stream-prefix" : "datagrok"
+        LogDriver = "awslogs"
+        Options = {
+          awslogs-group         = var.create_cloudwatch_log_group ? aws_cloudwatch_log_group.ecs[0].name : var.cloudwatch_log_group_name
+          awslogs-region        = data.aws_region.current.name
+          awslogs-stream-prefix = "datagrok"
         }
       }
       memoryReservation = 100
     },
-    {
+    merge({
       name  = "datagrok"
-      image = "docker.io/datagrok/datagrok:${var.docker_datagrok_tag}"
-      repositoryCredentials = {
-        credentialsParameter = try(length(var.docker_hub_secret_arn) > 0, false) ? var.docker_hub_secret_arn : aws_secretsmanager_secret.docker_hub[0].arn
-      }
+      image = var.ecr_enabled ? "${aws_ecr_repository.ecr["datagrok"].repository_url}:${var.docker_datagrok_tag}" : "${var.docker_datagrok_image}:${var.docker_datagrok_tag}"
       environment = [
         {
           name  = "GROK_MODE",
@@ -229,7 +314,7 @@ resource "aws_ecs_task_definition" "datagrok" {
   "dbPort": "${module.db.db_instance_port}",
   "db": "datagrok",
   "dbLogin": "datagrok",
-  "dbPassword": "${try(length(var.rds_dg_password) > 0, false) ? var.rds_dg_password : random_password.db_datagrok_password[0].result}",
+  "dbPassword": "${try(random_password.db_datagrok_password[0].result, var.rds_dg_password)}",
   "dbAdminLogin": "${var.rds_master_username}",
   "dbAdminPassword": "${module.db.db_instance_password}",
   "dbSsl": false,
@@ -264,7 +349,12 @@ EOF
       ]
       memoryReservation = var.datagrok_container_memory_reservation
       cpu               = var.datagrok_container_cpu
-    }
+      }, var.ecr_enabled ? {} : {
+      repositoryCredentials = {
+        credentialsParameter = try(aws_secretsmanager_secret.docker_hub[0].arn, var.docker_hub_credentials.secret_arn)
+      }
+      }
+    )
   ])
   cpu                      = var.ecs_launch_type == "FARGATE" ? var.datagrok_cpu : null
   memory                   = var.ecs_launch_type == "FARGATE" ? var.datagrok_memory : null
@@ -274,10 +364,10 @@ EOF
   requires_compatibilities = [var.ecs_launch_type]
 }
 resource "aws_service_discovery_private_dns_namespace" "datagrok" {
-  count       = !try(length(var.service_discovery_namespace) > 0, false) && var.ecs_launch_type == "FARGATE" ? 1 : 0
+  count       = var.service_discovery_namespace.create && var.ecs_launch_type == "FARGATE" ? 1 : 0
   name        = "datagrok.${var.name}.${var.environment}.local"
   description = "Datagrok Service Discovery"
-  vpc         = try(length(var.vpc_id) > 0, false) ? var.vpc_id : module.vpc[0].vpc_id
+  vpc         = try(module.vpc[0].vpc_id, var.vpc_id)
 }
 resource "aws_service_discovery_service" "datagrok" {
   count       = var.ecs_launch_type == "FARGATE" ? 1 : 0
@@ -285,7 +375,7 @@ resource "aws_service_discovery_service" "datagrok" {
   description = "Datagrok service discovery entry for 'datlas' server"
 
   dns_config {
-    namespace_id = try(length(var.service_discovery_namespace) > 0, false) ? var.service_discovery_namespace : aws_service_discovery_private_dns_namespace.datagrok[0].id
+    namespace_id = var.service_discovery_namespace.create ? aws_service_discovery_private_dns_namespace.datagrok[0].id : var.service_discovery_namespace.id
 
     dns_records {
       ttl  = 10
@@ -397,7 +487,7 @@ resource "aws_ecs_service" "datagrok" {
   dynamic "network_configuration" {
     for_each = var.ecs_launch_type == "FARGATE" ? [
       {
-        subnets : try(length(var.vpc_id) > 0, false) ? var.private_subnet_ids : module.vpc[0].private_subnets,
+        subnets : try(module.vpc[0].private_subnets, var.private_subnet_ids)
         security_groups : [module.sg.security_group_id]
       }
     ] : []
@@ -410,7 +500,7 @@ resource "aws_ecs_service" "datagrok" {
 }
 
 data "aws_ami" "aws_optimized_ecs" {
-  count       = var.ecs_launch_type == "EC2" ? 1 : 0
+  count       = !try(length(var.ami_id) > 0, false) && var.ecs_launch_type == "EC2" ? 1 : 0
   most_recent = true
   filter {
     name   = "name"
@@ -480,7 +570,11 @@ resource "aws_iam_role" "ec2" {
       },
     ]
   })
-  managed_policy_arns = [aws_iam_policy.exec.arn, aws_iam_policy.ec2.arn]
+  managed_policy_arns = compact([
+    aws_iam_policy.exec.arn,
+    aws_iam_policy.ec2.arn,
+    var.ecr_enabled ? aws_iam_policy.ecr[0].arn : aws_iam_policy.docker_hub[0].arn
+  ])
 
   tags = local.tags
 }
@@ -491,14 +585,14 @@ resource "aws_iam_instance_profile" "ec2_profile" {
 }
 resource "aws_instance" "ec2" {
   count         = var.ecs_launch_type == "EC2" ? 1 : 0
-  ami           = try(length(var.ami_id) > 0, false) ? var.ami_id : data.aws_ami.aws_optimized_ecs[0].id
+  ami           = try(data.aws_ami.aws_optimized_ecs[0].id, var.ami_id)
   instance_type = var.instance_type
-  key_name      = try(length(var.key_pair_name) > 0, false) ? var.key_pair_name : aws_key_pair.ec2[0].key_name
+  key_name      = try(aws_key_pair.ec2[0].key_name, var.key_pair_name)
   user_data = base64encode(templatefile("${path.module}/user_data.sh.tpl", {
     ecs_cluster_name = module.ecs.cluster_name
   }))
   availability_zone                    = data.aws_availability_zones.available.names[0]
-  subnet_id                            = try(length(var.vpc_id) > 0, false) ? var.private_subnet_ids[0] : module.vpc[0].private_subnets[0]
+  subnet_id                            = try(module.vpc[0].private_subnets[0], var.private_subnet_ids[0])
   associate_public_ip_address          = false
   vpc_security_group_ids               = [module.sg.security_group_id]
   disable_api_stop                     = var.termination_protection
@@ -517,7 +611,7 @@ resource "aws_instance" "ec2" {
   }
   root_block_device {
     encrypted   = true
-    kms_key_id  = var.custom_kms_key ? (try(length(var.kms_key) > 0, false) ? var.kms_key : module.kms[0].key_arn) : null
+    kms_key_id  = var.custom_kms_key ? try(module.kms[0].key_arn, var.kms_key) : null
     volume_type = "gp3"
     throughput  = try(length(var.root_volume_throughput) > 0, false) ? var.root_volume_throughput : null
     volume_size = 50

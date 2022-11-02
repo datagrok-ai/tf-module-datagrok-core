@@ -4,7 +4,7 @@ module "db_sg" {
 
   name        = "${local.rds_name}-db"
   description = "${local.rds_name} Datagrok DB Security Group"
-  vpc_id      = try(length(var.vpc_id) > 0, false) ? var.vpc_id : module.vpc[0].vpc_id
+  vpc_id      = try(module.vpc[0].vpc_id, var.vpc_id)
 
   # TODO: Egress disable
   egress_with_self = [
@@ -18,7 +18,7 @@ module "db_sg" {
       to_port     = 5432
       protocol    = "tcp"
       description = "PostgreSQL access from within VPC"
-      cidr_blocks = try(length(var.vpc_id) > 0, false) ? var.cidr : module.vpc[0].vpc_cidr_block
+      cidr_blocks = try(module.vpc[0].vpc_cidr_block, var.cidr)
     },
   ]
 
@@ -47,10 +47,10 @@ module "db" {
   publicly_accessible            = false
   storage_encrypted              = true
   storage_type                   = "gp2"
-  kms_key_id                     = var.custom_kms_key ? (try(length(var.kms_key) > 0, false) ? var.kms_key : module.kms[0].key_arn) : null
+  kms_key_id                     = var.custom_kms_key ? try(module.kms[0].key_arn, var.kms_key) : null
   multi_az                       = var.rds_multi_az
   create_db_subnet_group         = false
-  db_subnet_group_name           = try(length(var.vpc_id) > 0, false) ? var.database_subnet_group : module.vpc[0].database_subnet_group
+  db_subnet_group_name           = try(module.vpc[0].database_subnet_group, var.database_subnet_group)
   vpc_security_group_ids         = [module.db_sg.security_group_id]
 
   iam_database_authentication_enabled   = true

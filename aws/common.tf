@@ -6,16 +6,23 @@ locals {
     Terraform   = "true"
   })
   full_name          = "${var.name}-${var.environment}"
-  vpc_name           = try(length(var.vpc_name) > 0, false) ? var.vpc_name : "${var.name}-${var.environment}"
-  rds_name           = try(length(var.rds_name) > 0, false) ? var.rds_name : "${var.name}-${var.environment}"
-  s3_name            = try(length(var.s3_name) > 0, false) ? var.s3_name : "${var.name}-${var.environment}"
-  ecs_name           = try(length(var.ecs_name) > 0, false) ? var.ecs_name : "${var.name}-${var.environment}"
-  lb_name            = try(length(var.lb_name) > 0, false) ? var.lb_name : "${var.name}-${var.environment}"
-  ec2_name           = try(length(var.ec2_name) > 0, false) ? var.ec2_name : "${var.name}-${var.environment}"
-  sns_topic_name     = try(length(var.sns_topic_name) > 0, false) ? var.sns_topic_name : "${var.name}-${var.environment}"
-  r53_record         = var.route53_enabled ? try(length(var.route53_record_name) > 0, false) ? "${var.route53_record_name}.${var.domain_name}" : "${var.name}-${var.environment}.${var.domain_name}" : ""
+  vpc_name           = coalesce(var.vpc_name, "${var.name}-${var.environment}")
+  rds_name           = coalesce(var.rds_name, "${var.name}-${var.environment}")
+  s3_name            = coalesce(var.s3_name, "${var.name}-${var.environment}")
+  ecs_name           = coalesce(var.ecs_name, "${var.name}-${var.environment}")
+  lb_name            = coalesce(var.lb_name, "${var.name}-${var.environment}")
+  ec2_name           = coalesce(var.ec2_name, "${var.name}-${var.environment}")
+  sns_topic_name     = coalesce(var.sns_topic_name, "${var.name}-${var.environment}")
+  r53_record         = var.route53_enabled ? try("${var.route53_record_name}.${var.domain_name}", "${var.name}-${var.environment}.${var.domain_name}") : ""
   create_kms         = var.custom_kms_key && !try(length(var.kms_key) > 0, false)
   admin_password_key = var.set_admin_password ? ("\"adminPassword\": " + try(length(var.admin_password) > 0, false) ? "\"${var.admin_password}\"" : "\"${random_password.admin_password[0].result}\"") : ""
+
+  images = {
+    datagrok = {
+      image = var.docker_datagrok_image
+      tag   = var.docker_datagrok_tag
+    }
+  }
 
   targets = [
     {

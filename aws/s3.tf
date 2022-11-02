@@ -1,9 +1,9 @@
 resource "random_pet" "this" {
-  count  = var.enable_bucket_logging && !try(length(var.log_bucket) > 0, false) ? 1 : 0
+  count  = var.bucket_logging.enabled && var.bucket_logging.create_log_bucket ? 1 : 0
   length = 2
 }
 module "log_bucket" {
-  create_bucket = var.enable_bucket_logging && !try(length(var.log_bucket) > 0, false)
+  create_bucket = var.bucket_logging.enabled && var.bucket_logging.create_log_bucket
   source        = "registry.terraform.io/terraform-aws-modules/s3-bucket/aws"
   version       = "~> 3.3.0"
 
@@ -46,7 +46,7 @@ data "aws_iam_policy_document" "bucket_policy" {
     ]
     condition {
       test     = "StringNotEquals"
-      values   = [try(length(var.vpc_id) > 0, false) ? var.vpc_endpoint_id : module.vpc_endpoint[0].endpoints["s3"].id]
+      values   = [try(module.vpc_endpoint[0].endpoints["s3"].id, var.vpc_endpoint_id)]
       variable = "aws:SourceVpce"
     }
   }
@@ -80,8 +80,8 @@ module "s3_bucket" {
   expected_bucket_owner    = data.aws_caller_identity.current.account_id
   request_payer            = "BucketOwner"
 
-  logging = var.enable_bucket_logging ? {
-    target_bucket = try(length(var.log_bucket) > 0, false) ? var.log_bucket : module.log_bucket.s3_bucket_id
+  logging = var.bucket_logging.enabled ? {
+    target_bucket = var.bucket_logging.create_log_bucket ? module.log_bucket.s3_bucket_id : var.bucket_logging.log_bucket
     target_prefix = "s3/"
   } : {}
 
