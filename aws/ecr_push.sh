@@ -49,8 +49,13 @@ fi
 region="$(echo "${ecr}" | awk -F'.' '{print $4}')"
 ecr_url="$(echo "${ecr}" | awk -F'/' '{print $1}')"
 
-echo "Login to ECR Repository: ${ecr_url}"
-aws ecr get-login-password --region "${region}" | docker login --username AWS --password-stdin "${ecr_url}"
+if [ -n "$(jq ".auths | select(has(\"${ecr_url}\") == true)" "${HOME}/.docker/config.json")" ]; then
+  echo "Already logged in to ECR Repository: ${ecr_url}"
+else
+  echo "Login to ECR Repository: ${ecr_url}"
+  aws ecr get-login-password --region "${region}" | docker login --username AWS --password-stdin "${ecr_url}"
+fi
+
 echo "Pull image from Docker Hub: ${image}:${tag}"
 docker pull "${image}:${tag}"
 echo "Copy image from Docker Hub ${image}:${tag} to ECR ${ecr}:${tag}"
