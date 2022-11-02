@@ -182,7 +182,7 @@ resource "aws_iam_policy" "ecr" {
 }
 
 resource "aws_iam_policy" "docker_hub" {
-  count       = try(var.docker_hub_credentials.create_secret, false) && !var.ecr_enabled ? 1 : 0
+  count       = !var.ecr_enabled ? 1 : 0
   name        = "${local.ecs_name}_docker_hub"
   description = "Datagrok Docker Hub credentials policy for ECS task"
 

@@ -120,7 +120,7 @@ output "log_bucket" {
 
 output "service_discovery_namespace" {
   description = "The ID of the CloudMap for Datagrok"
-  value       = try(aws_service_discovery_private_dns_namespace.datagrok[0].id, var.service_discovery_namespace)
+  value       = try(aws_service_discovery_private_dns_namespace.datagrok[0].id, var.service_discovery_namespace.id)
 }
 
 output "route_53_external_zone" {
