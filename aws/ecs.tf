@@ -371,7 +371,7 @@ resource "aws_service_discovery_service" "datagrok" {
   description = "Datagrok service discovery entry for 'datlas' server"
 
   dns_config {
-    namespace_id = var.service_discovery_namespace.create ? aws_service_discovery_private_dns_namespace.datagrok[0].id : var.service_discovery_namespace
+    namespace_id = var.service_discovery_namespace.create ? aws_service_discovery_private_dns_namespace.datagrok[0].id : var.service_discovery_namespace.id
 
     dns_records {
       ttl  = 10
