@@ -49,7 +49,7 @@ fi
 region="$(echo "${ecr}" | awk -F'.' '{print $4}')"
 ecr_url="$(echo "${ecr}" | awk -F'/' '{print $1}')"
 
-echo "Login to ECR Repository: ${ecr}"
+echo "Login to ECR Repository: ${ecr_url}"
 aws ecr get-login-password --region "${region}" | docker login --username AWS --password-stdin "${ecr_url}"
 echo "Pull image from Docker Hub: ${image}:${tag}"
 docker pull "${image}:${tag}"
