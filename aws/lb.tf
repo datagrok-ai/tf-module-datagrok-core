@@ -218,6 +218,7 @@ resource "aws_cloudwatch_log_group" "external" {
   count             = var.route53_enabled && var.enable_route53_logging && var.create_route53_external_zone ? 1 : 0
   name              = "/aws/route53/${aws_route53_zone.external[0].name}"
   retention_in_days = 7
+  #checkov:skip=CKV_AWS_158:The KMS key is configurable
   kms_key_id        = var.custom_kms_key ? try(module.kms[0].key_arn, var.kms_key) : null
   tags              = local.tags
 }

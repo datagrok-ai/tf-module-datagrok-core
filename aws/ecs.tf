@@ -2,6 +2,7 @@ resource "aws_cloudwatch_log_group" "ecs" {
   count             = var.create_cloudwatch_log_group ? 1 : 0
   name              = "/aws/ecs/${local.full_name}"
   retention_in_days = 7
+  #checkov:skip=CKV_AWS_158:The KMS key is configurable
   kms_key_id        = var.custom_kms_key ? try(module.kms[0].key_arn, var.kms_key) : null
   tags              = local.tags
 }
@@ -77,10 +78,12 @@ resource "random_password" "admin_password" {
 #}
 #POLICY
 #}
+
 resource "aws_secretsmanager_secret" "docker_hub" {
   count                   = try(var.docker_hub_credentials.create_secret, false) && !var.ecr_enabled ? 1 : 0
   name_prefix             = "${local.full_name}_docker_hub"
   description             = "Docker Hub token to download images"
+  #checkov:skip=CKV_AWS_158:The KMS key is configurable
   kms_key_id              = var.custom_kms_key ? try(module.kms[0].key_arn, var.kms_key) : null
   recovery_window_in_days = 7
   tags                    = local.tags
@@ -97,6 +100,7 @@ resource "aws_secretsmanager_secret_version" "docker_hub" {
 resource "aws_ecr_repository" "ecr" {
   for_each             = var.ecr_enabled ? local.images : {}
   name                 = each.key
+  #checkov:skip=CKV_AWS_51:The ECR Image Tags immutability is configurable
   image_tag_mutability = var.ecr_image_tag_mutable ? "MUTABLE" : "IMMUTABLE"
   force_delete         = !var.termination_protection
   encryption_configuration {
