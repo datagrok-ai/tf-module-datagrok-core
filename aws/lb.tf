@@ -219,8 +219,8 @@ resource "aws_cloudwatch_log_group" "external" {
   name              = "/aws/route53/${aws_route53_zone.external[0].name}"
   retention_in_days = 7
   #checkov:skip=CKV_AWS_158:The KMS key is configurable
-  kms_key_id        = var.custom_kms_key ? try(module.kms[0].key_arn, var.kms_key) : null
-  tags              = local.tags
+  kms_key_id = var.custom_kms_key ? try(module.kms[0].key_arn, var.kms_key) : null
+  tags       = local.tags
 }
 
 data "aws_iam_policy_document" "external" {
