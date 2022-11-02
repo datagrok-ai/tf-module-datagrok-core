@@ -48,6 +48,7 @@ fi
 
 region="$(echo "${ecr}" | awk -F'.' '{print $4}')"
 ecr_url="$(echo "${ecr}" | awk -F'/' '{print $1}')"
+ecr_repo_name="$(echo "${ecr}" | awk -F'/' '{print $2}')"
 
 if [ -n "$(jq ".auths | select(has(\"${ecr_url}\") == true)" "${HOME}/.docker/config.json")" ]; then
   echo "Already logged in to ECR Repository: ${ecr_url}"
@@ -60,5 +61,17 @@ echo "Pull image from Docker Hub: ${image}:${tag}"
 docker pull "${image}:${tag}"
 echo "Copy image from Docker Hub ${image}:${tag} to ECR ${ecr}:${tag}"
 docker tag "${image}:${tag}" "${ecr}:${tag}"
+
 echo "Push image to ECR ${ecr}:${tag}"
-docker push "${ecr}:${tag}"
+docker_push=$(docker push "${ecr}:${tag}" 2>&1 || true)
+if [[ $docker_push == *"no basic auth credentials"* ]]; then
+  echo "Re-login to ECR Repository: ${ecr_url}"
+  aws ecr get-login-password --region "${region}" | docker login --username AWS --password-stdin "${ecr_url}"
+  echo "Push image to ECR ${ecr}:${tag} after login to ECR Repository"
+  docker push "${ecr}:${tag}"
+elif [[ $docker_push == *"tag invalid: The image tag '${tag}' already exists in the '${ecr_repo_name}' repository and cannot be overwritten because the repository is immutable"* ]]; then
+  echo "Push to ECR repository FAILED: ${ecr}:${tag} already exists in the immutable repository"
+  exit 1
+else
+  echo "Docker image ${image}:${tag} was pushed to ECR ${ecr}:${tag}"
+fi
