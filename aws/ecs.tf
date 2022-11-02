@@ -83,7 +83,7 @@ resource "aws_secretsmanager_secret" "docker_hub" {
   count       = try(var.docker_hub_credentials.create_secret, false) && !var.ecr_enabled ? 1 : 0
   name_prefix = "${local.full_name}_docker_hub"
   description = "Docker Hub token to download images"
-  #checkov:skip=CKV_AWS_158:The KMS key is configurable
+  #checkov:skip=CKV_AWS_149:The KMS key is configurable
   kms_key_id              = var.custom_kms_key ? try(module.kms[0].key_arn, var.kms_key) : null
   recovery_window_in_days = 7
   tags                    = local.tags
