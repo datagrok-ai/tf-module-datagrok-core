@@ -8,8 +8,11 @@ module "datagrok_core" {
   name                = "datagrok"
   environment         = "example"
   domain_name         = "datagrok.example"
-  docker_hub_user     = "exampleUser"
-  docker_hub_password = "examplePassword"
+  docker_hub_credentials = {
+    create_secret = true
+    user          = "exampleUser"
+    password      = "examplePassword"
+  }
 }
 ```
 
