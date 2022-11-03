@@ -139,9 +139,8 @@ module "datagrok_core" {
 | <a name="input_domain_name"></a> [domain\_name](#input\_domain\_name) | This is the name of domain for datagrok endpoint. It is used for the external hosted zone in Route53. and to create ACM certificates. | `string` | `""` | no |
 | <a name="input_ec2_detailed_monitoring_enabled"></a> [ec2\_detailed\_monitoring\_enabled](#input\_ec2\_detailed\_monitoring\_enabled) | Specifies whether Monitoring Insights for EC2 instance are enabled. We recommend to set it to true for production stand. | `bool` | `true` | no |
 | <a name="input_ec2_name"></a> [ec2\_name](#input\_ec2\_name) | The name of Datagrok EC2 instance. If it is not specified, the name along with the environment will be used. | `string` | `null` | no |
-| <a name="input_ecr_enabled"></a> [ecr\_enabled](#input\_ecr\_enabled) | n/a | `bool` | `false` | no |
-| <a name="input_ecr_image_scan_on_push"></a> [ecr\_image\_scan\_on\_push](#input\_ecr\_image\_scan\_on\_push) | n/a | `bool` | `true` | no |
-| <a name="input_ecr_image_tag_mutable"></a> [ecr\_image\_tag\_mutable](#input\_ecr\_image\_tag\_mutable) | n/a | `bool` | `true` | no |
+| <a name="input_ecr_enabled"></a> [ecr\_enabled](#input\_ecr\_enabled) | Specifies should terraform copy images to ECR and use it instead of `docker_<service>_image` | `bool` | `false` | no |
+| <a name="input_ecr_image_scan_on_push"></a> [ecr\_image\_scan\_on\_push](#input\_ecr\_image\_scan\_on\_push) | Indicates whether images are scanned after being pushed to the repository (true) or not scanned (false). | `bool` | `true` | no |
 | <a name="input_ecs_cluster_insights"></a> [ecs\_cluster\_insights](#input\_ecs\_cluster\_insights) | Specifies whether Monitoring Insights for ECS cluster are enabled. We recommend to set it to true for production stand. | `bool` | `true` | no |
 | <a name="input_ecs_launch_type"></a> [ecs\_launch\_type](#input\_ecs\_launch\_type) | Launch type for datagrok containers. FARGATE and EC2 are available options. We recommend FARGATE for production stand. | `string` | `"FARGATE"` | no |
 | <a name="input_ecs_name"></a> [ecs\_name](#input\_ecs\_name) | The name of ECS cluster for Datagrok. If it is not specified, the name along with the environment will be used. | `string` | `null` | no |

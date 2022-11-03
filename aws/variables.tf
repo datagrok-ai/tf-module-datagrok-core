@@ -537,15 +537,17 @@ variable "datagrok_cpu" {
 }
 
 variable "ecr_enabled" {
-  type     = bool
-  default  = false
-  nullable = false
+  type        = bool
+  default     = false
+  nullable    = false
+  description = "Specifies should terraform copy images to ECR and use it instead of `docker_<service>_image`"
 }
 
 variable "ecr_image_scan_on_push" {
-  type     = bool
-  default  = true
-  nullable = false
+  type        = bool
+  default     = true
+  nullable    = false
+  description = "Indicates whether images are scanned after being pushed to the repository (true) or not scanned (false)."
 }
 
 variable "docker_datagrok_image" {
