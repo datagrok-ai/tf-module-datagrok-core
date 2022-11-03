@@ -46,6 +46,11 @@ if [ -z "${image}" ] || [ -z "${ecr}" ]; then
   exit 1
 fi
 
+source_tag=$tag
+if [[ $tag == "latest-"* ]]; then
+  source_tag="latest"
+fi
+
 region="$(echo "${ecr}" | awk -F'.' '{print $4}')"
 ecr_url="$(echo "${ecr}" | awk -F'/' '{print $1}')"
 ecr_repo_name="$(echo "${ecr}" | awk -F'/' '{print $2}')"
@@ -57,10 +62,10 @@ else
   aws ecr get-login-password --region "${region}" | docker login --username AWS --password-stdin "${ecr_url}"
 fi
 
-echo "Pull image from Docker Hub: ${image}:${tag}"
-docker pull "${image}:${tag}"
-echo "Copy image from Docker Hub ${image}:${tag} to ECR ${ecr}:${tag}"
-docker tag "${image}:${tag}" "${ecr}:${tag}"
+echo "Pull image from Docker Hub: ${image}:${source_tag}"
+docker pull "${image}:${source_tag}"
+echo "Copy image from Docker Hub ${image}:${source_tag} to ECR ${ecr}:${tag}"
+docker tag "${image}:${source_tag}" "${ecr}:${tag}"
 
 echo "Push image to ECR ${ecr}:${tag}"
 docker_push=$(docker push "${ecr}:${tag}" 2>&1 || true)
@@ -73,5 +78,5 @@ elif [[ $docker_push == *"tag invalid: The image tag '${tag}' already exists in 
   echo "Push to ECR repository FAILED: ${ecr}:${tag} already exists in the immutable repository"
   exit 1
 else
-  echo "Docker image ${image}:${tag} was pushed to ECR ${ecr}:${tag}"
+  echo "Docker image ${image}:${source_tag} was pushed to ECR ${ecr}:${tag}"
 fi

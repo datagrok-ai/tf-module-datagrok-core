@@ -542,12 +542,6 @@ variable "ecr_enabled" {
   nullable = false
 }
 
-variable "ecr_image_tag_mutable" {
-  type     = bool
-  default  = true
-  nullable = false
-}
-
 variable "ecr_image_scan_on_push" {
   type     = bool
   default  = true

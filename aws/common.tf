@@ -20,7 +20,11 @@ locals {
   images = {
     datagrok = {
       image = var.docker_datagrok_image
-      tag   = var.docker_datagrok_tag
+      tag   = var.docker_datagrok_tag == "latest" ? "${var.docker_datagrok_tag}-${formatdate("YYYYMMDDhhmmss", timestamp())}" : var.docker_datagrok_tag
+    },
+    "ecs-searchdomain-sidecar-${var.name}-${var.environment}" = {
+      image = "docker/ecs-searchdomain-sidecar"
+      tag   = "1.0"
     }
   }
 
