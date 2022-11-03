@@ -112,6 +112,30 @@ resource "aws_ecr_repository" "ecr" {
   tags = local.tags
 }
 
+resource "aws_ecr_repository_policy" "ecr" {
+  for_each   = var.ecr_enabled ? local.images : {}
+  repository = aws_ecr_repository.ecr[each.key].name
+  policy = jsonencode({
+    "Version" : "2008-10-17",
+    "Statement" : [
+      {
+        "Effect" : "Allow",
+        "Principal" : "*",
+        "Action" : [
+          "ecr:BatchCheckLayerAvailability",
+          "ecr:BatchGetImage",
+          "ecr:CompleteLayerUpload",
+          "ecr:GetDownloadUrlForLayer",
+          "ecr:GetLifecyclePolicy",
+          "ecr:InitiateLayerUpload",
+          "ecr:PutImage",
+          "ecr:UploadLayerPart"
+        ]
+      }
+    ]
+  })
+}
+
 # https://github.com/mathspace/terraform-aws-ecr-docker-image/blob/master/hash.shÏ
 #data "external" "docker_hash" {
 #  for_each = var.ecr_enabled ? local.images : {}
