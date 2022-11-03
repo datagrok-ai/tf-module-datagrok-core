@@ -63,8 +63,14 @@ data "aws_iam_policy_document" "vpc_endpoint_policy" {
     resources = [
       module.s3_bucket.s3_bucket_arn,
       "${module.s3_bucket.s3_bucket_arn}/*",
+      "arn:aws:s3:::amazonlinux.${data.aws_region.current.name}.amazonaws.com",
       "arn:aws:s3:::amazonlinux.${data.aws_region.current.name}.amazonaws.com/*",
-      "arn:aws:s3:::amazonlinux-2-repos-${data.aws_region.current.name}/*"
+      "arn:aws:s3:::amazonlinux-2-repos-${data.aws_region.current.name}",
+      "arn:aws:s3:::amazonlinux-2-repos-${data.aws_region.current.name}/*",
+      "arn:aws:s3:::prod-${data.aws_region.current.name}-starport-layer-bucket",
+      "arn:aws:s3:::prod-${data.aws_region.current.name}-starport-layer-bucket/*",
+      "arn:aws:s3:::docker-images-prod",
+      "arn:aws:s3:::docker-images-prod/*"
     ]
   }
 }

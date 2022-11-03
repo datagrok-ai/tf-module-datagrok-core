@@ -98,10 +98,9 @@ resource "aws_secretsmanager_secret_version" "docker_hub" {
 }
 
 resource "aws_ecr_repository" "ecr" {
-  for_each = var.ecr_enabled ? local.images : {}
-  name     = each.key
-  #checkov:skip=CKV_AWS_51:The ECR Image Tags immutability is configurable
-  image_tag_mutability = var.ecr_image_tag_mutable ? "MUTABLE" : "IMMUTABLE"
+  for_each             = var.ecr_enabled ? local.images : {}
+  name                 = each.key
+  image_tag_mutability = "IMMUTABLE"
   force_delete         = !var.termination_protection
   encryption_configuration {
     encryption_type = "KMS"
@@ -113,6 +112,30 @@ resource "aws_ecr_repository" "ecr" {
   tags = local.tags
 }
 
+resource "aws_ecr_repository_policy" "ecr" {
+  for_each   = var.ecr_enabled && var.ecr_principal_restrict_access ? local.images : {}
+  repository = aws_ecr_repository.ecr[each.key].name
+  policy = jsonencode({
+    Version = "2008-10-17"
+    Statement = [
+      {
+        Effect    = "Allow"
+        Principal = concat([data.aws_caller_identity.current.arn], var.ecr_policy_principal)
+        Action = [
+          "ecr:BatchCheckLayerAvailability",
+          "ecr:BatchGetImage",
+          "ecr:CompleteLayerUpload",
+          "ecr:GetDownloadUrlForLayer",
+          "ecr:GetLifecyclePolicy",
+          "ecr:InitiateLayerUpload",
+          "ecr:PutImage",
+          "ecr:UploadLayerPart"
+        ]
+      }
+    ]
+  })
+}
+
 # https://github.com/mathspace/terraform-aws-ecr-docker-image/blob/master/hash.shÏ
 #data "external" "docker_hash" {
 #  for_each = var.ecr_enabled ? local.images : {}
@@ -122,7 +145,7 @@ resource "aws_ecr_repository" "ecr" {
 resource "null_resource" "ecr_push" {
   for_each = var.ecr_enabled ? local.images : {}
   triggers = {
-    tag   = each.value["tag"] == "latest" ? "${each.value["tag"]}-${timestamp()}" : each.value["tag"]
+    tag   = each.value["tag"]
     image = each.value["image"]
   }
 
@@ -165,11 +188,16 @@ resource "aws_iam_policy" "ecr" {
     "Version" = "2012-10-17",
     "Statement" = [
       {
+        "Action" : "ecr:GetAuthorizationToken",
+        "Condition" = {},
+        "Effect" : "Allow",
+        "Resource" : "*"
+      },
+      {
         "Action" = [
           "ecr:BatchCheckLayerAvailability",
           "ecr:BatchGetImage",
           "ecr:GetDownloadUrlForLayer",
-          "ecr:GetAuthorizationToken"
         ],
         "Condition" = {},
         "Effect"    = "Allow",
@@ -188,16 +216,24 @@ resource "aws_iam_policy" "docker_hub" {
 
   policy = jsonencode({
     "Version" = "2012-10-17",
-    "Statement" = [
+    "Statement" = concat([
       {
-        "Action"    = ["secretsmanager:GetSecretValue"],
-        "Condition" = {},
-        "Effect"    = "Allow",
-        "Resource" = [
+        Action    = ["secretsmanager:GetSecretValue"],
+        Condition = {},
+        Effect    = "Allow",
+        Resource = [
           try(aws_secretsmanager_secret.docker_hub[0].arn, var.docker_hub_credentials.secret_arn)
         ]
-      }
-    ]
+      }],
+      var.custom_kms_key ? [{
+        Action    = ["kms:Decrypt"],
+        Condition = {},
+        Effect    = "Allow",
+        Resource = [
+          try(module.kms[0].key_arn, var.kms_key)
+        ]
+      }] : []
+    )
   })
 }
 
@@ -285,7 +321,7 @@ resource "aws_ecs_task_definition" "datagrok" {
         "datagrok.${var.name}.${var.environment}.local"
       ]
       essential = false
-      image     = "docker/ecs-searchdomain-sidecar:1.0"
+      image     = "${var.ecr_enabled ? aws_ecr_repository.ecr["ecs-searchdomain-sidecar-${var.name}-${var.environment}"].repository_url : local.images["ecs-searchdomain-sidecar-${var.name}-${var.environment}"]["image"]}:${local.images["ecs-searchdomain-sidecar-${var.name}-${var.environment}"]["tag"]}"
       logConfiguration = {
         LogDriver = "awslogs"
         Options = {
@@ -298,7 +334,7 @@ resource "aws_ecs_task_definition" "datagrok" {
     },
     merge({
       name  = "datagrok"
-      image = var.ecr_enabled ? "${aws_ecr_repository.ecr["datagrok"].repository_url}:${var.docker_datagrok_tag}" : "${var.docker_datagrok_image}:${var.docker_datagrok_tag}"
+      image = "${var.ecr_enabled ? aws_ecr_repository.ecr["datagrok"].repository_url : local.images["datagrok"]["image"]}:${local.images["datagrok"]["tag"]}"
       environment = [
         {
           name  = "GROK_MODE",
