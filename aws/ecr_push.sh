@@ -69,7 +69,8 @@ docker tag "${image}:${source_tag}" "${ecr}:${tag}"
 
 echo "Push image to ECR ${ecr}:${tag}"
 docker_push=$(docker push "${ecr}:${tag}" 2>&1 || true)
-if [[ $docker_push == *"no basic auth credentials"* ]]; then
+echo "${docker_push}"
+if [[ $docker_push == *"no basic auth credentials"* ]] || [[ $docker_push == *"denied: Your authorization token has expired. Reauthenticate and try again"* ]] ; then
   echo "Re-login to ECR Repository: ${ecr_url}"
   aws ecr get-login-password --region "${region}" | docker login --username AWS --password-stdin "${ecr_url}"
   echo "Push image to ECR ${ecr}:${tag} after login to ECR Repository"

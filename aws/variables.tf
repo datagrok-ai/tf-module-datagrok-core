@@ -540,7 +540,7 @@ variable "ecr_enabled" {
   type        = bool
   default     = false
   nullable    = false
-  description = "Specifies should terraform copy images to ECR and use it instead of `docker_<service>_image`"
+  description = "Specifies whether terraform copy images to ECR and use it instead of `docker_<service>_image`"
 }
 
 variable "ecr_image_scan_on_push" {
@@ -548,6 +548,20 @@ variable "ecr_image_scan_on_push" {
   default     = true
   nullable    = false
   description = "Indicates whether images are scanned after being pushed to the repository (true) or not scanned (false)."
+}
+
+variable "ecr_principal_restrict_access" {
+  type        = bool
+  default     = false
+  nullable    = false
+  description = "Specifies whether ECR restrictive policy is enabled. We recommend to set it to true for production stand."
+}
+
+variable "ecr_policy_principal" {
+  type        = list(string)
+  default     = []
+  nullable    = false
+  description = "List of principal ARNs which will have access to ECR. By default it is limited to the caller ARN."
 }
 
 variable "docker_datagrok_image" {

@@ -113,15 +113,15 @@ resource "aws_ecr_repository" "ecr" {
 }
 
 resource "aws_ecr_repository_policy" "ecr" {
-  for_each   = var.ecr_enabled ? local.images : {}
+  for_each   = var.ecr_enabled && var.ecr_principal_restrict_access ? local.images : {}
   repository = aws_ecr_repository.ecr[each.key].name
   policy = jsonencode({
-    "Version" : "2008-10-17",
-    "Statement" : [
+    Version = "2008-10-17"
+    Statement = [
       {
-        "Effect" : "Allow",
-        "Principal" : "*",
-        "Action" : [
+        Effect    = "Allow"
+        Principal = concat([data.aws_caller_identity.current.arn], var.ecr_policy_principal)
+        Action = [
           "ecr:BatchCheckLayerAvailability",
           "ecr:BatchGetImage",
           "ecr:CompleteLayerUpload",
