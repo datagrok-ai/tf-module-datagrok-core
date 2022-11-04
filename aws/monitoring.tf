@@ -50,7 +50,7 @@ resource "aws_cloudwatch_metric_alarm" "datagrok_task_count" {
   alarm_name          = "${local.ecs_name}-datagrok-task-count"
   comparison_operator = "LessThanThreshold"
   threshold           = "1"
-  evaluation_periods  = "1"
+  evaluation_periods  = "2"
   treat_missing_data  = "ignore"
   alarm_description   = "This metric monitors ${local.ecs_name} ECS tasks count"
   alarm_actions = compact([
