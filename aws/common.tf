@@ -15,7 +15,7 @@ locals {
   sns_topic_name     = coalesce(var.sns_topic_name, "${var.name}-${var.environment}")
   r53_record         = var.route53_enabled ? try("${var.route53_record_name}.${var.domain_name}", "${var.name}-${var.environment}.${var.domain_name}") : ""
   create_kms         = var.custom_kms_key && !try(length(var.kms_key) > 0, false)
-  admin_password_key = var.set_admin_password ? ("\"adminPassword\": " + try(length(var.admin_password) > 0, false) ? "\"${var.admin_password}\"" : "\"${random_password.admin_password[0].result}\"") : ""
+  admin_password_key = var.set_admin_password ? (try(length(var.admin_password) > 0, false) ? "\"adminPassword\": \"${var.admin_password}\"" : "\"adminPassword\": \"${random_password.admin_password[0].result}\"") : ""
 
   images = {
     datagrok = {
