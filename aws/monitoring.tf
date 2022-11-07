@@ -228,17 +228,48 @@ resource "aws_cloudwatch_metric_alarm" "datagrok_lb_5xx_count" {
   count               = var.monitoring.alarms_enabled ? 1 : 0
   alarm_name          = "${local.lb_name}-datagrok-lb-5xx"
   comparison_operator = "GreaterThanThreshold"
-  evaluation_periods  = "5"
+  evaluation_periods  = "1"
   metric_name         = "HTTPCode_ELB_5XX_Count"
   namespace           = "AWS/ApplicationELB"
-  period              = "300"
+  period              = "60"
   statistic           = "Sum"
   threshold           = "0"
-  alarm_description   = "Average API 5XX load balancer error code count is too high"
-  datapoints_to_alarm = 5
-  treat_missing_data  = "ignore"
+  alarm_description   = "${local.lb_name} external ALB 5XX error code count is too high"
+  datapoints_to_alarm = 1
+  treat_missing_data  = "notBreaching"
   dimensions = {
     "LoadBalancer" = module.lb_ext.lb_arn_suffix
+  }
+  alarm_actions = compact([
+    var.monitoring.slack_alerts ?
+    module.notify_slack.slack_topic_arn :
+    "",
+    var.monitoring.email_alerts ?
+    module.sns_topic.sns_topic_arn :
+    "",
+    !var.monitoring.create_sns_topic ?
+    var.monitoring.sns_topic_arn :
+    ""
+  ])
+  tags = local.tags
+}
+
+resource "aws_cloudwatch_metric_alarm" "lb_target_5xx_count" {
+  count               = var.monitoring.alarms_enabled ? length(local.targets) : 0
+  alarm_name          = "datagrok-lb-target-${module.lb_ext.target_group_names[count.index]}-5xx"
+  comparison_operator = "GreaterThanThreshold"
+  threshold           = "0"
+  alarm_description   = "${local.ecs_name} external ALB target group ${module.lb_ext.target_group_names[count.index]} registered 5XX errors"
+  treat_missing_data  = "notBreaching"
+  period              = "120"
+  evaluation_periods  = "1"
+  datapoints_to_alarm = 1
+  statistic           = "Sum"
+  metric_name         = "HTTPCode_Target_5XX_Count"
+  namespace           = "AWS/ApplicationELB"
+  dimensions = {
+    TargetGroup  = module.lb_ext.target_group_arn_suffixes[count.index]
+    LoadBalancer = module.lb_ext.lb_arn_suffix
   }
   alarm_actions = compact([
     var.monitoring.slack_alerts ?
