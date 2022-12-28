@@ -37,7 +37,7 @@ data "aws_iam_policy_document" "bucket_policy" {
       ], var.s3_policy_principal))
     }
     actions = ["s3:*"]
-    effect = "Allow"
+    effect  = "Allow"
     resources = [
       module.s3_bucket.s3_bucket_arn,
       "${module.s3_bucket.s3_bucket_arn}/*"
@@ -65,8 +65,8 @@ data "aws_iam_policy_document" "bucket_policy" {
       variable = "aws:SourceVpce"
     }
     condition {
-      test     = "StringNotEquals"
-      values   = compact(concat([
+      test = "StringNotEquals"
+      values = compact(concat([
         "arn:aws:iam::${data.aws_caller_identity.current.account_id}:root"
       ], var.s3_policy_principal))
       variable = "aws:PrincipalArn"
