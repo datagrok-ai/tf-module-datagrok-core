@@ -200,6 +200,13 @@ variable "s3_name" {
   description = "The name of S3 bucket for Datagrok. If it is not specified, the name along with the environment will be used."
 }
 
+variable "s3_policy_principal" {
+  type        = list(string)
+  default     = []
+  nullable    = false
+  description = "List of principal ARNs which will have access to S3 bucket. By default it is limited to the root ARN."
+}
+
 variable "kms_key" {
   type        = string
   default     = null

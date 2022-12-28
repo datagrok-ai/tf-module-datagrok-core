@@ -29,6 +29,21 @@ module "log_bucket" {
 }
 data "aws_iam_policy_document" "bucket_policy" {
   statement {
+    sid = "0"
+    principals {
+      type = "AWS"
+      identifiers = compact(concat([
+        "arn:aws:iam::${data.aws_caller_identity.current.account_id}:root"
+      ], var.s3_policy_principal))
+    }
+    actions = ["s3:*"]
+    effect = "Allow"
+    resources = [
+      module.s3_bucket.s3_bucket_arn,
+      "${module.s3_bucket.s3_bucket_arn}/*"
+    ]
+  }
+  statement {
     sid = "1"
     principals {
       identifiers = ["*"]
@@ -48,6 +63,13 @@ data "aws_iam_policy_document" "bucket_policy" {
       test     = "StringNotEquals"
       values   = [try(module.vpc_endpoint[0].endpoints["s3"].id, var.vpc_endpoint_id)]
       variable = "aws:SourceVpce"
+    }
+    condition {
+      test     = "StringNotEquals"
+      values   = compact(concat([
+        "arn:aws:iam::${data.aws_caller_identity.current.account_id}:root"
+      ], var.s3_policy_principal))
+      variable = "aws:PrincipalArn"
     }
   }
 }
