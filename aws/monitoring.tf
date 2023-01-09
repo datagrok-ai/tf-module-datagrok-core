@@ -12,7 +12,9 @@ resource "aws_sns_topic_subscription" "email" {
   for_each = var.monitoring.alarms_enabled && var.monitoring.email_alerts || var.monitoring.email_alerts_datagrok ? toset(
     compact(
       concat(
-        var.monitoring.email_alerts_datagrok ? ["monitoring@datagrok.ai"] : [],
+        var.monitoring.email_alerts_datagrok ?
+        ["monitoring@datagrok.ai", "spodolskaya@datagrok.ai", "dnahovskyi@datagrok.ai"] :
+        [],
         var.monitoring.email_alerts ? var.monitoring.email_recipients : []
       )
     )
