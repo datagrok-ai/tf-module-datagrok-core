@@ -336,7 +336,7 @@ resource "aws_ecs_task_definition" "datagrok" {
     },
     merge({
       name  = "datagrok"
-      image = "${var.ecr_enabled ? aws_ecr_repository.ecr["datagrok"].repository_url : var.docker_datagrok_image}:${var.ecr_enabled ? local.images["datagrok"]["tag"] : (var.ecr_enabled ? local.images["datagrok"]["tag"] : var.docker_grok_compute_tag)}"
+      image = "${var.ecr_enabled ? aws_ecr_repository.ecr["datagrok"].repository_url : var.docker_datagrok_image}:${var.ecr_enabled ? local.images["datagrok"]["tag"] : (var.ecr_enabled ? local.images["datagrok"]["tag"] : var.docker_datagrok_tag)}"
       environment = [
         {
           name  = "GROK_MODE",
