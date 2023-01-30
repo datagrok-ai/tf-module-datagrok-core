@@ -400,7 +400,7 @@ EOF
   execution_role_arn       = aws_iam_role.exec.arn
   task_role_arn            = aws_iam_role.task.arn
   requires_compatibilities = [var.ecs_launch_type]
-  depends_on = [null_resource.ecr_push]
+  depends_on               = [null_resource.ecr_push]
 }
 resource "aws_service_discovery_private_dns_namespace" "datagrok" {
   count       = var.service_discovery_namespace.create && var.ecs_launch_type == "FARGATE" ? 1 : 0
