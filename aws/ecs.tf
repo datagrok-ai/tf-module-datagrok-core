@@ -210,7 +210,7 @@ resource "aws_iam_policy" "ecr" {
 }
 
 resource "aws_iam_policy" "docker_hub" {
-  count       = !var.ecr_enabled ? 1 : 0
+  count       = !var.ecr_enabled && try(var.docker_hub_credentials.create_secret, false) ? 1 : 0
   name        = "${local.ecs_name}_docker_hub"
   description = "Datagrok Docker Hub credentials policy for ECS task"
 
@@ -255,7 +255,8 @@ resource "aws_iam_role" "exec" {
   })
   managed_policy_arns = compact([
     aws_iam_policy.exec.arn,
-    var.ecr_enabled ? aws_iam_policy.ecr[0].arn : aws_iam_policy.docker_hub[0].arn
+    var.ecr_enabled ? aws_iam_policy.ecr[0].arn : (
+    try(var.docker_hub_credentials.create_secret, false) ? aws_iam_policy.docker_hub[0].arn : "")
   ])
 
   tags = local.tags
@@ -303,7 +304,8 @@ resource "aws_iam_role" "task" {
   managed_policy_arns = compact([
     aws_iam_policy.exec.arn,
     aws_iam_policy.task.arn,
-    var.ecr_enabled ? aws_iam_policy.ecr[0].arn : aws_iam_policy.docker_hub[0].arn
+    var.ecr_enabled ? aws_iam_policy.ecr[0].arn : (
+    try(var.docker_hub_credentials.create_secret, false) ? aws_iam_policy.docker_hub[0].arn : "")
   ])
   #  managed_policy_arns = [aws_iam_policy.task.arn]
 
@@ -334,7 +336,7 @@ resource "aws_ecs_task_definition" "datagrok" {
     },
     merge({
       name  = "datagrok"
-      image = "${var.ecr_enabled ? aws_ecr_repository.ecr["datagrok"].repository_url : var.docker_datagrok_image}:${var.docker_datagrok_tag}"
+      image = "${var.ecr_enabled ? aws_ecr_repository.ecr["datagrok"].repository_url : var.docker_datagrok_image}:${var.ecr_enabled ? local.images["datagrok"]["tag"] : (var.ecr_enabled ? local.images["datagrok"]["tag"] : var.docker_grok_compute_tag)}"
       environment = [
         {
           name  = "GROK_MODE",
@@ -385,7 +387,7 @@ EOF
       ]
       memoryReservation = var.datagrok_container_memory_reservation
       cpu               = var.datagrok_container_cpu
-      }, var.ecr_enabled ? {} : {
+      }, var.ecr_enabled || !try(var.docker_hub_credentials.create_secret, false) ? {} : {
       repositoryCredentials = {
         credentialsParameter = try(aws_secretsmanager_secret.docker_hub[0].arn, var.docker_hub_credentials.secret_arn)
       }
@@ -398,6 +400,7 @@ EOF
   execution_role_arn       = aws_iam_role.exec.arn
   task_role_arn            = aws_iam_role.task.arn
   requires_compatibilities = [var.ecs_launch_type]
+  depends_on = [null_resource.ecr_push]
 }
 resource "aws_service_discovery_private_dns_namespace" "datagrok" {
   count       = var.service_discovery_namespace.create && var.ecs_launch_type == "FARGATE" ? 1 : 0
@@ -609,7 +612,8 @@ resource "aws_iam_role" "ec2" {
   managed_policy_arns = compact([
     aws_iam_policy.exec.arn,
     aws_iam_policy.ec2.arn,
-    var.ecr_enabled ? aws_iam_policy.ecr[0].arn : aws_iam_policy.docker_hub[0].arn
+    var.ecr_enabled ? aws_iam_policy.ecr[0].arn : (
+    try(var.docker_hub_credentials.create_secret, false) ? aws_iam_policy.docker_hub[0].arn : "")
   ])
 
   tags = local.tags
