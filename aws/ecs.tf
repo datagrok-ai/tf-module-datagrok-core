@@ -210,7 +210,7 @@ resource "aws_iam_policy" "ecr" {
 }
 
 resource "aws_iam_policy" "docker_hub" {
-  count       = !var.ecr_enabled && try(var.docker_hub_credentials.create_secret, false) ? 1 : 0
+  count       = !var.ecr_enabled ? 1 : 0
   name        = "${local.ecs_name}_docker_hub"
   description = "Datagrok Docker Hub credentials policy for ECS task"
 
@@ -255,8 +255,7 @@ resource "aws_iam_role" "exec" {
   })
   managed_policy_arns = compact([
     aws_iam_policy.exec.arn,
-    var.ecr_enabled ? aws_iam_policy.ecr[0].arn : (
-    try(var.docker_hub_credentials.create_secret, false) ? aws_iam_policy.docker_hub[0].arn : "")
+    var.ecr_enabled ? aws_iam_policy.ecr[0].arn : aws_iam_policy.docker_hub[0].arn
   ])
 
   tags = local.tags
@@ -304,8 +303,7 @@ resource "aws_iam_role" "task" {
   managed_policy_arns = compact([
     aws_iam_policy.exec.arn,
     aws_iam_policy.task.arn,
-    var.ecr_enabled ? aws_iam_policy.ecr[0].arn : (
-    try(var.docker_hub_credentials.create_secret, false) ? aws_iam_policy.docker_hub[0].arn : "")
+    var.ecr_enabled ? aws_iam_policy.ecr[0].arn : aws_iam_policy.docker_hub[0].arn
   ])
   #  managed_policy_arns = [aws_iam_policy.task.arn]
 
@@ -387,7 +385,7 @@ EOF
       ]
       memoryReservation = var.datagrok_container_memory_reservation
       cpu               = var.datagrok_container_cpu
-      }, var.ecr_enabled || !try(var.docker_hub_credentials.create_secret, false) ? {} : {
+      }, var.ecr_enabled ? {} : {
       repositoryCredentials = {
         credentialsParameter = try(aws_secretsmanager_secret.docker_hub[0].arn, var.docker_hub_credentials.secret_arn)
       }
@@ -612,8 +610,7 @@ resource "aws_iam_role" "ec2" {
   managed_policy_arns = compact([
     aws_iam_policy.exec.arn,
     aws_iam_policy.ec2.arn,
-    var.ecr_enabled ? aws_iam_policy.ecr[0].arn : (
-    try(var.docker_hub_credentials.create_secret, false) ? aws_iam_policy.docker_hub[0].arn : "")
+    var.ecr_enabled ? aws_iam_policy.ecr[0].arn : aws_iam_policy.docker_hub[0].arn
   ])
 
   tags = local.tags
