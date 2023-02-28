@@ -78,7 +78,9 @@ module "datagrok_core" {
 | [aws_ecr_repository.ecr](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/ecr_repository) | resource |
 | [aws_ecr_repository_policy.ecr](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/ecr_repository_policy) | resource |
 | [aws_ecs_service.datagrok](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/ecs_service) | resource |
+| [aws_ecs_service.grok_connect](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/ecs_service) | resource |
 | [aws_ecs_task_definition.datagrok](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/ecs_task_definition) | resource |
+| [aws_ecs_task_definition.grok_connect](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/ecs_task_definition) | resource |
 | [aws_iam_instance_profile.ec2_profile](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/iam_instance_profile) | resource |
 | [aws_iam_policy.docker_hub](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/iam_policy) | resource |
 | [aws_iam_policy.ec2](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/iam_policy) | resource |
@@ -93,6 +95,7 @@ module "datagrok_core" {
 | [aws_kms_ciphertext.slack_url](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/kms_ciphertext) | resource |
 | [aws_route53_query_log.external](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/route53_query_log) | resource |
 | [aws_route53_record.external](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/route53_record) | resource |
+| [aws_route53_record.grok_connect](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/route53_record) | resource |
 | [aws_route53_record.internal](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/route53_record) | resource |
 | [aws_route53_zone.external](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/route53_zone) | resource |
 | [aws_route53_zone.internal](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/route53_zone) | resource |
@@ -100,6 +103,7 @@ module "datagrok_core" {
 | [aws_secretsmanager_secret_version.docker_hub](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/secretsmanager_secret_version) | resource |
 | [aws_service_discovery_private_dns_namespace.datagrok](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/service_discovery_private_dns_namespace) | resource |
 | [aws_service_discovery_service.datagrok](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/service_discovery_service) | resource |
+| [aws_service_discovery_service.grok_connect](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/service_discovery_service) | resource |
 | [aws_sns_topic_subscription.email](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/sns_topic_subscription) | resource |
 | [null_resource.ecr_push](https://registry.terraform.io/providers/hashicorp/null/latest/docs/resources/resource) | resource |
 | [random_password.admin_password](https://registry.terraform.io/providers/hashicorp/random/latest/docs/resources/password) | resource |
@@ -140,6 +144,8 @@ module "datagrok_core" {
 | <a name="input_db_name"></a> [db\_name](#input\_db\_name) | The database name in RDS. | `string` | `null` | no |
 | <a name="input_docker_datagrok_image"></a> [docker\_datagrok\_image](#input\_docker\_datagrok\_image) | Datagrok Docker Image registry location. By default the official image from Docker Hub will be used. | `string` | `"docker.io/datagrok/datagrok"` | no |
 | <a name="input_docker_datagrok_tag"></a> [docker\_datagrok\_tag](#input\_docker\_datagrok\_tag) | Tag from Docker Registry for Datagrok Docker Image | `string` | `"latest"` | no |
+| <a name="input_docker_grok_connect_image"></a> [docker\_grok\_connect\_image](#input\_docker\_grok\_connect\_image) | Grok Connect Docker Image registry location. By default the official image from Docker Hub will be used. | `string` | `"docker.io/datagrok/grok_connect"` | no |
+| <a name="input_docker_grok_connect_tag"></a> [docker\_grok\_connect\_tag](#input\_docker\_grok\_connect\_tag) | Tag from Docker Registry for Datagrok Grok Connect Image | `string` | `"latest"` | no |
 | <a name="input_docker_hub_credentials"></a> [docker\_hub\_credentials](#input\_docker\_hub\_credentials) | Docker Hub credentials to download images.<br>`create_secret` - Specifies if new secret with Docker Hub credentials will be created.<br>`user` - Docker Hub User to access Docker Hub and download datagrok images. Can be ommited if `secret_arn` is specified<br>`password` - Docker Hub Token to access Docker Hub and download datagrok images. Can be ommited if `secret_arn` is specified<br>`secret_arn` - The ARN of AWS Secret which contains Docker Hub Token to access Docker Hub and download datagrok images. If not specified the secret will be created using `user` and `password` variables<br>Either user(`user`) - password(`password`) pair or AWS Secret ARN (`secret_arn`) should be specified. | <pre>object({<br>    create_secret = bool<br>    password      = optional(string)<br>    user          = optional(string)<br>    secret_arn    = optional(string)<br>  })</pre> | `null` | no |
 | <a name="input_domain_name"></a> [domain\_name](#input\_domain\_name) | This is the name of domain for datagrok endpoint. It is used for the external hosted zone in Route53. and to create ACM certificates. | `string` | `""` | no |
 | <a name="input_ec2_detailed_monitoring_enabled"></a> [ec2\_detailed\_monitoring\_enabled](#input\_ec2\_detailed\_monitoring\_enabled) | Specifies whether Monitoring Insights for EC2 instance are enabled. We recommend to set it to true for production stand. | `bool` | `true` | no |
@@ -157,6 +163,10 @@ module "datagrok_core" {
 | <a name="input_environment"></a> [environment](#input\_environment) | The environment of a stand. It will be used to name resources along with the name. | `string` | n/a | yes |
 | <a name="input_flow_log_cloudwatch_log_group_name_prefix"></a> [flow\_log\_cloudwatch\_log\_group\_name\_prefix](#input\_flow\_log\_cloudwatch\_log\_group\_name\_prefix) | Flow logs CloudWatch Log Group name prefix. | `string` | `"/aws/vpc-flow-log/"` | no |
 | <a name="input_flow_log_log_format"></a> [flow\_log\_log\_format](#input\_flow\_log\_log\_format) | Flow logs format. | `string` | `null` | no |
+| <a name="input_grok_connect_container_cpu"></a> [grok\_connect\_container\_cpu](#input\_grok\_connect\_container\_cpu) | The number of cpu units the Amazon ECS container agent reserves for the Grok Connect container. | `number` | `512` | no |
+| <a name="input_grok_connect_container_memory_reservation"></a> [grok\_connect\_container\_memory\_reservation](#input\_grok\_connect\_container\_memory\_reservation) | The soft limit (in MiB) of memory to reserve for the Grok Connect container. | `number` | `512` | no |
+| <a name="input_grok_connect_cpu"></a> [grok\_connect\_cpu](#input\_grok\_connect\_cpu) | Number of cpu units used by the Grok Connect FARGATE task. The hard limit of CPU units to present for the task. | `number` | `1024` | no |
+| <a name="input_grok_connect_memory"></a> [grok\_connect\_memory](#input\_grok\_connect\_memory) | Amount (in MiB) of memory used by the Grok Connect FARGATE task. The hard limit of memory (in MiB) to present to the task. | `number` | `4096` | no |
 | <a name="input_instance_type"></a> [instance\_type](#input\_instance\_type) | EC2 instance type. The default value is the minimum recommended type. | `string` | `"t3.medium"` | no |
 | <a name="input_key_pair_name"></a> [key\_pair\_name](#input\_key\_pair\_name) | Existing SSH Key Pair name for access to EC2 instance. If not set public\_key is required. | `string` | `null` | no |
 | <a name="input_kms_admins"></a> [kms\_admins](#input\_kms\_admins) | https://docs.aws.amazon.com/kms/latest/developerguide/key-policy-default.html#key-policy-default-allow-administrators | `list(string)` | `null` | no |
