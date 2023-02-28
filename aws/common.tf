@@ -22,6 +22,10 @@ locals {
       image = var.docker_datagrok_image
       tag   = var.docker_datagrok_tag == "latest" ? "${var.docker_datagrok_tag}-${formatdate("YYYYMMDDhhmmss", timestamp())}" : var.docker_datagrok_tag
     },
+    grok_connect = {
+      image = var.docker_grok_connect_image
+      tag   = var.docker_grok_connect_tag == "latest" ? "${var.docker_grok_connect_tag}-${formatdate("YYYYMMDDhhmmss", timestamp())}" : var.docker_grok_connect_tag
+    },
     "ecs-searchdomain-sidecar-${var.name}-${var.environment}" = {
       image = "docker/ecs-searchdomain-sidecar"
       tag   = "1.0"

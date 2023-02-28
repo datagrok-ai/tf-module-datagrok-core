@@ -200,6 +200,13 @@ resource "aws_route53_record" "internal" {
     evaluate_target_health = true
   }
 }
+resource "aws_route53_record" "grok_connect" {
+  count   = var.ecs_launch_type == "EC2" ? 1 : 0
+  zone_id = var.create_route53_internal_zone ? aws_route53_zone.internal[0].id : var.route53_internal_zone
+  name    = "grok_connect.datagrok.${var.name}.${var.environment}.internal"
+  type    = "A"
+  records = [aws_instance.ec2[0].private_ip]
+}
 
 provider "aws" {
   alias  = "datagrok-cloudwatch-r53-external"

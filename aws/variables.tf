@@ -543,6 +543,34 @@ variable "datagrok_cpu" {
   description = "Number of cpu units used by the Datagrok FARGATE task. The hard limit of CPU units to present for the task."
 }
 
+variable "grok_connect_container_memory_reservation" {
+  type        = number
+  default     = 512
+  nullable    = false
+  description = "The soft limit (in MiB) of memory to reserve for the Grok Connect container."
+}
+
+variable "grok_connect_container_cpu" {
+  type        = number
+  default     = 512
+  nullable    = false
+  description = "The number of cpu units the Amazon ECS container agent reserves for the Grok Connect container."
+}
+
+variable "grok_connect_memory" {
+  type        = number
+  default     = 4096
+  nullable    = false
+  description = "Amount (in MiB) of memory used by the Grok Connect FARGATE task. The hard limit of memory (in MiB) to present to the task."
+}
+
+variable "grok_connect_cpu" {
+  type        = number
+  default     = 1024
+  nullable    = false
+  description = "Number of cpu units used by the Grok Connect FARGATE task. The hard limit of CPU units to present for the task."
+}
+
 variable "ecr_enabled" {
   type        = bool
   default     = false
@@ -583,6 +611,20 @@ variable "docker_datagrok_tag" {
   default     = "latest"
   nullable    = false
   description = "Tag from Docker Registry for Datagrok Docker Image"
+}
+
+variable "docker_grok_connect_image" {
+  type        = string
+  default     = "docker.io/datagrok/grok_connect"
+  nullable    = false
+  description = "Grok Connect Docker Image registry location. By default the official image from Docker Hub will be used."
+}
+
+variable "docker_grok_connect_tag" {
+  type        = string
+  default     = "latest"
+  nullable    = false
+  description = "Tag from Docker Registry for Datagrok Grok Connect Image"
 }
 
 variable "service_discovery_namespace" {
