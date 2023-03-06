@@ -562,7 +562,7 @@ resource "aws_ecs_task_definition" "grok_connect" {
     },
     merge({
       name  = "grok_connect"
-      image = "${var.ecr_enabled ? aws_ecr_repository.ecr["grok_connect"].repository_url : var.docker_datagrok_image}:${var.ecr_enabled ? local.images["grok_connect"]["tag"] : (var.ecr_enabled ? local.images["grok_connect"]["tag"] : var.docker_datagrok_tag)}"
+      image = "${var.ecr_enabled ? aws_ecr_repository.ecr["grok_connect"].repository_url : var.docker_grok_connect_image}:${var.ecr_enabled ? local.images["grok_connect"]["tag"] : (var.ecr_enabled ? local.images["grok_connect"]["tag"] : var.docker_grok_connect_tag)}"
       dependsOn = [
         {
           "condition" : "SUCCESS",
