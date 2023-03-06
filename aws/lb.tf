@@ -205,6 +205,7 @@ resource "aws_route53_record" "grok_connect" {
   zone_id = var.create_route53_internal_zone ? aws_route53_zone.internal[0].id : var.route53_internal_zone
   name    = "grok_connect.datagrok.${var.name}.${var.environment}.internal"
   type    = "A"
+  ttl     = 60
   records = [aws_instance.ec2[0].private_ip]
 }
 
