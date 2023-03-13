@@ -160,7 +160,7 @@ resource "aws_backup_plan" "datagrok_public_s3_backup_plan" {
     schedule          = "cron(0 05 * * ? *)"
 
     lifecycle {
-      delete_after = "35"
+      delete_after = "14"
     }
 
     enable_continuous_backup = false
