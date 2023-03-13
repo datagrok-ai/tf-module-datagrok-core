@@ -123,3 +123,58 @@ module "s3_bucket" {
 
   tags = local.tags
 }
+# aws S3 backup
+resource "aws_backup_vault" "datagrok_public_vault" {
+  name = "datagrok_public_vault"
+}
+
+resource "aws_iam_role" "backup_role" {
+  name = "s3-backup-role"
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect    = "Allow"
+        Principal = {
+          Service = "backup.amazonaws.com"
+        }
+        Action = "sts:AssumeRole"
+      }
+    ]
+  })
+}
+
+# Attach an IAM policy to the backup role that allows  performing AWS Backup jobs
+resource "aws_iam_role_policy_attachment" "backup_policy_attachment" {
+  policy_arn = "arn:aws:iam::aws:policy/service-role/AWSBackupServiceRolePolicyForBackup"
+  role       = aws_iam_role.backup_role.name
+}
+resource "aws_backup_plan" "datagrok_public_s3_backup_plan" {
+  name        = "datagrok_public_s3_backup_plan"
+  description = "datagrok_public s3 bucket backup plan"
+
+  rule {
+    rule_name         = "Daily S3 backups-rule"
+    target_vault_name = aws_backup_vault.datagrok_public_vault.name
+    schedule          = "cron(0 05 * * ? *)"
+
+    lifecycle {
+      delete_after = "35"
+    }
+
+    enable_continuous_backup = false
+
+    tags = local.tags
+    
+    }
+}
+resource "aws_backup_selection" "s3_bucket_selection" {
+  iam_role_arn = aws_iam_role.backup_role.arn
+  name         = "s3_bucket_selection"
+  plan_id      = aws_backup_plan.datagrok_public_s3_backup_plan.id
+
+  resources = [
+    module.s3_bucket.s3_bucket_arn
+  ]
+}
