@@ -123,7 +123,7 @@ module "s3_bucket" {
 
   tags = local.tags
 }
-# aws S3 backup
+# aws S3 backup //////////////////////
 resource "aws_backup_vault" "datagrok_public_vault" {
   name = "datagrok_public_vault"
 }
@@ -152,10 +152,9 @@ resource "aws_iam_role_policy_attachment" "backup_policy_attachment" {
 }
 resource "aws_backup_plan" "datagrok_public_s3_backup_plan" {
   name        = "datagrok_public_s3_backup_plan"
-  description = "datagrok_public s3 bucket backup plan"
 
   rule {
-    rule_name         = "Daily S3 backups-rule"
+    rule_name         = "Daily-S3-backups-rule"
     target_vault_name = aws_backup_vault.datagrok_public_vault.name
     schedule          = "cron(0 05 * * ? *)"
 
@@ -165,9 +164,9 @@ resource "aws_backup_plan" "datagrok_public_s3_backup_plan" {
 
     enable_continuous_backup = false
 
-    tags = local.tags
-    
+      
     }
+  tags = local.tags  
 }
 resource "aws_backup_selection" "s3_bucket_selection" {
   iam_role_arn = aws_iam_role.backup_role.arn
