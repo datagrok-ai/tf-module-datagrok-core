@@ -135,7 +135,7 @@ resource "aws_iam_role" "backup_role" {
     Version = "2012-10-17"
     Statement = [
       {
-        Effect    = "Allow"
+        Effect = "Allow"
         Principal = {
           Service = "backup.amazonaws.com"
         }
@@ -166,8 +166,8 @@ resource "aws_backup_plan" "datagrok_public_s3_backup_plan" {
     enable_continuous_backup = false
 
     tags = local.tags
-    
-    }
+
+  }
 }
 resource "aws_backup_selection" "s3_bucket_selection" {
   iam_role_arn = aws_iam_role.backup_role.arn
