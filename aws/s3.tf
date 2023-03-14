@@ -145,9 +145,14 @@ resource "aws_iam_role" "backup_role" {
   })
 }
 
+resource "aws_iam_policy" "s3_backup" {
+  name        = "backup-s3"
+  description = "polisy for backup s3 datagrok-public bucket"
+  policy      = data.aws_iam_policy_document.bucket_policy.json
+}
 # Attach an IAM policy to the backup role that allows  performing AWS Backup jobs
 resource "aws_iam_role_policy_attachment" "backup_policy_attachment" {
-  policy_arn = "arn:aws:iam::aws:policy/service-role/AWSBackupServiceRolePolicyForBackup"
+  policy_arn = aws_iam_policy.s3_backup.arn
   role       = aws_iam_role.backup_role.name
 }
 resource "aws_backup_plan" "datagrok_public_s3_backup_plan" {
