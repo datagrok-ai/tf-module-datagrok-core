@@ -130,25 +130,31 @@ resource "aws_backup_vault" "datagrok_public_vault" {
 
 resource "aws_iam_role" "backup_role" {
   name = "s3-backup-role"
-
-  assume_role_policy = jsonencode({
-    Version = "2012-10-17"
-    Statement = [
-      {
-        Effect    = "Allow"
-        Principal = {
-          Service = "backup.amazonaws.com"
-        }
-        Action = "sts:AssumeRole"
-      }
-    ]
-  })
+  assume_role_policy  = data.aws_iam_policy_document.bucket_policy.json
+  managed_policy_arns = [aws_iam_policy.s3_backup.arn]
 }
 
 resource "aws_iam_policy" "s3_backup" {
   name        = "backup-s3"
   description = "policy for backup s3 datagrok-public bucket"
-  policy      = data.aws_iam_policy_document.bucket_policy.json
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect   = "Allow"
+        Action   = [
+          "s3:ListBucket",
+          "s3:GetBucketLocation",
+          "s3:GetObjectVersion",
+          "s3:GetObjectVersionAcl"
+        ]
+        Resource = [
+           "module.s3_bucket.s3_bucket_arn",
+           "${module.s3_bucket.s3_bucket_arn}/*"
+        ]
+      }
+    ]
+  })
 }
 # Attach an IAM policy to the backup role that allows  performing AWS Backup jobs
 resource "aws_iam_role_policy_attachment" "backup_policy_attachment" {
