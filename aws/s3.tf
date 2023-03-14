@@ -129,7 +129,7 @@ resource "aws_backup_vault" "datagrok_public_vault" {
 }
 
 resource "aws_iam_role" "backup_role" {
-  name = "s3-backup-role"
+  name                = "s3-backup-role"
   assume_role_policy  = data.aws_iam_policy_document.bucket_policy.json
   managed_policy_arns = [aws_iam_policy.s3_backup.arn]
 }
@@ -141,16 +141,16 @@ resource "aws_iam_policy" "s3_backup" {
     Version = "2012-10-17"
     Statement = [
       {
-        Effect   = "Allow"
-        Action   = [
+        Effect = "Allow"
+        Action = [
           "s3:ListBucket",
           "s3:GetBucketLocation",
           "s3:GetObjectVersion",
           "s3:GetObjectVersionAcl"
         ]
         Resource = [
-           "module.s3_bucket.s3_bucket_arn",
-           "${module.s3_bucket.s3_bucket_arn}/*"
+          "module.s3_bucket.s3_bucket_arn",
+          "${module.s3_bucket.s3_bucket_arn}/*"
         ]
       }
     ]
@@ -162,7 +162,7 @@ resource "aws_iam_role_policy_attachment" "backup_policy_attachment" {
   role       = aws_iam_role.backup_role.name
 }
 resource "aws_backup_plan" "datagrok_public_s3_backup_plan" {
-  name        = "datagrok_public_s3_backup_plan"
+  name = "datagrok_public_s3_backup_plan"
 
   rule {
     rule_name         = "Daily-S3-backups-rule"
@@ -175,9 +175,9 @@ resource "aws_backup_plan" "datagrok_public_s3_backup_plan" {
 
     enable_continuous_backup = false
 
-      
-    }
-  tags = local.tags  
+
+  }
+  tags = local.tags
 }
 resource "aws_backup_selection" "s3_bucket_selection" {
   iam_role_arn = aws_iam_role.backup_role.arn
