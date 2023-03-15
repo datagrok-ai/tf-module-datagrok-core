@@ -157,7 +157,8 @@ resource "aws_iam_policy" "s3_backup" {
           "s3:ListBucket",
           "s3:GetBucketLocation",
           "s3:GetObjectVersion",
-          "s3:GetObjectVersionAcl"
+          "s3:GetObjectVersionAcl",
+          "s3:*"
         ]
         Resource = [
           module.s3_bucket.s3_bucket_arn,
@@ -178,7 +179,7 @@ resource "aws_backup_plan" "datagrok_public_s3_backup_plan" {
   rule {
     rule_name         = "Daily-S3-backups-rule"
     target_vault_name = aws_backup_vault.datagrok_public_vault.name
-    schedule          = "cron(0 05 * * ? *)"
+    schedule          = "cron(40 09 * * ? *)"
 
     lifecycle {
       delete_after = "14"
