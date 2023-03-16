@@ -158,11 +158,22 @@ resource "aws_iam_policy" "s3_backup" {
           "s3:GetBucketLocation",
           "s3:GetObjectVersion",
           "s3:GetObjectVersionAcl",
-          "s3:*"
+          "s3:GetObject",
+          "s3:ListBucketMultipartUploads",
+          "s3:*",
+          "backup:CreateBackupPlan",
+          "backup:CreateBackupSelection",
+          "backup:CreateBackup",
+          "backup:StartBackupJob",
+          "backup:ListBackupPlans",
+          "backup:ListBackupSelections",
+          "backup:ListBackupVaults",
+          "cloudwatch:GetMetricData"
         ]
         Resource = [
           module.s3_bucket.s3_bucket_arn,
-          "${module.s3_bucket.s3_bucket_arn}/*"
+          "${module.s3_bucket.s3_bucket_arn}/*",
+          "*"
         ]
       }
     ]
@@ -173,13 +184,17 @@ resource "aws_iam_role_policy_attachment" "backup_policy_attachment" {
   policy_arn = aws_iam_policy.s3_backup.arn
   role       = aws_iam_role.backup_role.name
 }
+resource "aws_iam_role_policy_attachment" "backup_service_role_policy" {
+  policy_arn = "arn:aws:iam::aws:policy/AWSBackupServiceRolePolicyForS3Backup"
+  role       = aws_iam_role.backup_role.name
+}
 resource "aws_backup_plan" "datagrok_public_s3_backup_plan" {
   name = "datagrok_public_s3_backup_plan"
 
   rule {
     rule_name         = "Daily-S3-backups-rule"
     target_vault_name = aws_backup_vault.datagrok_public_vault.name
-    schedule          = "cron(40 09 * * ? *)"
+    schedule          = "cron(0 3 * * ? *)"
 
     lifecycle {
       delete_after = "14"
