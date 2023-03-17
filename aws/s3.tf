@@ -193,7 +193,7 @@ resource "aws_backup_plan" "datagrok_public_s3_backup_plan" {
   rule {
     rule_name         = "Daily-S3-backups-rule"
     target_vault_name = aws_backup_vault.datagrok_public_vault.name
-    schedule          = "cron(50 8 * * ? *)"
+    schedule          = "cron(0 3 * * ? *)"
 
     lifecycle {
       delete_after = "14"
