@@ -130,7 +130,6 @@ resource "aws_backup_vault" "datagrok_public_vault" {
 
 resource "aws_iam_role" "backup_role" {
   name                = "s3-backup-role"
-  managed_policy_arns = [aws_iam_policy.s3_backup.arn]
   assume_role_policy = jsonencode({
     Version = "2012-10-17"
     Statement = [
@@ -194,7 +193,7 @@ resource "aws_backup_plan" "datagrok_public_s3_backup_plan" {
   rule {
     rule_name         = "Daily-S3-backups-rule"
     target_vault_name = aws_backup_vault.datagrok_public_vault.name
-    schedule          = "cron(0 3 * * ? *)"
+    schedule          = "cron(50 8 * * ? *)"
 
     lifecycle {
       delete_after = "14"
