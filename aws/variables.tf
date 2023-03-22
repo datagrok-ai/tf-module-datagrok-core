@@ -524,7 +524,7 @@ variable "datagrok_container_memory_reservation" {
 
 variable "datagrok_container_cpu" {
   type        = number
-  default     = 1024
+  default     = 512
   nullable    = false
   description = "The number of cpu units the Amazon ECS container agent reserves for the Datagrok container."
 }
