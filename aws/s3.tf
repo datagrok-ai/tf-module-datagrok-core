@@ -129,7 +129,7 @@ resource "aws_backup_vault" "datagrok_public_vault" {
 }
 
 resource "aws_iam_role" "backup_role" {
-  name                = "s3-backup-role"
+  name = "s3-backup-role"
   assume_role_policy = jsonencode({
     Version = "2012-10-17"
     Statement = [
