@@ -125,7 +125,7 @@ module "s3_bucket" {
 }
 # aws S3 backup //////////////////////
 resource "aws_backup_vault" "datagrok_public_vault" {
-  name = "datagrok_public_vault"
+  name = var.s3_backup_vault_name
 }
 
 resource "aws_iam_role" "backup_role" {
@@ -188,12 +188,12 @@ resource "aws_iam_role_policy_attachment" "backup_service_role_policy" {
   role       = aws_iam_role.backup_role.name
 }
 resource "aws_backup_plan" "datagrok_public_s3_backup_plan" {
-  name = "datagrok_public_s3_backup_plan"
+  name = var.s3_backup_plan_name
 
   rule {
     rule_name         = "Daily-S3-backups-rule"
     target_vault_name = aws_backup_vault.datagrok_public_vault.name
-    schedule          = "cron(0 3 * * ? *)"
+    schedule          = var.s3_backup_schedule
 
     lifecycle {
       delete_after = "14"

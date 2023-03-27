@@ -627,6 +627,27 @@ variable "docker_grok_connect_tag" {
   description = "Tag from Docker Registry for Datagrok Grok Connect Image"
 }
 
+variable "s3_backup_vault_name" {
+  type        = string
+  default     = "datagrok_public_vault"
+  nullable    = false
+  description = "Name of aws s3 vault for do s3 bucket backup "
+}
+
+variable "s3_backup_plan_name" {
+  type        = string
+  default     = "datagrok_public_s3_backup_plan"
+  nullable    = false
+  description = "Name of aws s3 backup plan for do s3 bucket backup "
+}
+
+variable "s3_backup_schedule" {
+  type        = string
+  default     = "cron(0 3 * * ? *)"
+  nullable    = false
+  description = "Schedule for backup aws s3 bucket. By default is everyday 3 AM"
+}
+
 variable "service_discovery_namespace" {
   type = object({
     create = bool
