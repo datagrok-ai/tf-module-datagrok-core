@@ -146,7 +146,7 @@ resource "aws_iam_role" "s3_backup_role" {
 
 resource "aws_iam_policy" "s3_backup" {
   name        = "${var.name}-${var.environment}-backup-s3-policy"
-  description = "policy for backup ${module.s3_bucket.s3_bucket_id} s3 bucket"
+  description = "Policy for backup ${module.s3_bucket.s3_bucket_id} s3 bucket"
   policy = jsonencode({
     Version = "2012-10-17"
     Statement = [
