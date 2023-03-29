@@ -129,7 +129,7 @@ resource "aws_backup_vault" "s3_backup_vault" {
 }
 
 resource "aws_iam_role" "s3_backup_role" {
-  name                = "s3-backup-role-${var.name}-${var.environment}"
+  name                = "${var.name}-${var.environment}-s3-backup-role"
   assume_role_policy = jsonencode({
     Version = "2012-10-17"
     Statement = [
