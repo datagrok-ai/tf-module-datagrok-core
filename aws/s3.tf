@@ -124,12 +124,12 @@ module "s3_bucket" {
   tags = local.tags
 }
 # aws S3 backup //////////////////////
-resource "aws_backup_vault" "datagrok_public_vault" {
-  name = var.s3_backup_vault_name
+resource "aws_backup_vault" "s3_backup_vault" {
+  name = "s3-backup-vault-${var.name}-${var.environment}"
 }
 
-resource "aws_iam_role" "backup_role" {
-  name                = "s3-backup-role"
+resource "aws_iam_role" "s3_backup_role" {
+  name                = "s3-backup-role-${var.name}-${var.environment}"
   assume_role_policy = jsonencode({
     Version = "2012-10-17"
     Statement = [
@@ -145,8 +145,8 @@ resource "aws_iam_role" "backup_role" {
 }
 
 resource "aws_iam_policy" "s3_backup" {
-  name        = "backup-s3"
-  description = "policy for backup s3 datagrok-public bucket"
+  name        = "backup-s3-policy-${var.name}-${var.environment}"
+  description = "policy for backup ${module.s3_bucket.s3_bucket_id} s3 bucket"
   policy = jsonencode({
     Version = "2012-10-17"
     Statement = [
@@ -181,22 +181,22 @@ resource "aws_iam_policy" "s3_backup" {
 # Attach an IAM policy to the backup role that allows  performing AWS Backup jobs
 resource "aws_iam_role_policy_attachment" "backup_policy_attachment" {
   policy_arn = aws_iam_policy.s3_backup.arn
-  role       = aws_iam_role.backup_role.name
+  role       = aws_iam_role.s3_backup_role.name
 }
 resource "aws_iam_role_policy_attachment" "backup_service_role_policy" {
   policy_arn = "arn:aws:iam::aws:policy/AWSBackupServiceRolePolicyForS3Backup"
-  role       = aws_iam_role.backup_role.name
+  role       = aws_iam_role.s3_backup_role.name
 }
-resource "aws_backup_plan" "datagrok_public_s3_backup_plan" {
-  name = var.s3_backup_plan_name
+resource "aws_backup_plan" "s3_backup_plan" {
+  name = "s3-backup-plan-${var.name}-${var.environment}"
 
   rule {
     rule_name         = "Daily-S3-backups-rule"
-    target_vault_name = aws_backup_vault.datagrok_public_vault.name
+    target_vault_name = aws_backup_vault.s3_backup_vault.name
     schedule          = var.s3_backup_schedule
 
     lifecycle {
-      delete_after = "14"
+      delete_after = "${var.s3_backup_lifecycle}"
     }
 
     enable_continuous_backup = false
@@ -205,10 +205,10 @@ resource "aws_backup_plan" "datagrok_public_s3_backup_plan" {
   }
   tags = local.tags
 }
-resource "aws_backup_selection" "s3_bucket_selection" {
-  iam_role_arn = aws_iam_role.backup_role.arn
-  name         = "s3_bucket_selection"
-  plan_id      = aws_backup_plan.datagrok_public_s3_backup_plan.id
+resource "aws_backup_selection" "s3_bucket_backup_selection" {
+  iam_role_arn = aws_iam_role.s3_backup_role.arn
+  name         = "s3-bucket-backup-selection-${var.name}-${var.environment}"
+  plan_id      = aws_backup_plan.s3_backup_plan.id
 
   resources = [
     module.s3_bucket.s3_bucket_arn

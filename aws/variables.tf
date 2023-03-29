@@ -200,6 +200,13 @@ variable "s3_name" {
   description = "The name of S3 bucket for Datagrok. If it is not specified, the name along with the environment will be used."
 }
 
+variable "s3_backup_lifecycle" {
+  type        = number
+  default     = 14
+  nullable    = true
+  description = "Describes how many days save s3 backup snapshot."
+}
+
 variable "s3_policy_principal" {
   type        = list(string)
   default     = []
@@ -625,20 +632,6 @@ variable "docker_grok_connect_tag" {
   default     = "latest"
   nullable    = false
   description = "Tag from Docker Registry for Datagrok Grok Connect Image"
-}
-
-variable "s3_backup_vault_name" {
-  type        = string
-  default     = "datagrok_public_vault"
-  nullable    = false
-  description = "Name of aws s3 vault for do s3 bucket backup "
-}
-
-variable "s3_backup_plan_name" {
-  type        = string
-  default     = "datagrok_public_s3_backup_plan"
-  nullable    = false
-  description = "Name of aws s3 backup plan for do s3 bucket backup "
 }
 
 variable "s3_backup_schedule" {
