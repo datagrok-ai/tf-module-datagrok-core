@@ -204,7 +204,7 @@ variable "s3_backup_lifecycle" {
   type        = number
   default     = 14
   nullable    = true
-  description = "Describes how many days save s3 backup snapshot."
+  description = "Describes how many days store s3 backup snapshot."
 }
 
 variable "s3_policy_principal" {
