@@ -638,7 +638,7 @@ variable "s3_backup_schedule" {
   type        = string
   default     = "cron(0 3 * * ? *)"
   nullable    = false
-  description = "Schedule for backup aws s3 bucket. By default is every day 3 AM"
+  description = "Schedule for backup aws s3 bucket. By default, time is every day 3 AM"
 }
 
 variable "service_discovery_namespace" {
