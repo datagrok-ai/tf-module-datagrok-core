@@ -129,7 +129,7 @@ resource "aws_backup_vault" "s3_backup_vault" {
 }
 
 resource "aws_iam_role" "s3_backup_role" {
-  name                = "${var.name}-${var.environment}-s3-backup-role"
+  name = "${var.name}-${var.environment}-s3-backup-role"
   assume_role_policy = jsonencode({
     Version = "2012-10-17"
     Statement = [
@@ -196,7 +196,7 @@ resource "aws_backup_plan" "s3_backup_plan" {
     schedule          = var.s3_backup_schedule
 
     lifecycle {
-      delete_after = "${var.s3_backup_lifecycle}"
+      delete_after = var.s3_backup_lifecycle
     }
 
     enable_continuous_backup = false
