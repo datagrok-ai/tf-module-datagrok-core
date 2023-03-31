@@ -125,13 +125,13 @@ module "s3_bucket" {
 }
 # aws S3 backup //////////////////////
 resource "aws_backup_vault" "s3_backup_vault" {
-  name = "${var.name}-${var.environment}-s3-backup-vault"
+  name        = "${var.name}-${var.environment}-s3-backup-vault"
   kms_key_arn = aws_kms_key.s3_backup_kms_key.arn
 }
 
 resource "aws_kms_key" "s3_backup_kms_key" {
-  description             = "KMS key for s3 vault"
-  enable_key_rotation     = true
+  description         = "KMS key for s3 vault"
+  enable_key_rotation = true
 }
 
 resource "aws_iam_role" "s3_backup_role" {
