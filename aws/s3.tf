@@ -127,6 +127,7 @@ module "s3_bucket" {
 resource "aws_backup_vault" "s3_backup_vault" {
   name = "${var.name}-${var.environment}-s3-backup-vault"
   kms_key_arn = local.create_kms ? module.kms[0].key_id : null
+  force_destroy = true
 }
 
 resource "aws_iam_role" "s3_backup_role" {
