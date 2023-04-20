@@ -123,3 +123,96 @@ module "s3_bucket" {
 
   tags = local.tags
 }
+# aws S3 backup //////////////////////
+resource "aws_backup_vault" "s3_backup_vault" {
+  name = "${var.name}-${var.environment}-s3-backup-vault"
+  kms_key_arn = local.create_kms ? module.kms[0].key_id : null
+  force_destroy = true
+}
+
+resource "aws_iam_role" "s3_backup_role" {
+  name = "${var.name}-${var.environment}-s3-backup-role"
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Principal = {
+          Service = "backup.amazonaws.com"
+        }
+        Action = "sts:AssumeRole"
+      }
+    ]
+  })
+}
+
+resource "aws_iam_policy" "s3_backup" {
+  name        = "${var.name}-${var.environment}-backup-s3-policy"
+  description = "Policy for backup ${module.s3_bucket.s3_bucket_id} s3 bucket"
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Action = [
+          "s3:ListBucket",
+          "s3:GetBucketLocation",
+          "s3:GetObjectVersion",
+          "s3:GetObjectVersionAcl",
+          "s3:GetObject",
+          "s3:ListBucketMultipartUploads",
+          "s3:*",
+          "backup:CreateBackupPlan",
+          "backup:CreateBackupSelection",
+          "backup:CreateBackup",
+          "backup:StartBackupJob",
+          "backup:ListBackupPlans",
+          "backup:ListBackupSelections",
+          "backup:ListBackupVaults",
+          "cloudwatch:GetMetricData"
+        ]
+        Resource = [
+          module.s3_bucket.s3_bucket_arn,
+          "${module.s3_bucket.s3_bucket_arn}/*",
+          "*"
+        ]
+      }
+    ]
+  })
+}
+# Attach an IAM policy to the backup role that allows  performing AWS Backup jobs
+resource "aws_iam_role_policy_attachment" "backup_policy_attachment" {
+  policy_arn = aws_iam_policy.s3_backup.arn
+  role       = aws_iam_role.s3_backup_role.name
+}
+resource "aws_iam_role_policy_attachment" "backup_service_role_policy" {
+  policy_arn = "arn:aws:iam::aws:policy/AWSBackupServiceRolePolicyForS3Backup"
+  role       = aws_iam_role.s3_backup_role.name
+}
+resource "aws_backup_plan" "s3_backup_plan" {
+  name = "${var.name}-${var.environment}-s3-backup-plan"
+
+  rule {
+    rule_name         = "Daily-S3-backups-rule"
+    target_vault_name = aws_backup_vault.s3_backup_vault.name
+    schedule          = var.s3_backup_schedule
+
+    lifecycle {
+      delete_after = var.s3_backup_lifecycle
+    }
+
+    enable_continuous_backup = false
+
+
+  }
+  tags = local.tags
+}
+resource "aws_backup_selection" "s3_bucket_backup_selection" {
+  iam_role_arn = aws_iam_role.s3_backup_role.arn
+  name         = "${var.name}-${var.environment}-s3-bucket-backup-selection"
+  plan_id      = aws_backup_plan.s3_backup_plan.id
+
+  resources = [
+    module.s3_bucket.s3_bucket_arn
+  ]
+}

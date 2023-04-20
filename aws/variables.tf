@@ -200,6 +200,13 @@ variable "s3_name" {
   description = "The name of S3 bucket for Datagrok. If it is not specified, the name along with the environment will be used."
 }
 
+variable "s3_backup_lifecycle" {
+  type        = number
+  default     = 14
+  nullable    = true
+  description = "Describes how many days store s3 backup snapshot."
+}
+
 variable "s3_policy_principal" {
   type        = list(string)
   default     = []
@@ -524,7 +531,7 @@ variable "datagrok_container_memory_reservation" {
 
 variable "datagrok_container_cpu" {
   type        = number
-  default     = 1024
+  default     = 512
   nullable    = false
   description = "The number of cpu units the Amazon ECS container agent reserves for the Datagrok container."
 }
@@ -625,6 +632,13 @@ variable "docker_grok_connect_tag" {
   default     = "latest"
   nullable    = false
   description = "Tag from Docker Registry for Datagrok Grok Connect Image"
+}
+
+variable "s3_backup_schedule" {
+  type        = string
+  default     = "cron(0 3 * * ? *)"
+  nullable    = false
+  description = "Schedule for backup aws s3 bucket. By default, time is every day 3 AM"
 }
 
 variable "service_discovery_namespace" {
