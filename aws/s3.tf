@@ -8,7 +8,7 @@ module "log_bucket" {
   version       = "~> 3.3.0"
 
   bucket        = "logs-${var.name}-${var.environment}-${try(random_pet.this[0].id, "")}"
-  acl           = "log-delivery-write"
+#  acl           = "log-delivery-write"
   force_destroy = true
 
   attach_elb_log_delivery_policy        = true
@@ -80,7 +80,7 @@ module "s3_bucket" {
   bucket = local.s3_name
 
   force_destroy       = !var.termination_protection
-  acceleration_status = "Suspended"
+#  acceleration_status = "Suspended"
 
   # Bucket policies
   attach_deny_insecure_transport_policy = true
