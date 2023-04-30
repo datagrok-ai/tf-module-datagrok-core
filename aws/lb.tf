@@ -82,16 +82,16 @@ module "acm" {
 
   subject_alternative_names = var.subject_alternative_names
 
-  create_route53_records = var.route53_enabled
-  validate_certificate   = true
-  wait_for_validation    = true
+  create_route53_records  = var.route53_enabled
+  validate_certificate    = true
+  wait_for_validation     = true
   validation_record_fqdns = var.route53_enabled ? [] : distinct(
     [
       for domain in compact(concat(
         [
           var.domain_name
         ],
-      var.subject_alternative_names)) : "_f36e88adbd7b4c92a11a58ffc7f6808e.${replace(domain, "*.", "")}"
+        var.subject_alternative_names)) : "_f36e88adbd7b4c92a11a58ffc7f6808e.${replace(domain, "*.", "")}"
     ]
   )
 
@@ -132,7 +132,7 @@ module "lb_ext" {
       action_type = "redirect"
       port        = 80
       protocol    = "HTTP"
-      redirect = {
+      redirect    = {
         port        = 443
         protocol    = "HTTPS"
         status_code = "HTTP_301"
@@ -189,6 +189,9 @@ resource "aws_route53_zone" "internal" {
   count = var.create_route53_internal_zone ? 1 : 0
   name  = "datagrok.${var.name}.${var.environment}.internal"
   tags  = local.tags
+  vpc {
+    vpc_id = try(module.vpc[0].vpc_id, var.vpc_id)
+  }
 }
 resource "aws_route53_record" "internal" {
   zone_id = var.create_route53_internal_zone ? aws_route53_zone.internal[0].id : var.route53_internal_zone
@@ -220,8 +223,8 @@ resource "aws_cloudwatch_log_group" "external" {
   name              = "/aws/route53/${aws_route53_zone.external[0].name}"
   retention_in_days = 7
   #checkov:skip=CKV_AWS_158:The KMS key is configurable
-  kms_key_id = var.custom_kms_key ? try(module.kms[0].key_arn, var.kms_key) : null
-  tags       = local.tags
+  kms_key_id        = var.custom_kms_key ? try(module.kms[0].key_arn, var.kms_key) : null
+  tags              = local.tags
 }
 
 data "aws_iam_policy_document" "external" {

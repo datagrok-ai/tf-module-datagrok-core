@@ -310,15 +310,20 @@ resource "aws_iam_role" "task" {
   tags = local.tags
 }
 
+data "aws_route53_zone" "internal" {
+  count   = var.create_route53_internal_zone ? 0 : 1
+  zone_id = var.route53_internal_zone
+}
+
 resource "aws_ecs_task_definition" "datagrok" {
   family = "${local.ecs_name}_datagrok"
 
-  container_definitions = jsonencode([
-    {
+  container_definitions = jsonencode(compact([
+    var.ecs_launch_type == "FARGATE" ? {
       name = "resolv_conf"
       command = [
         "${data.aws_region.current.name}.compute.internal",
-        "datagrok.${var.name}.${var.environment}.internal",
+        var.create_route53_internal_zone ? aws_route53_zone.internal[0].name : data.aws_route53_zone[0].internal,
         "datagrok.${var.name}.${var.environment}.local"
       ]
       essential = false
@@ -332,7 +337,7 @@ resource "aws_ecs_task_definition" "datagrok" {
         }
       }
       memoryReservation = 100
-    },
+    } : "",
     merge({
       name  = "datagrok"
       image = "${var.ecr_enabled ? aws_ecr_repository.ecr["datagrok"].repository_url : var.docker_datagrok_image}:${var.ecr_enabled ? local.images["datagrok"]["tag"] : (var.ecr_enabled ? local.images["datagrok"]["tag"] : var.docker_datagrok_tag)}"
@@ -390,9 +395,14 @@ EOF
       repositoryCredentials = {
         credentialsParameter = try(aws_secretsmanager_secret.docker_hub[0].arn, var.docker_hub_credentials.secret_arn)
       }
-      }
+      }, var.ecs_launch_type == "FARGATE" ? {} : {
+      dnsSearchDomains = compact([
+        "${data.aws_region.current.name}.compute.internal",
+        var.create_route53_internal_zone ? aws_route53_zone.internal[0].name : data.aws_route53_zone[0].internal,
+      ])
+    }
     )
-  ])
+  ]))
   cpu                      = var.ecs_launch_type == "FARGATE" ? var.datagrok_cpu : null
   memory                   = var.ecs_launch_type == "FARGATE" ? var.datagrok_memory : null
   network_mode             = var.ecs_launch_type == "FARGATE" ? "awsvpc" : "bridge"
@@ -540,12 +550,12 @@ resource "aws_ecs_service" "datagrok" {
 resource "aws_ecs_task_definition" "grok_connect" {
   family = "${local.ecs_name}_grok_connect"
 
-  container_definitions = jsonencode([
-    {
+  container_definitions = jsonencode(compact([
+    var.ecs_launch_type == "FARGATE" ? {
       name = "resolv_conf"
       command = [
         "${data.aws_region.current.name}.compute.internal",
-        "datagrok.${var.name}.${var.environment}.internal",
+        var.create_route53_internal_zone ? aws_route53_zone.internal[0].name : data.aws_route53_zone[0].internal,
         "datagrok.${var.name}.${var.environment}.local"
       ]
       essential = false
@@ -559,7 +569,7 @@ resource "aws_ecs_task_definition" "grok_connect" {
         }
       }
       memoryReservation = 100
-    },
+    } : "",
     merge({
       name  = "grok_connect"
       image = "${var.ecr_enabled ? aws_ecr_repository.ecr["grok_connect"].repository_url : var.docker_grok_connect_image}:${var.ecr_enabled ? local.images["grok_connect"]["tag"] : (var.ecr_enabled ? local.images["grok_connect"]["tag"] : var.docker_grok_connect_tag)}"
@@ -591,9 +601,14 @@ resource "aws_ecs_task_definition" "grok_connect" {
       repositoryCredentials = {
         credentialsParameter = try(aws_secretsmanager_secret.docker_hub[0].arn, var.docker_hub_credentials.secret_arn)
       }
+      }, var.ecs_launch_type == "FARGATE" ? {} : {
+      dnsSearchDomains = compact([
+        "${data.aws_region.current.name}.compute.internal",
+        var.create_route53_internal_zone ? aws_route53_zone.internal[0].name : data.aws_route53_zone[0].internal,
+      ])
       }
     )
-  ])
+  ]))
   cpu                      = var.ecs_launch_type == "FARGATE" ? var.grok_connect_cpu : null
   memory                   = var.ecs_launch_type == "FARGATE" ? var.grok_connect_memory : null
   network_mode             = var.ecs_launch_type == "FARGATE" ? "awsvpc" : "bridge"
