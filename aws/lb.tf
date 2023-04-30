@@ -1,6 +1,6 @@
 resource "random_string" "lb_id" {
   for_each = {
-    for target in local.targets:
+    for target in local.targets :
     target.name => target
   }
   length  = 2
