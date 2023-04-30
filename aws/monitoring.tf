@@ -140,11 +140,11 @@ resource "aws_cloudwatch_metric_alarm" "high_cpu" {
   alarm_name          = "${local.ecs_name}-ecs-high-cpu"
   comparison_operator = "GreaterThanOrEqualToThreshold"
   period              = "60"
-  evaluation_periods  = "1"
-  datapoints_to_alarm = 1
+  evaluation_periods  = "3"
+  datapoints_to_alarm = 3
   treat_missing_data  = "ignore"
   statistic           = "Average"
-  threshold           = "80"
+  threshold           = "85"
   alarm_description   = "${local.ecs_name} ECS cluster CPU capacity alarm"
   metric_name         = "CPUUtilization"
   namespace           = "AWS/ECS"
@@ -170,11 +170,11 @@ resource "aws_cloudwatch_metric_alarm" "high_ram" {
   alarm_name          = "${local.ecs_name}-ecs-high-ram"
   comparison_operator = "GreaterThanOrEqualToThreshold"
   period              = "60"
-  evaluation_periods  = "1"
-  datapoints_to_alarm = 1
+  evaluation_periods  = "3"
+  datapoints_to_alarm = 3
   treat_missing_data  = "ignore"
   statistic           = "Average"
-  threshold           = "80"
+  threshold           = "85"
   alarm_description   = "${local.ecs_name} ECS cluster RAM capacity alarm"
   metric_name         = "MemoryUtilization"
   namespace           = "AWS/ECS"
@@ -233,9 +233,9 @@ resource "aws_cloudwatch_metric_alarm" "datagrok_lb_5xx_count" {
   evaluation_periods  = "1"
   metric_name         = "HTTPCode_ELB_5XX_Count"
   namespace           = "AWS/ApplicationELB"
-  period              = "60"
+  period              = "120"
   statistic           = "Sum"
-  threshold           = "0"
+  threshold           = "5"
   alarm_description   = "${local.lb_name} external ALB 5XX error code count is too high"
   datapoints_to_alarm = 1
   treat_missing_data  = "notBreaching"
@@ -260,7 +260,7 @@ resource "aws_cloudwatch_metric_alarm" "lb_target_5xx_count" {
   count               = var.monitoring.alarms_enabled ? length(local.targets) : 0
   alarm_name          = "datagrok-lb-target-${module.lb_ext.target_group_names[count.index]}-5xx"
   comparison_operator = "GreaterThanThreshold"
-  threshold           = "0"
+  threshold           = "5"
   alarm_description   = "${local.ecs_name} external ALB target group ${module.lb_ext.target_group_names[count.index]} registered 5XX errors"
   treat_missing_data  = "notBreaching"
   period              = "120"
@@ -407,7 +407,7 @@ resource "aws_cloudwatch_metric_alarm" "db_anomalous_connection" {
   count               = var.monitoring.alarms_enabled ? 1 : 0
   alarm_name          = "${local.rds_name}-db-anomaly-connections"
   comparison_operator = "GreaterThanUpperThreshold"
-  evaluation_periods  = "1"
+  evaluation_periods  = "3"
   threshold_metric_id = "e1"
   alarm_description   = "${local.ecs_name} RDS anomalous database connection count detected. Something unusual is happening."
   treat_missing_data  = "ignore"
@@ -426,7 +426,7 @@ resource "aws_cloudwatch_metric_alarm" "db_anomalous_connection" {
 
   metric_query {
     id          = "e1"
-    expression  = "ANOMALY_DETECTION_BAND(m1, 3)"
+    expression  = "ANOMALY_DETECTION_BAND(m1, 10)"
     label       = "DatabaseConnections (Expected)"
     return_data = "true"
   }

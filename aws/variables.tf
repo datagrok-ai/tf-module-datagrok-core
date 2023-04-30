@@ -531,7 +531,7 @@ variable "datagrok_container_memory_reservation" {
 
 variable "datagrok_container_cpu" {
   type        = number
-  default     = 512
+  default     = 1024
   nullable    = false
   description = "The number of cpu units the Amazon ECS container agent reserves for the Datagrok container."
 }
@@ -576,6 +576,34 @@ variable "grok_connect_cpu" {
   default     = 1024
   nullable    = false
   description = "Number of cpu units used by the Grok Connect FARGATE task. The hard limit of CPU units to present for the task."
+}
+
+variable "grok_spawner_container_memory_reservation" {
+  type        = number
+  default     = 256
+  nullable    = false
+  description = "The soft limit (in MiB) of memory to reserve for the Grok Spawner container."
+}
+
+variable "grok_spawner_container_cpu" {
+  type        = number
+  default     = 256
+  nullable    = false
+  description = "The number of cpu units the Amazon ECS container agent reserves for the Grok Spawner container."
+}
+
+variable "grok_spawner_memory" {
+  type        = number
+  default     = 512
+  nullable    = false
+  description = "Amount (in MiB) of memory used by the Grok Spawner FARGATE task. The hard limit of memory (in MiB) to present to the task."
+}
+
+variable "grok_spawner_cpu" {
+  type        = number
+  default     = 256
+  nullable    = false
+  description = "Number of cpu units used by the Grok Spawner FARGATE task. The hard limit of CPU units to present for the task."
 }
 
 variable "ecr_enabled" {
@@ -713,4 +741,47 @@ variable "monitoring" {
   }
   nullable    = false
   description = "Monitoring object.\n`alarms_enabled` - Specifies whether CloudWatch Alarms are enabled. We recommend to set it to true for production stand.\n`create_sns_topic` - Specifies whether Datagrok SNS topic should be created. If it is set to false, `sns_topic_arn` is required.\n`sns_topic_name` - The name of Datagrok SNS topic. If it is not specified, the name along with the environment will be used.\n`sns_topic_arn` - An ARN of the custom SNS topic for CloudWatch alarms.\n`email_alerts` - Specifies whether CloudWatch Alarms are forwarded to Email. We recommend to set it to true for production stand.\n`email_recipients` - List of email addresses to receive CloudWatch Alarms.\n`email_alerts_datagrok` - Specifies whether CloudWatch Alarms are forwarded to Datagrok Email. We recommend to set it to true for production stand.\n`slack_alerts` - Specifies whether CloudWatch Alarms are forwarded to Slack. We recommend to set it to true for production stand.\n`slack_emoji` - A custom emoji that will appear on Slack messages from CloudWatch alarms.\n`slack_webhook_url` - The URL of Slack webhook for CloudWatch alarm notifications.\n`slack_channel` - The name of the channel in Slack for notifications from CloudWatch alarms.\n`slack_username` - The username that will appear on Slack messages from CloudWatch alarms."
+}
+
+variable "smtp_relay_host" {
+  type        = string
+  default     = null
+  nullable    = true
+  description = "SMTP relay host to send emails for datagrok"
+}
+
+variable "smtp_relay_port" {
+  type        = string
+  default     = null
+  nullable    = true
+  description = "SMTP relay port to send emails for datagrok"
+}
+
+variable "smtp_relay_username" {
+  type        = string
+  default     = null
+  nullable    = true
+  description = "SMTP relay username to send emails for datagrok"
+}
+
+variable "smtp_relay_password" {
+  type        = string
+  default     = null
+  nullable    = true
+  sensitive   = true
+  description = "SMTP relay password to send emails for datagrok"
+}
+
+variable "grok_spawner_docker_build_enabled" {
+  type        = bool
+  default     = true
+  nullable    = false
+  description = "Specifies whether ECR policy to create repositories should be enabled for Grok Spawner to store debug images"
+}
+
+variable "smtp_server" {
+  type        = bool
+  default     = false
+  nullable    = false
+  description = "Specifies whether to create SMTP server"
 }

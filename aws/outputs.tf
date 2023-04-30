@@ -135,7 +135,7 @@ output "route_53_internal_zone" {
 
 output "sns_topic" {
   description = "The ARN of the SNS topic from which messages will be sent"
-  value       = coalesce(module.sns_topic.sns_topic_arn, var.monitoring.sns_topic_arn)
+  value       = try(module.sns_topic.sns_topic_arn, var.monitoring.sns_topic_arn, "")
 }
 
 output "docker_hub_secret" {

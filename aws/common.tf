@@ -34,11 +34,19 @@ locals {
       image = "docker/ecs-searchdomain-sidecar"
       tag   = "1.0"
     }
+    "smtp-${var.name}-${var.environment}" = {
+      image = "bytemark/smtp"
+      tag   = "stretch"
+    },
+    "kaniko-${var.name}-${var.environment}" = {
+      image = "gcr.io/kaniko-project/executor"
+      tag   = "v1.9.2"
+    }
   }
 
   targets = [
     {
-      name             = "datagrok"
+      name             = "dg"
       backend_protocol = "HTTP"
       backend_port     = 8080
       target_type      = aws_ecs_task_definition.datagrok.network_mode == "awsvpc" ? "ip" : "instance"
@@ -47,6 +55,32 @@ locals {
         interval            = 60
         unhealthy_threshold = 5
         path                = "/api/admin/health"
+        matcher             = "200"
+      }
+    },
+    {
+      name             = "connect"
+      backend_protocol = "HTTP"
+      backend_port     = 1234
+      target_type      = aws_ecs_task_definition.grok_connect.network_mode == "awsvpc" ? "ip" : "instance"
+      health_check = {
+        enabled             = true
+        interval            = 60
+        unhealthy_threshold = 5
+        path                = "/health"
+        matcher             = "200"
+      }
+    },
+    {
+      name             = "spawner"
+      backend_protocol = "HTTP"
+      backend_port     = 8000
+      target_type      = aws_ecs_task_definition.grok_spawner.network_mode == "awsvpc" ? "ip" : "instance"
+      health_check = {
+        enabled             = true
+        interval            = 60
+        unhealthy_threshold = 5
+        path                = "/info"
         matcher             = "200"
       }
     }

@@ -1,9 +1,19 @@
+resource "random_string" "lb_id" {
+  for_each = {
+    for target in local.targets:
+    target.name => target
+  }
+  length  = 2
+  special = false
+  keepers = { target_type = each.value["target_type"] }
+}
+
 module "lb_ext_sg" {
   source  = "registry.terraform.io/terraform-aws-modules/security-group/aws"
   version = "~> 4.12.0"
 
   name        = "${local.lb_name}-lb-ext"
-  description = "${local.lb_name} Datagrok LB Security Group"
+  description = "${local.lb_name}-lb-ext Datagrok LB Security Group"
   vpc_id      = try(module.vpc[0].vpc_id, var.vpc_id)
 
   egress_with_source_security_group_id = [
@@ -46,7 +56,7 @@ module "lb_int_sg" {
       from_port                = 0
       to_port                  = 65535
       protocol                 = "tcp"
-      description              = "Datagrok egress rules from LB to ECS"
+      description              = "Egress rules from LB to ECS"
       source_security_group_id = module.sg.security_group_id
     },
   ]
@@ -56,7 +66,21 @@ module "lb_int_sg" {
       from_port   = 80
       to_port     = 80
       protocol    = "tcp"
-      description = "Access to HTTP"
+      description = "Access to Datagrok"
+      cidr_blocks = try(module.vpc[0].vpc_cidr_block, var.cidr)
+    },
+    {
+      from_port   = 1234
+      to_port     = 1234
+      protocol    = "tcp"
+      description = "Access to Grok Connect"
+      cidr_blocks = try(module.vpc[0].vpc_cidr_block, var.cidr)
+    },
+    {
+      from_port   = 8000
+      to_port     = 8000
+      protocol    = "tcp"
+      description = "Access to Grok Spawner"
       cidr_blocks = try(module.vpc[0].vpc_cidr_block, var.cidr)
     },
   ]
@@ -82,16 +106,16 @@ module "acm" {
 
   subject_alternative_names = var.subject_alternative_names
 
-  create_route53_records  = var.route53_enabled
-  validate_certificate    = true
-  wait_for_validation     = true
+  create_route53_records = var.route53_enabled
+  validate_certificate   = true
+  wait_for_validation    = true
   validation_record_fqdns = var.route53_enabled ? [] : distinct(
     [
       for domain in compact(concat(
         [
           var.domain_name
         ],
-        var.subject_alternative_names)) : "_f36e88adbd7b4c92a11a58ffc7f6808e.${replace(domain, "*.", "")}"
+      var.subject_alternative_names)) : "_f36e88adbd7b4c92a11a58ffc7f6808e.${replace(domain, "*.", "")}"
     ]
   )
 
@@ -116,7 +140,7 @@ module "lb_ext" {
     enabled = true
   } : { bucket = "", enabled = false }
 
-  target_groups = [for target in local.targets : merge(target, { name = "${local.lb_name}-ext-${target["name"]}" })]
+  target_groups = [for target in local.targets : merge(target, { name = "${local.lb_name}-ext-${target["name"]}${random_string.lb_id[target["name"]].result}" })]
 
   https_listeners = [
     {
@@ -132,7 +156,7 @@ module "lb_ext" {
       action_type = "redirect"
       port        = 80
       protocol    = "HTTP"
-      redirect    = {
+      redirect = {
         port        = 443
         protocol    = "HTTPS"
         status_code = "HTTP_301"
@@ -154,7 +178,7 @@ module "lb_int" {
   security_groups            = [module.lb_int_sg.security_group_id]
   drop_invalid_header_fields = true
 
-  idle_timeout = 300
+  idle_timeout = 660
 
   access_logs = var.bucket_logging.enabled ? {
     bucket  = var.bucket_logging.create_log_bucket ? module.log_bucket.s3_bucket_id : var.bucket_logging.log_bucket
@@ -162,13 +186,23 @@ module "lb_int" {
     enabled = true
   } : { bucket = "", enabled = false }
 
-  target_groups = [for target in local.targets : merge(target, { name = "${local.lb_name}-int-${target["name"]}" })]
+  target_groups = [for target in local.targets : merge(target, { name = "${local.lb_name}-int-${target["name"]}${random_string.lb_id[target["name"]].result}" })]
 
   http_tcp_listeners = [
     {
       port               = 80
       protocol           = "HTTP"
       target_group_index = 0
+    },
+    {
+      port               = 1234
+      protocol           = "HTTP"
+      target_group_index = 1
+    },
+    {
+      port               = 8000
+      protocol           = "HTTP"
+      target_group_index = 2
     }
   ]
 
@@ -204,12 +238,24 @@ resource "aws_route53_record" "internal" {
   }
 }
 resource "aws_route53_record" "grok_connect" {
-  count   = var.ecs_launch_type == "EC2" ? 1 : 0
   zone_id = var.create_route53_internal_zone ? aws_route53_zone.internal[0].id : var.route53_internal_zone
   name    = "grok_connect.datagrok.${var.name}.${var.environment}.internal"
   type    = "A"
-  ttl     = 60
-  records = [aws_instance.ec2[0].private_ip]
+  alias {
+    name                   = module.lb_int.lb_dns_name
+    zone_id                = module.lb_int.lb_zone_id
+    evaluate_target_health = true
+  }
+}
+resource "aws_route53_record" "grok_spawner" {
+  zone_id = var.create_route53_internal_zone ? aws_route53_zone.internal[0].id : var.route53_internal_zone
+  name    = "grok_spawner.datagrok.${var.name}.${var.environment}.internal"
+  type    = "A"
+  alias {
+    name                   = module.lb_int.lb_dns_name
+    zone_id                = module.lb_int.lb_zone_id
+    evaluate_target_health = true
+  }
 }
 
 provider "aws" {
@@ -223,8 +269,8 @@ resource "aws_cloudwatch_log_group" "external" {
   name              = "/aws/route53/${aws_route53_zone.external[0].name}"
   retention_in_days = 7
   #checkov:skip=CKV_AWS_158:The KMS key is configurable
-  kms_key_id        = var.custom_kms_key ? try(module.kms[0].key_arn, var.kms_key) : null
-  tags              = local.tags
+  kms_key_id = var.custom_kms_key ? try(module.kms[0].key_arn, var.kms_key) : null
+  tags       = local.tags
 }
 
 data "aws_iam_policy_document" "external" {
