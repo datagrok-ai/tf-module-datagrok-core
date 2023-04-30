@@ -641,6 +641,20 @@ variable "s3_backup_schedule" {
   description = "Schedule for backup aws s3 bucket. By default, time is every day 3 AM"
 }
 
+variable "docker_grok_spawner_image" {
+  type        = string
+  default     = "docker.io/datagrok/grok_spawner"
+  nullable    = false
+  description = "Grok Spawner Docker Image registry location. By default the official image from Docker Hub will be used."
+}
+
+variable "docker_grok_spawner_tag" {
+  type        = string
+  default     = "latest"
+  nullable    = false
+  description = "Tag from Docker Registry for Datagrok Grok Spawner Image"
+}
+
 variable "service_discovery_namespace" {
   type = object({
     create = bool

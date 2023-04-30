@@ -50,6 +50,9 @@ source_tag=$tag
 if [[ $tag == "latest-"* ]]; then
   source_tag="latest"
 fi
+if [[ $tag == "bleeding-edge-"* ]]; then
+  source_tag="bleeding-edge"
+fi
 
 region="$(echo "${ecr}" | awk -F'.' '{print $4}')"
 ecr_url="$(echo "${ecr}" | awk -F'/' '{print $1}')"

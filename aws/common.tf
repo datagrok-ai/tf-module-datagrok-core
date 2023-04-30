@@ -20,11 +20,15 @@ locals {
   images = {
     datagrok = {
       image = var.docker_datagrok_image
-      tag   = var.docker_datagrok_tag == "latest" ? "${var.docker_datagrok_tag}-${formatdate("YYYYMMDDhhmmss", timestamp())}" : var.docker_datagrok_tag
+      tag   = var.docker_datagrok_tag == "latest" || var.docker_datagrok_tag == "bleeding-edge" ? "${var.docker_datagrok_tag}-${formatdate("YYYYMMDDhhmmss", timestamp())}" : var.docker_datagrok_tag
     },
     grok_connect = {
       image = var.docker_grok_connect_image
-      tag   = var.docker_grok_connect_tag == "latest" ? "${var.docker_grok_connect_tag}-${formatdate("YYYYMMDDhhmmss", timestamp())}" : var.docker_grok_connect_tag
+      tag   = var.docker_grok_connect_tag == "latest" || var.docker_grok_connect_tag == "bleeding-edge" ? "${var.docker_grok_connect_tag}-${formatdate("YYYYMMDDhhmmss", timestamp())}" : var.docker_grok_connect_tag
+    },
+    grok_spawner = {
+      image = var.docker_grok_spawner_image
+      tag   = var.docker_grok_spawner_tag == "latest" || var.docker_grok_spawner_tag == "bleeding-edge" ? "${var.docker_grok_spawner_tag}-${formatdate("YYYYMMDDhhmmss", timestamp())}" : var.docker_grok_spawner_tag
     },
     "ecs-searchdomain-sidecar-${var.name}-${var.environment}" = {
       image = "docker/ecs-searchdomain-sidecar"
