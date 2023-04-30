@@ -7,8 +7,8 @@ module "log_bucket" {
   source        = "registry.terraform.io/terraform-aws-modules/s3-bucket/aws"
   version       = "~> 3.3.0"
 
-  bucket        = "logs-${var.name}-${var.environment}-${try(random_pet.this[0].id, "")}"
-#  acl           = "log-delivery-write"
+  bucket = "logs-${var.name}-${var.environment}-${try(random_pet.this[0].id, "")}"
+  #  acl           = "log-delivery-write"
   force_destroy = true
 
   attach_elb_log_delivery_policy        = true
@@ -79,8 +79,8 @@ module "s3_bucket" {
 
   bucket = local.s3_name
 
-  force_destroy       = !var.termination_protection
-#  acceleration_status = "Suspended"
+  force_destroy = !var.termination_protection
+  #  acceleration_status = "Suspended"
 
   # Bucket policies
   attach_deny_insecure_transport_policy = true
@@ -125,8 +125,8 @@ module "s3_bucket" {
 }
 # aws S3 backup //////////////////////
 resource "aws_backup_vault" "s3_backup_vault" {
-  name = "${var.name}-${var.environment}-s3-backup-vault"
-  kms_key_arn = local.create_kms ? module.kms[0].key_id : null
+  name          = "${var.name}-${var.environment}-s3-backup-vault"
+  kms_key_arn   = local.create_kms ? module.kms[0].key_id : null
   force_destroy = true
 }
 
