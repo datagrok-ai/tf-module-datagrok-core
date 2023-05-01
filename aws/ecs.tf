@@ -1040,7 +1040,7 @@ resource "aws_iam_policy" "grok_spawner" {
         ],
         "Condition" = {
           "ArnEquals" : {
-            "ecs:cluster" : "${module.ecs.cluster_arn}"
+            "ecs:cluster" : module.ecs.cluster_arn
           }
         },
         "Effect"   = "Allow",
@@ -1074,7 +1074,7 @@ resource "aws_iam_policy" "grok_spawner" {
         ],
         "Condition" = {
           "ArnEquals" : {
-            "ecs:cluster" : "${module.ecs.cluster_arn}"
+            "ecs:cluster" : module.ecs.cluster_arn
           }
         },
         "Resource" : "arn:aws:ecs:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:service/${module.ecs.cluster_name}/*"
@@ -1086,7 +1086,7 @@ resource "aws_iam_policy" "grok_spawner" {
         ],
         "Condition" = {
           "ArnEquals" : {
-            "ecs:cluster" : "${module.ecs.cluster_arn}"
+            "ecs:cluster" : module.ecs.cluster_arn
           },
           "StringEquals" : {
             "aws:RequestTag/caller" : ["grok_spawner"]
@@ -1101,7 +1101,7 @@ resource "aws_iam_policy" "grok_spawner" {
         ],
         "Condition" = {
           "ArnEquals" : {
-            "ecs:cluster" : "${module.ecs.cluster_arn}"
+            "ecs:cluster" : module.ecs.cluster_arn
           }
         },
         "Resource" : "arn:aws:ecs:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:task/${module.ecs.cluster_name}/*"
@@ -1124,7 +1124,7 @@ resource "aws_iam_policy" "grok_spawner_kaniko" {
         ],
         "Condition" = {
           "ArnEquals" : {
-            "ecs:cluster" : "${module.ecs.cluster_arn}"
+            "ecs:cluster" : module.ecs.cluster_arn
           }
         },
         "Resource" : [
