@@ -1380,7 +1380,7 @@ resource "aws_ecs_task_definition" "grok_spawner_kaniko" {
     },
     portMappings = [
       {
-        hostPort      = var.ecs_launch_type == "FARGATE" ? 8000 : 0
+        hostPort      = 8000
         protocol      = "tcp"
         containerPort = 8000
       }
