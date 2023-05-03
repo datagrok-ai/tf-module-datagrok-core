@@ -22,6 +22,13 @@ resource "aws_sns_topic_subscription" "email" {
   topic_arn = var.monitoring.create_sns_topic ? module.sns_topic.sns_topic_arn : var.monitoring.sns_topic_arn
   protocol  = "email"
   endpoint  = each.key
+  filter_policy = jsonencode({
+    State = [
+      {
+        anything-but = "COMPLETED"
+      }
+    ]
+  })
 }
 
 # Encrypt the URL, storing encryption here will show it in logs and in tfstate
@@ -59,7 +66,7 @@ resource "aws_cloudwatch_metric_alarm" "datagrok_task_count" {
     var.monitoring.slack_alerts ?
     module.notify_slack.slack_topic_arn :
     "",
-    var.monitoring.email_alerts ?
+    var.monitoring.email_alerts || var.monitoring.email_alerts_datagrok ?
     module.sns_topic.sns_topic_arn :
     "",
     !var.monitoring.create_sns_topic ?
@@ -125,7 +132,7 @@ resource "aws_cloudwatch_metric_alarm" "instance_count" {
     var.monitoring.slack_alerts ?
     module.notify_slack.slack_topic_arn :
     "",
-    var.monitoring.email_alerts ?
+    var.monitoring.email_alerts || var.monitoring.email_alerts_datagrok ?
     module.sns_topic.sns_topic_arn :
     "",
     !var.monitoring.create_sns_topic ?
@@ -155,7 +162,7 @@ resource "aws_cloudwatch_metric_alarm" "high_cpu" {
     var.monitoring.slack_alerts ?
     module.notify_slack.slack_topic_arn :
     "",
-    var.monitoring.email_alerts ?
+    var.monitoring.email_alerts || var.monitoring.email_alerts_datagrok ?
     module.sns_topic.sns_topic_arn :
     "",
     !var.monitoring.create_sns_topic ?
@@ -185,7 +192,7 @@ resource "aws_cloudwatch_metric_alarm" "high_ram" {
     var.monitoring.slack_alerts ?
     module.notify_slack.slack_topic_arn :
     "",
-    var.monitoring.email_alerts ?
+    var.monitoring.email_alerts || var.monitoring.email_alerts_datagrok ?
     module.sns_topic.sns_topic_arn :
     "",
     !var.monitoring.create_sns_topic ?
@@ -216,7 +223,7 @@ resource "aws_cloudwatch_metric_alarm" "lb_target" {
     var.monitoring.slack_alerts ?
     module.notify_slack.slack_topic_arn :
     "",
-    var.monitoring.email_alerts ?
+    var.monitoring.email_alerts || var.monitoring.email_alerts_datagrok ?
     module.sns_topic.sns_topic_arn :
     "",
     !var.monitoring.create_sns_topic ?
@@ -246,7 +253,7 @@ resource "aws_cloudwatch_metric_alarm" "datagrok_lb_5xx_count" {
     var.monitoring.slack_alerts ?
     module.notify_slack.slack_topic_arn :
     "",
-    var.monitoring.email_alerts ?
+    var.monitoring.email_alerts || var.monitoring.email_alerts_datagrok ?
     module.sns_topic.sns_topic_arn :
     "",
     !var.monitoring.create_sns_topic ?
@@ -277,7 +284,7 @@ resource "aws_cloudwatch_metric_alarm" "lb_target_5xx_count" {
     var.monitoring.slack_alerts ?
     module.notify_slack.slack_topic_arn :
     "",
-    var.monitoring.email_alerts ?
+    var.monitoring.email_alerts || var.monitoring.email_alerts_datagrok ?
     module.sns_topic.sns_topic_arn :
     "",
     !var.monitoring.create_sns_topic ?
@@ -306,7 +313,7 @@ resource "aws_cloudwatch_metric_alarm" "db_high_cpu" {
     var.monitoring.slack_alerts ?
     module.notify_slack.slack_topic_arn :
     "",
-    var.monitoring.email_alerts ?
+    var.monitoring.email_alerts || var.monitoring.email_alerts_datagrok ?
     module.sns_topic.sns_topic_arn :
     "",
     !var.monitoring.create_sns_topic ?
@@ -335,7 +342,7 @@ resource "aws_cloudwatch_metric_alarm" "db_low_cpu_credit" {
     var.monitoring.slack_alerts ?
     module.notify_slack.slack_topic_arn :
     "",
-    var.monitoring.email_alerts ?
+    var.monitoring.email_alerts || var.monitoring.email_alerts_datagrok ?
     module.sns_topic.sns_topic_arn :
     "",
     !var.monitoring.create_sns_topic ?
@@ -364,7 +371,7 @@ resource "aws_cloudwatch_metric_alarm" "db_high_disk_queue" {
     var.monitoring.slack_alerts ?
     module.notify_slack.slack_topic_arn :
     "",
-    var.monitoring.email_alerts ?
+    var.monitoring.email_alerts || var.monitoring.email_alerts_datagrok ?
     module.sns_topic.sns_topic_arn :
     "",
     !var.monitoring.create_sns_topic ?
@@ -393,7 +400,7 @@ resource "aws_cloudwatch_metric_alarm" "db_low_disk_space" {
     var.monitoring.slack_alerts ?
     module.notify_slack.slack_topic_arn :
     "",
-    var.monitoring.email_alerts ?
+    var.monitoring.email_alerts || var.monitoring.email_alerts_datagrok ?
     module.sns_topic.sns_topic_arn :
     "",
     !var.monitoring.create_sns_topic ?
@@ -415,7 +422,7 @@ resource "aws_cloudwatch_metric_alarm" "db_anomalous_connection" {
     var.monitoring.slack_alerts ?
     module.notify_slack.slack_topic_arn :
     "",
-    var.monitoring.email_alerts ?
+    var.monitoring.email_alerts || var.monitoring.email_alerts_datagrok ?
     module.sns_topic.sns_topic_arn :
     "",
     !var.monitoring.create_sns_topic ?
@@ -446,4 +453,11 @@ resource "aws_cloudwatch_metric_alarm" "db_anomalous_connection" {
       }
     }
   }
+}
+
+resource "aws_backup_vault_notifications" "test" {
+  count               = var.monitoring.alarms_enabled && var.monitoring.email_alerts || var.monitoring.email_alerts_datagrok ? 1 : 0
+  backup_vault_name   = aws_backup_vault.s3_backup_vault.name
+  sns_topic_arn       = var.monitoring.create_sns_topic ? module.sns_topic.sns_topic_arn : var.monitoring.sns_topic_arn
+  backup_vault_events = ["BACKUP_JOB_COMPLETED"]
 }
