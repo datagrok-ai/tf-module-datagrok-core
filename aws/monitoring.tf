@@ -22,13 +22,6 @@ resource "aws_sns_topic_subscription" "email" {
   topic_arn = var.monitoring.create_sns_topic ? module.sns_topic.sns_topic_arn : var.monitoring.sns_topic_arn
   protocol  = "email"
   endpoint  = each.key
-  filter_policy = jsonencode({
-    State = [
-      {
-        anything-but = "COMPLETED"
-      }
-    ]
-  })
 }
 
 # Encrypt the URL, storing encryption here will show it in logs and in tfstate
@@ -108,6 +101,122 @@ resource "aws_cloudwatch_metric_alarm" "datagrok_task_count" {
       dimensions = {
         ClusterName = module.ecs.cluster_name
         ServiceName = aws_ecs_service.datagrok.name
+      }
+    }
+  }
+}
+resource "aws_cloudwatch_metric_alarm" "grok_connect_task_count" {
+  count               = var.monitoring.alarms_enabled && var.ecs_cluster_insights ? 1 : 0
+  alarm_name          = "${local.ecs_name}-grok_connect-task-count"
+  comparison_operator = "LessThanThreshold"
+  threshold           = "1"
+  evaluation_periods  = "2"
+  treat_missing_data  = "ignore"
+  alarm_description   = "This metric monitors ${local.ecs_name} ECS tasks count"
+  alarm_actions = compact([
+    var.monitoring.slack_alerts ?
+    module.notify_slack.slack_topic_arn :
+    "",
+    var.monitoring.email_alerts || var.monitoring.email_alerts_datagrok ?
+    module.sns_topic.sns_topic_arn :
+    "",
+    !var.monitoring.create_sns_topic ?
+    var.monitoring.sns_topic_arn :
+    ""
+  ])
+  tags = local.tags
+
+  metric_query {
+    id          = "expression"
+    expression  = "IF(desired > running, 0, 1)"
+    label       = "Task Failures"
+    return_data = "true"
+  }
+
+  metric_query {
+    id = "desired"
+
+    metric {
+      metric_name = "DesiredTaskCount"
+      namespace   = "ECS/ContainerInsights"
+      period      = "60"
+      stat        = "Average"
+      dimensions = {
+        ClusterName = module.ecs.cluster_name
+        ServiceName = aws_ecs_service.grok_connect.name
+      }
+    }
+  }
+
+  metric_query {
+    id = "running"
+
+    metric {
+      metric_name = "RunningTaskCount"
+      namespace   = "ECS/ContainerInsights"
+      period      = "60"
+      stat        = "Average"
+      dimensions = {
+        ClusterName = module.ecs.cluster_name
+        ServiceName = aws_ecs_service.grok_connect.name
+      }
+    }
+  }
+}
+resource "aws_cloudwatch_metric_alarm" "grok_spawner_task_count" {
+  count               = var.monitoring.alarms_enabled && var.ecs_cluster_insights ? 1 : 0
+  alarm_name          = "${local.ecs_name}-grok_spawner-task-count"
+  comparison_operator = "LessThanThreshold"
+  threshold           = "1"
+  evaluation_periods  = "2"
+  treat_missing_data  = "ignore"
+  alarm_description   = "This metric monitors ${local.ecs_name} grok_spawner ECS tasks count"
+  alarm_actions = compact([
+    var.monitoring.slack_alerts ?
+    module.notify_slack.slack_topic_arn :
+    "",
+    var.monitoring.email_alerts || var.monitoring.email_alerts_datagrok ?
+    module.sns_topic.sns_topic_arn :
+    "",
+    !var.monitoring.create_sns_topic ?
+    var.monitoring.sns_topic_arn :
+    ""
+  ])
+  tags = local.tags
+
+  metric_query {
+    id          = "expression"
+    expression  = "IF(desired > running, 0, 1)"
+    label       = "Task Failures"
+    return_data = "true"
+  }
+
+  metric_query {
+    id = "desired"
+
+    metric {
+      metric_name = "DesiredTaskCount"
+      namespace   = "ECS/ContainerInsights"
+      period      = "60"
+      stat        = "Average"
+      dimensions = {
+        ClusterName = module.ecs.cluster_name
+        ServiceName = aws_ecs_service.grok_spawner.name
+      }
+    }
+  }
+
+  metric_query {
+    id = "running"
+
+    metric {
+      metric_name = "RunningTaskCount"
+      namespace   = "ECS/ContainerInsights"
+      period      = "60"
+      stat        = "Average"
+      dimensions = {
+        ClusterName = module.ecs.cluster_name
+        ServiceName = aws_ecs_service.grok_spawner.name
       }
     }
   }
@@ -455,9 +564,60 @@ resource "aws_cloudwatch_metric_alarm" "db_anomalous_connection" {
   }
 }
 
-resource "aws_backup_vault_notifications" "test" {
-  count               = var.monitoring.alarms_enabled && var.monitoring.email_alerts || var.monitoring.email_alerts_datagrok ? 1 : 0
-  backup_vault_name   = aws_backup_vault.s3_backup_vault.name
-  sns_topic_arn       = var.monitoring.create_sns_topic ? module.sns_topic.sns_topic_arn : var.monitoring.sns_topic_arn
-  backup_vault_events = ["BACKUP_JOB_COMPLETED"]
+resource "aws_cloudwatch_metric_alarm" "s3_backup_complete" {
+  count               = var.monitoring.alarms_enabled ? 1 : 0
+  alarm_name          = "${local.s3_name}-backup"
+  comparison_operator = "LessThanThreshold"
+  evaluation_periods  = "1"
+  metric_name         = "NumberOfBackupJobsCompleted"
+  namespace           = "AWS/Backup"
+  period              = "86400"
+  statistic           = "Average"
+  threshold           = "1"
+  alarm_description   = "${local.s3_name} S3 backup did not complete."
+  treat_missing_data  = "ignore"
+  dimensions = {
+    BackupVaultName = aws_backup_vault.s3_backup_vault.name
+  }
+  alarm_actions = compact([
+    var.monitoring.slack_alerts ?
+    module.notify_slack.slack_topic_arn :
+    "",
+    var.monitoring.email_alerts || var.monitoring.email_alerts_datagrok ?
+    module.sns_topic.sns_topic_arn :
+    "",
+    !var.monitoring.create_sns_topic ?
+    var.monitoring.sns_topic_arn :
+    ""
+  ])
+  tags = local.tags
+}
+
+resource "aws_cloudwatch_metric_alarm" "s3_backup_failed" {
+  count               = var.monitoring.alarms_enabled ? 1 : 0
+  alarm_name          = "${local.s3_name}-backup"
+  comparison_operator = "GreaterThanThreshold"
+  evaluation_periods  = "1"
+  metric_name         = "NumberOfBackupJobsFailed"
+  namespace           = "AWS/Backup"
+  period              = "86400"
+  statistic           = "Average"
+  threshold           = "0"
+  alarm_description   = "${local.s3_name} S3 backup failed."
+  treat_missing_data  = "ignore"
+  dimensions = {
+    BackupVaultName = aws_backup_vault.s3_backup_vault.name
+  }
+  alarm_actions = compact([
+    var.monitoring.slack_alerts ?
+    module.notify_slack.slack_topic_arn :
+    "",
+    var.monitoring.email_alerts || var.monitoring.email_alerts_datagrok ?
+    module.sns_topic.sns_topic_arn :
+    "",
+    !var.monitoring.create_sns_topic ?
+    var.monitoring.sns_topic_arn :
+    ""
+  ])
+  tags = local.tags
 }
