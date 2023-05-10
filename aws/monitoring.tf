@@ -566,7 +566,7 @@ resource "aws_cloudwatch_metric_alarm" "db_anomalous_connection" {
 
 resource "aws_cloudwatch_metric_alarm" "s3_backup_complete" {
   count               = var.monitoring.alarms_enabled ? 1 : 0
-  alarm_name          = "${local.s3_name}-backup"
+  alarm_name          = "${local.s3_name}-backup-complete"
   comparison_operator = "LessThanThreshold"
   evaluation_periods  = "1"
   metric_name         = "NumberOfBackupJobsCompleted"
@@ -595,7 +595,7 @@ resource "aws_cloudwatch_metric_alarm" "s3_backup_complete" {
 
 resource "aws_cloudwatch_metric_alarm" "s3_backup_failed" {
   count               = var.monitoring.alarms_enabled ? 1 : 0
-  alarm_name          = "${local.s3_name}-backup"
+  alarm_name          = "${local.s3_name}-backup-failed"
   comparison_operator = "GreaterThanThreshold"
   evaluation_periods  = "1"
   metric_name         = "NumberOfBackupJobsFailed"
