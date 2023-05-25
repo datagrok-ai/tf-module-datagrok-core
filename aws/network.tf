@@ -70,7 +70,9 @@ data "aws_iam_policy_document" "vpc_endpoint_policy" {
       "arn:aws:s3:::prod-${data.aws_region.current.name}-starport-layer-bucket",
       "arn:aws:s3:::prod-${data.aws_region.current.name}-starport-layer-bucket/*",
       "arn:aws:s3:::docker-images-prod",
-      "arn:aws:s3:::docker-images-prod/*"
+      "arn:aws:s3:::docker-images-prod/*",
+      "arn:aws:s3:::datagrok-data",
+      "arn:aws:s3:::datagrok-data/*"
     ]
   }
 }
