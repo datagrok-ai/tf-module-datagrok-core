@@ -219,7 +219,7 @@ resource "aws_route53_record" "external" {
     evaluate_target_health = true
   }
 }
-resource "aws_route53_zone" "internal" {
+resource "aws_route53_zone" "internal_communication" {
   count = var.create_route53_internal_zone ? 1 : 0
   name  = "datagrok.${var.name}.${var.environment}.internal"
   tags  = local.tags
@@ -228,7 +228,7 @@ resource "aws_route53_zone" "internal" {
   }
 }
 resource "aws_route53_record" "internal" {
-  zone_id = var.create_route53_internal_zone ? aws_route53_zone.internal[0].id : var.route53_internal_zone
+  zone_id = var.create_route53_internal_zone ? aws_route53_zone.internal_communication[0].id : var.route53_internal_zone
   name    = "datagrok.datagrok.${var.name}.${var.environment}.internal"
   type    = "A"
   alias {
@@ -238,7 +238,7 @@ resource "aws_route53_record" "internal" {
   }
 }
 resource "aws_route53_record" "grok_connect" {
-  zone_id = var.create_route53_internal_zone ? aws_route53_zone.internal[0].id : var.route53_internal_zone
+  zone_id = var.create_route53_internal_zone ? aws_route53_zone.internal_communication[0].id : var.route53_internal_zone
   name    = "grok_connect.datagrok.${var.name}.${var.environment}.internal"
   type    = "A"
   alias {
@@ -248,7 +248,7 @@ resource "aws_route53_record" "grok_connect" {
   }
 }
 resource "aws_route53_record" "grok_spawner" {
-  zone_id = var.create_route53_internal_zone ? aws_route53_zone.internal[0].id : var.route53_internal_zone
+  zone_id = var.create_route53_internal_zone ? aws_route53_zone.internal_communication[0].id : var.route53_internal_zone
   name    = "grok_spawner.datagrok.${var.name}.${var.environment}.internal"
   type    = "A"
   alias {
