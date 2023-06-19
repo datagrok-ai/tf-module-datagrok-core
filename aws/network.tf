@@ -1,7 +1,7 @@
 module "vpc" {
   count   = var.vpc_create ? 1 : 0
   source  = "registry.terraform.io/terraform-aws-modules/vpc/aws"
-  version = "~> 3.14.2"
+  version = "~> 5.0.0"
 
   name = local.vpc_name
 
