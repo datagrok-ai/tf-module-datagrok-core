@@ -1328,7 +1328,7 @@ resource "aws_ecs_task_definition" "grok_spawner" {
           value = aws_ecs_task_definition.grok_spawner_kaniko.arn
         },
         {
-          name = "ECS_LOG_GROUP",
+          name  = "ECS_LOG_GROUP",
           value = var.create_cloudwatch_log_group ? aws_cloudwatch_log_group.ecs[0].arn : var.cloudwatch_log_group_arn
         }
       ]
