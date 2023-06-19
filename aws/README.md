@@ -52,7 +52,7 @@ module "datagrok_core" {
 | <a name="module_s3_bucket"></a> [s3\_bucket](#module\_s3\_bucket) | registry.terraform.io/terraform-aws-modules/s3-bucket/aws | ~>3.3.0 |
 | <a name="module_sg"></a> [sg](#module\_sg) | registry.terraform.io/terraform-aws-modules/security-group/aws | ~> 4.12.0 |
 | <a name="module_sns_topic"></a> [sns\_topic](#module\_sns\_topic) | registry.terraform.io/terraform-aws-modules/sns/aws | ~> 3.3.0 |
-| <a name="module_vpc"></a> [vpc](#module\_vpc) | registry.terraform.io/terraform-aws-modules/vpc/aws | ~> 3.14.2 |
+| <a name="module_vpc"></a> [vpc](#module\_vpc) | registry.terraform.io/terraform-aws-modules/vpc/aws | ~> 5.0.0 |
 | <a name="module_vpc_endpoint"></a> [vpc\_endpoint](#module\_vpc\_endpoint) | registry.terraform.io/terraform-aws-modules/vpc/aws//modules/vpc-endpoints | ~> 3.14.2 |
 
 ## Resources
