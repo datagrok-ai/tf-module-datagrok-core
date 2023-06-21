@@ -329,7 +329,7 @@ resource "aws_ecs_task_definition" "datagrok" {
       name = "resolv_conf"
       command = [
         "${data.aws_region.current.name}.compute.internal",
-        var.create_route53_internal_zone ? aws_route53_zone.internal_communication[0].name : data.aws_route53_zone.internal[0].name,
+        var.create_route53_internal_zone ? aws_route53_zone.internal[0].name : data.aws_route53_zone.internal[0].name,
         "datagrok.${var.name}.${var.environment}.local"
       ]
       essential = false
@@ -405,7 +405,7 @@ EOF
       var.ecs_launch_type == "FARGATE" ? {} : {
         dnsSearchDomains = compact([
           "${data.aws_region.current.name}.compute.internal",
-          var.create_route53_internal_zone ? aws_route53_zone.internal_communication[0].name : data.aws_route53_zone.internal[0].name,
+          var.create_route53_internal_zone ? aws_route53_zone.internal[0].name : data.aws_route53_zone.internal[0].name,
         ])
       }
       )
@@ -556,7 +556,7 @@ resource "aws_ecs_task_definition" "grok_connect" {
       name = "resolv_conf"
       command = [
         "${data.aws_region.current.name}.compute.internal",
-        var.create_route53_internal_zone ? aws_route53_zone.internal_communication[0].name : data.aws_route53_zone.internal[0].name,
+        var.create_route53_internal_zone ? aws_route53_zone.internal[0].name : data.aws_route53_zone.internal[0].name,
         "datagrok.${var.name}.${var.environment}.local"
       ]
       essential = false
@@ -607,7 +607,7 @@ resource "aws_ecs_task_definition" "grok_connect" {
       var.ecs_launch_type == "FARGATE" ? {} : {
         dnsSearchDomains = compact([
           "${data.aws_region.current.name}.compute.internal",
-          var.create_route53_internal_zone ? aws_route53_zone.internal_communication[0].name : data.aws_route53_zone.internal[0].name,
+          var.create_route53_internal_zone ? aws_route53_zone.internal[0].name : data.aws_route53_zone.internal[0].name,
         ])
       }
       )
@@ -1279,7 +1279,7 @@ resource "aws_ecs_task_definition" "grok_spawner" {
       name = "resolv_conf"
       command = [
         "${data.aws_region.current.name}.compute.internal",
-        var.create_route53_internal_zone ? aws_route53_zone.internal_communication[0].name : data.aws_route53_zone.internal[0].name,
+        var.create_route53_internal_zone ? aws_route53_zone.internal[0].name : data.aws_route53_zone.internal[0].name,
         "datagrok.${var.name}.${var.environment}.local"
       ]
       essential = false
@@ -1356,7 +1356,7 @@ resource "aws_ecs_task_definition" "grok_spawner" {
       }, var.ecs_launch_type == "FARGATE" ? {} : {
       dnsSearchDomains = compact([
         "${data.aws_region.current.name}.compute.internal",
-        var.create_route53_internal_zone ? aws_route53_zone.internal_communication[0].name : data.aws_route53_zone.internal[0].name,
+        var.create_route53_internal_zone ? aws_route53_zone.internal[0].name : data.aws_route53_zone.internal[0].name,
       ])
       }, var.ecs_launch_type == "FARGATE" ? {
       dependsOn = [
