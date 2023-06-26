@@ -159,7 +159,6 @@ variable "rds_master_username" {
 variable "rds_master_password" {
   type        = string
   default     = null
-  sensitive   = true
   nullable    = true
   description = "The superuser password in RDS. If it is not specified, the random password will be generated."
 }
@@ -167,7 +166,6 @@ variable "rds_master_password" {
 variable "rds_dg_password" {
   type        = string
   default     = null
-  sensitive   = true
   nullable    = true
   description = "The password for datagrok user in RDS. If it is not specified, the random password will be generated, 16 symbols long without special characters."
 }
@@ -488,7 +486,6 @@ variable "set_admin_password" {
 
 variable "admin_password" {
   type        = string
-  sensitive   = true
   default     = null
   nullable    = true
   description = "Specifies the Datagrok Admin user password. If it is not specified, the random password will be generated, 16 symbols long without special characters."
@@ -768,7 +765,6 @@ variable "smtp_relay_password" {
   type        = string
   default     = null
   nullable    = true
-  sensitive   = true
   description = "SMTP relay password to send emails for datagrok"
 }
 
