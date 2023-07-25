@@ -353,24 +353,25 @@ resource "aws_ecs_task_definition" "datagrok" {
           value = var.datagrok_startup_mode
         },
         {
-          name  = "GROK_PARAMETERS",
-          value = <<EOF
-{
-  "amazonStorageRegion": "${data.aws_region.current.name}",
-  "amazonStorageBucket": "${module.s3_bucket.s3_bucket_id}",
-  "dbServer": "${module.db.db_instance_address}",
-  "dbPort": "${module.db.db_instance_port}",
-  "db": "datagrok",
-  "dbLogin": "datagrok",
-  "dbPassword": "${try(random_password.db_datagrok_password[0].result, var.rds_dg_password)}",
-  "dbAdminLogin": "${var.rds_master_username}",
-  "dbAdminPassword": "${module.db.db_instance_password}",
-  "dbSsl": false,
-  "deployDemo": false,
-  "deployTestDemo": false${var.set_admin_password ? "," : ""}
-  ${local.admin_password_key}
-}
-EOF
+          name = "GROK_PARAMETERS",
+          value = jsonencode(
+            merge(
+              {
+                amazonStorageRegion : data.aws_region.current.name,
+                amazonStorageBucket : module.s3_bucket.s3_bucket_id,
+                dbServer : module.db.db_instance_address,
+                dbPort : module.db.db_instance_port,
+                db : "datagrok",
+                dbLogin : "datagrok",
+                dbPassword : try(random_password.db_datagrok_password[0].result, var.rds_dg_password),
+                dbAdminLogin : var.rds_master_username,
+                dbAdminPassword : module.db.db_instance_password,
+                dbSsl : "false",
+                deployDemo : "false",
+                deployTestDemo : "false"
+                }, var.set_admin_password ? {
+                adminPassword : try(length(var.admin_password) > 0, false) ? var.admin_password : random_password.admin_password[0].result
+          } : {}))
         }
       ]
       essential = true
