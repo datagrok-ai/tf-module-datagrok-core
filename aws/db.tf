@@ -55,8 +55,8 @@ module "db" {
 
   iam_database_authentication_enabled   = true
   apply_immediately                     = false
-  maintenance_window                    = "Mon:07:44-Mon:08:14"
-  backup_window                         = "06:01-06:31"
+  maintenance_window                    = "Mon:05:44-Mon:06:14"
+  backup_window                         = "04:31-05:01"
   backup_retention_period               = var.rds_backup_retention_period
   delete_automated_backups              = true
   skip_final_snapshot                   = false
