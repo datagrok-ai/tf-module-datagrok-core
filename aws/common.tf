@@ -18,7 +18,7 @@ locals {
   images = {
     datagrok = {
       image = var.docker_datagrok_image
-      tag   = var.docker_datagrok_tag == "latest" || var.docker_datagrok_tag == "bleeding-edge" ? "${var.docker_datagrok_tag}-${formatdate("YYYYMMDDhhmmss", timestamp())}" : var.docker_datagrok_tag
+      tag   = var.docker_datagrok_tag == "jupyter" || var.docker_datagrok_tag == "bleeding-edge" ? "${var.docker_datagrok_tag}-${formatdate("YYYYMMDDhhmmss", timestamp())}" : var.docker_datagrok_tag
     },
     grok_connect = {
       image = var.docker_grok_connect_image

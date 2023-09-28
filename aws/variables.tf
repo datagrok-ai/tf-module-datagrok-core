@@ -643,7 +643,7 @@ variable "docker_datagrok_image" {
 
 variable "docker_datagrok_tag" {
   type        = string
-  default     = "latest"
+  default     = "jupyter"
   nullable    = false
   description = "Tag from Docker Registry for Datagrok Docker Image"
 }
