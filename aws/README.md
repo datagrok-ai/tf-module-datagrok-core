@@ -244,6 +244,7 @@ module "datagrok_core" {
 | <a name="input_sns_topic_name"></a> [sns\_topic\_name](#input\_sns\_topic\_name) | The name of Datagrok SNS topic. If it is not specified, the name along with the environment will be used. | `string` | `null` | no |
 | <a name="input_subject_alternative_names"></a> [subject\_alternative\_names](#input\_subject\_alternative\_names) | List for alternative names for ACM certificate | `list(string)` | `[]` | no |
 | <a name="input_tags"></a> [tags](#input\_tags) | Key-value map of resource tags. | `map(string)` | `{}` | no |
+| <a name="input_task_iam_policies"></a> [task\_iam\_policies](#input\_task\_iam\_policies) | List of additional IAM policies to attach to tasks | `list(string)` | `[]` | no |
 | <a name="input_termination_protection"></a> [termination\_protection](#input\_termination\_protection) | Termination protection for the resources created by module. | `bool` | `true` | no |
 | <a name="input_vpc_create"></a> [vpc\_create](#input\_vpc\_create) | Specifies if new VPC should be created. | `bool` | `true` | no |
 | <a name="input_vpc_endpoint_id"></a> [vpc\_endpoint\_id](#input\_vpc\_endpoint\_id) | The ID of VPC endpoint to connect to S3 bucket. Required if 'vpc\_id' is specified. | `string` | `null` | no |
