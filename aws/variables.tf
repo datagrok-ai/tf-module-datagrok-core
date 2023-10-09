@@ -787,8 +787,8 @@ variable "smtp_server" {
 }
 
 variable "task_iam_policies" {
-  type     = list(string)
+  type        = list(string)
   description = "List of additional IAM policies to attach to tasks"
-  nullable = false
-  default  = []
+  nullable    = false
+  default     = []
 }
