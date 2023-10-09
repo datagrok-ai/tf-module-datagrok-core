@@ -785,3 +785,10 @@ variable "smtp_server" {
   nullable    = false
   description = "Specifies whether to create SMTP server"
 }
+
+variable "task_iam_policies" {
+  type     = list(string)
+  description = "List of additional IAM policies to attach to tasks"
+  nullable = false
+  default  = []
+}

@@ -300,11 +300,11 @@ resource "aws_iam_role" "task" {
       },
     ]
   })
-  managed_policy_arns = compact([
+  managed_policy_arns = compact(concat([
     aws_iam_policy.exec.arn,
     aws_iam_policy.task.arn,
     var.ecr_enabled ? aws_iam_policy.ecr[0].arn : aws_iam_policy.docker_hub[0].arn
-  ])
+  ], var.task_iam_policies))
   #  managed_policy_arns = [aws_iam_policy.task.arn]
 
   tags = local.tags
@@ -390,7 +390,7 @@ resource "aws_ecs_task_definition" "datagrok" {
           containerPort = 8080
         }
       ]
-      memoryReservation = var.datagrok_container_memory_reservation
+      memoryReservation = var.ecs_launch_type == "FARGATE" ? var.datagrok_memory - 200 : var.datagrok_container_memory_reservation
       cpu               = var.datagrok_container_cpu
       }, var.ecr_enabled ? {} : {
       repositoryCredentials = {
@@ -591,7 +591,7 @@ resource "aws_ecs_task_definition" "grok_connect" {
           containerPort = 1234
         }
       ]
-      memoryReservation = var.grok_connect_container_memory_reservation
+      memoryReservation = var.ecs_launch_type == "FARGATE" ? var.grok_connect_memory - 200 : var.grok_connect_container_memory_reservation
       cpu               = var.grok_connect_container_cpu
       }, var.ecr_enabled ? {} : {
       repositoryCredentials = {
@@ -1348,7 +1348,7 @@ resource "aws_ecs_task_definition" "grok_spawner" {
           containerPort = 8000
         }
       ]
-      memoryReservation = var.grok_spawner_container_memory_reservation
+      memoryReservation = var.ecs_launch_type == "FARGATE" ? var.grok_spawner_memory - 200 : var.grok_spawner_container_memory_reservation
       cpu               = var.grok_spawner_container_cpu
       }, var.ecr_enabled ? {} : {
       repositoryCredentials = {
