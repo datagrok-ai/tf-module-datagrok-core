@@ -131,7 +131,8 @@ resource "aws_backup_vault" "s3_backup_vault" {
 }
 
 resource "aws_iam_role" "s3_backup_role" {
-  name = "${var.name}-${var.environment}-s3-backup-role"
+# return rolename, delete -1 after success deploy
+  name = "${var.name}-${var.environment}-s3-backup-role-1"
   assume_role_policy = jsonencode({
     Version = "2012-10-17"
     Statement = [
