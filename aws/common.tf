@@ -5,15 +5,15 @@ locals {
     Environment = var.environment
     Terraform   = "true"
   })
-  full_name      = "${var.name}-${var.environment}1"//delete 1
+  full_name      = "${var.name}-${var.environment}1" //delete 1
   vpc_name       = coalesce(var.vpc_name, "${var.name}-${var.environment}")
   rds_name       = coalesce(var.rds_name, "${var.name}-${var.environment}")
-  s3_name        = "tf-jupyter-test"//coalesce(var.s3_name, "${var.name}-${var.environment}")
-  ecs_name       = "test11"//coalesce(var.ecs_name, "${var.name}-${var.environment}")
+  s3_name        = "tf-jupyter-test" //coalesce(var.s3_name, "${var.name}-${var.environment}")
+  ecs_name       = "test11"          //coalesce(var.ecs_name, "${var.name}-${var.environment}")
   lb_name        = coalesce(var.lb_name, "${var.name}-${var.environment}")
-  ec2_name       = "test111"//coalesce(var.ec2_name, "${var.name}-${var.environment}")
+  ec2_name       = "test111" //coalesce(var.ec2_name, "${var.name}-${var.environment}")
   sns_topic_name = coalesce(var.sns_topic_name, "${var.name}-${var.environment}")
-  r53_record     = "public111.datagrok.ai"//var.route53_enabled ? try("${var.route53_record_name}.${var.domain_name}", "${var.name}-${var.environment}.${var.domain_name}") : ""
+  r53_record     = "public111.datagrok.ai" //var.route53_enabled ? try("${var.route53_record_name}.${var.domain_name}", "${var.name}-${var.environment}.${var.domain_name}") : ""
   create_kms     = var.custom_kms_key && !try(length(var.kms_key) > 0, false)
   images = {
     datagrok = {
