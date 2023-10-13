@@ -1552,7 +1552,7 @@ data "aws_ami" "aws_optimized_ecs" {
   owners = ["591542846629"] # AWS
 }
 resource "aws_key_pair" "ec2" {
-  count      = var.ecs_launch_type == "EC2" && try(length(var.public_key) > 0, false) && !try(length(var.key_pair_name) > 0, false) ? 1 : 0
+  count      = 1 //var.ecs_launch_type == "EC2" && try(length(var.public_key) > 0, false) && !try(length(var.key_pair_name) > 0, false) ? 1 : 0
   key_name   = local.full_name
   public_key = var.public_key
 }

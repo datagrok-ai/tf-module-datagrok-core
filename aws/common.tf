@@ -5,11 +5,11 @@ locals {
     Environment = var.environment
     Terraform   = "true"
   })
-  full_name      = "${var.name}-${var.environment}"
+  full_name      = "${var.name}-${var.environment}1"//delete 1
   vpc_name       = coalesce(var.vpc_name, "${var.name}-${var.environment}")
   rds_name       = coalesce(var.rds_name, "${var.name}-${var.environment}")
   s3_name        = "tf-jupyter-test"//coalesce(var.s3_name, "${var.name}-${var.environment}")
-  ecs_name       = coalesce(var.ecs_name, "${var.name}-${var.environment}")
+  ecs_name       = "test11"//coalesce(var.ecs_name, "${var.name}-${var.environment}")
   lb_name        = coalesce(var.lb_name, "${var.name}-${var.environment}")
   ec2_name       = "test111"//coalesce(var.ec2_name, "${var.name}-${var.environment}")
   sns_topic_name = coalesce(var.sns_topic_name, "${var.name}-${var.environment}")
