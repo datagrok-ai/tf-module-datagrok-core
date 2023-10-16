@@ -89,11 +89,11 @@ module "s3_bucket" {
   policy                                = data.aws_iam_policy_document.bucket_policy.json
 
   # S3 bucket-level Public Access Block configuration //commented block
-#  acl                     = "private"
-#  block_public_acls       = true
-#  block_public_policy     = true
-#  ignore_public_acls      = true
-#  restrict_public_buckets = true
+  #  acl                     = "private"
+  #  block_public_acls       = true
+  #  block_public_policy     = true
+  #  ignore_public_acls      = true
+  #  restrict_public_buckets = true
 
   # S3 Bucket Ownership Controls
   # https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/s3_bucket_ownership_controls
@@ -131,7 +131,7 @@ resource "aws_backup_vault" "s3_backup_vault" {
 }
 
 resource "aws_iam_role" "s3_backup_role" {
-# return rolename, delete -1 after success deploy
+  # return rolename, delete -1 after success deploy
   name = "${var.name}-${var.environment}-s3-backup-role-1"
   assume_role_policy = jsonencode({
     Version = "2012-10-17"
@@ -148,7 +148,7 @@ resource "aws_iam_role" "s3_backup_role" {
 }
 
 resource "aws_iam_policy" "s3_backup" {
-# return backup-s3-policy
+  # return backup-s3-policy
   name        = "${var.name}-${var.environment}-backup-s3-policy1"
   description = "Policy for backup ${module.s3_bucket.s3_bucket_id} s3 bucket"
   policy = jsonencode({
