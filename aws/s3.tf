@@ -88,12 +88,12 @@ module "s3_bucket" {
   attach_policy                         = true
   policy                                = data.aws_iam_policy_document.bucket_policy.json
 
-  # S3 bucket-level Public Access Block configuration
-  acl                     = "private"
-  block_public_acls       = true
-  block_public_policy     = true
-  ignore_public_acls      = true
-  restrict_public_buckets = true
+  # S3 bucket-level Public Access Block configuration //commented block
+#  acl                     = "private"
+#  block_public_acls       = true
+#  block_public_policy     = true
+#  ignore_public_acls      = true
+#  restrict_public_buckets = true
 
   # S3 Bucket Ownership Controls
   # https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/s3_bucket_ownership_controls
