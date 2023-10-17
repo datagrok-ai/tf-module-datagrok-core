@@ -30,7 +30,7 @@ module "db" {
 
   identifier                     = local.rds_name
   instance_use_identifier_prefix = false
-  db_name                        = "postgres1"//var.db_name
+  db_name                        = var.db_name
   username                       = var.rds_master_username
   password                       = var.rds_master_password
   create_random_password         = try(length(var.rds_master_password) > 0, false) ? false : true
