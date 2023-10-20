@@ -361,12 +361,11 @@ resource "aws_ecs_task_definition" "datagrok" {
                 amazonStorageBucket : module.s3_bucket.s3_bucket_id,
                 dbServer : module.db.db_instance_address,
                 dbPort : tonumber(module.db.db_instance_port),
- #               db : "datagrok",
-                db : "datagrok1",
+                db : "datagrok",
                 dbLogin : "datagrok",
                 dbPassword : try(random_password.db_datagrok_password[0].result, var.rds_dg_password),
                 dbAdminLogin : var.rds_master_username,
-                dbAdminPassword : var.rds_master_password,//module.db.db_instance_password,
+                dbAdminPassword : module.db.db_instance_password,
                 dbSsl : false,
                 deployDemo : false,
                 deployTestDemo : false
@@ -1553,7 +1552,7 @@ data "aws_ami" "aws_optimized_ecs" {
   owners = ["591542846629"] # AWS
 }
 resource "aws_key_pair" "ec2" {
-  count      = 1 //var.ecs_launch_type == "EC2" && try(length(var.public_key) > 0, false) && !try(length(var.key_pair_name) > 0, false) ? 1 : 0
+  count      = var.ecs_launch_type == "EC2" && try(length(var.public_key) > 0, false) && !try(length(var.key_pair_name) > 0, false) ? 1 : 0
   key_name   = local.full_name
   public_key = var.public_key
 }

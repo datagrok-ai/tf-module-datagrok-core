@@ -439,7 +439,7 @@ variable "termination_protection" {
 
 variable "public_key" {
   type        = string
-  default     = "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABgQDmmfAGuTHuaVsdgxdn/kXPrPWd8rlNlEjaYfF/w/1Qz3eRkO9xYAZKDfrUW/694f3XxoDh0kgv4+/1JXSmwCJcUuc/r2eFcaxKLzAT2dwqEhV0cWsH5AxTWpbMy9Le6FCPo87IDZN6onXdZ6HnjfQkMyj1TgFbQOgCNH3qc5yQhUC5Zy2uSkCjIO1N1UiCq/ZoUbCXExwrnLav6JemPNrcErg3G/ECkE8yKG7PJEkbndJTRoxXXkMZneRWTm65i4svKS9mDmZGQtlB9uqaHlWN+nCE9XJLu9nkzRJIHE9R2S+NNSU9kjxeVWKNDqwlSKO6xliNUSSZKYo4RMbD1ByEBCejBRulY0h07nvnMNU/sFz0QD10YKUjXac28DKpOjmO3UCuHu/fxmyH2J74n44zq3aOdqq0gl8QQfy8yfA7yI2GlRvJRd01tUmnt9rtVimmBcnk8+4JByGLZPU7g02fBgIXup5peYKgL/US12B8JJ4gQ/S3/FhXEBlV0pJjFiU= ksumag@ksumag-X751SJ" //null
+  default     = null
   nullable    = true
   description = "SSH Public Key to create keypair in AWS and access EC2 instance. If not set key_pair_name is required."
 }
@@ -643,7 +643,7 @@ variable "docker_datagrok_image" {
 
 variable "docker_datagrok_tag" {
   type        = string
-  default     = "jupyter"
+  default     = "latest"
   nullable    = false
   description = "Tag from Docker Registry for Datagrok Docker Image"
 }
