@@ -392,11 +392,11 @@ resource "aws_ecs_task_definition" "datagrok" {
       ]
       memoryReservation = var.ecs_launch_type == "FARGATE" ? var.datagrok_memory - 200 : var.datagrok_container_memory_reservation
       cpu               = var.datagrok_container_cpu
-      }, var.ecr_enabled ? {} : {
-      repositoryCredentials = {
-        credentialsParameter = try(aws_secretsmanager_secret.docker_hub[0].arn, var.docker_hub_credentials.secret_arn)
-      }
-      }, var.ecs_launch_type == "FARGATE" ? {
+      }, var.ecr_enabled ? {} : (var.ecs_launch_type == "FARGATE" ? {} : {
+        repositoryCredentials = {
+          credentialsParameter = try(aws_secretsmanager_secret.docker_hub[0].arn, var.docker_hub_credentials.secret_arn)
+        }
+      }), var.ecs_launch_type == "FARGATE" ? {
       dependsOn = [
         {
           "condition" : "SUCCESS",
@@ -593,11 +593,11 @@ resource "aws_ecs_task_definition" "grok_connect" {
       ]
       memoryReservation = var.ecs_launch_type == "FARGATE" ? var.grok_connect_memory - 200 : var.grok_connect_container_memory_reservation
       cpu               = var.grok_connect_container_cpu
-      }, var.ecr_enabled ? {} : {
-      repositoryCredentials = {
-        credentialsParameter = try(aws_secretsmanager_secret.docker_hub[0].arn, var.docker_hub_credentials.secret_arn)
-      }
-      }, var.ecs_launch_type == "FARGATE" ? {
+      }, var.ecr_enabled ? {} : (var.ecs_launch_type == "FARGATE" ? {} : {
+        repositoryCredentials = {
+          credentialsParameter = try(aws_secretsmanager_secret.docker_hub[0].arn, var.docker_hub_credentials.secret_arn)
+        }
+      }), var.ecs_launch_type == "FARGATE" ? {
       dependsOn = [
         {
           "condition" : "SUCCESS",
@@ -790,11 +790,11 @@ resource "aws_ecs_task_definition" "smtp" {
       ]
       memoryReservation = 100
       cpu               = 100
-      }, var.ecr_enabled ? {} : {
-      repositoryCredentials = {
-        credentialsParameter = try(aws_secretsmanager_secret.docker_hub[0].arn, var.docker_hub_credentials.secret_arn)
-      }
-      }
+      }, var.ecr_enabled ? {} : (var.ecs_launch_type == "FARGATE" ? {} : {
+        repositoryCredentials = {
+          credentialsParameter = try(aws_secretsmanager_secret.docker_hub[0].arn, var.docker_hub_credentials.secret_arn)
+        }
+      }),
     )
   ])
   cpu                      = var.ecs_launch_type == "FARGATE" ? 256 : null
@@ -1350,11 +1350,11 @@ resource "aws_ecs_task_definition" "grok_spawner" {
       ]
       memoryReservation = var.ecs_launch_type == "FARGATE" ? var.grok_spawner_memory - 200 : var.grok_spawner_container_memory_reservation
       cpu               = var.grok_spawner_container_cpu
-      }, var.ecr_enabled ? {} : {
-      repositoryCredentials = {
-        credentialsParameter = try(aws_secretsmanager_secret.docker_hub[0].arn, var.docker_hub_credentials.secret_arn)
-      }
-      }, var.ecs_launch_type == "FARGATE" ? {} : {
+      }, var.ecr_enabled ? {} : (var.ecs_launch_type == "FARGATE" ? {} : {
+        repositoryCredentials = {
+          credentialsParameter = try(aws_secretsmanager_secret.docker_hub[0].arn, var.docker_hub_credentials.secret_arn)
+        }
+      }), var.ecs_launch_type == "FARGATE" ? {} : {
       dnsSearchDomains = compact([
         "${data.aws_region.current.name}.compute.internal",
         var.create_route53_internal_zone ? aws_route53_zone.internal[0].name : data.aws_route53_zone.internal[0].name,
