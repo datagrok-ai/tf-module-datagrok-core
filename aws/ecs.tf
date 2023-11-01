@@ -80,7 +80,7 @@ resource "random_password" "admin_password" {
 #}
 
 resource "aws_secretsmanager_secret" "docker_hub" {
-  count       = try(var.docker_hub_credentials.create_secret, false) && !var.ecr_enabled ? 1 : 0
+  count       = try(var.docker_hub_credentials.create_secret, false) && !var.ecr_enabled && var.ecs_launch_type != "FARGATE" ? 1 : 0
   name_prefix = "${local.full_name}_docker_hub"
   description = "Docker Hub token to download images"
   #checkov:skip=CKV_AWS_149:The KMS key is configurable
@@ -89,7 +89,7 @@ resource "aws_secretsmanager_secret" "docker_hub" {
   tags                    = local.tags
 }
 resource "aws_secretsmanager_secret_version" "docker_hub" {
-  count     = try(var.docker_hub_credentials.create_secret, false) && !var.ecr_enabled ? 1 : 0
+  count     = try(var.docker_hub_credentials.create_secret, false) && !var.ecr_enabled && var.ecs_launch_type != "FARGATE" ? 1 : 0
   secret_id = aws_secretsmanager_secret.docker_hub[0].id
   secret_string = jsonencode({
     "username" : sensitive(var.docker_hub_credentials.user),
@@ -210,7 +210,7 @@ resource "aws_iam_policy" "ecr" {
 }
 
 resource "aws_iam_policy" "docker_hub" {
-  count       = !var.ecr_enabled ? 1 : 0
+  count       = !var.ecr_enabled && var.ecs_launch_type != "FARGATE" ? 1 : 0
   name        = "${local.ecs_name}_docker_hub"
   description = "Datagrok Docker Hub credentials policy for ECS task"
 
@@ -255,7 +255,7 @@ resource "aws_iam_role" "exec" {
   })
   managed_policy_arns = compact([
     aws_iam_policy.exec.arn,
-    var.ecr_enabled ? aws_iam_policy.ecr[0].arn : aws_iam_policy.docker_hub[0].arn
+    var.ecr_enabled ? aws_iam_policy.ecr[0].arn : (var.ecs_launch_type == "FARGATE" ? "" : aws_iam_policy.docker_hub[0].arn)
   ])
 
   tags = local.tags
@@ -303,7 +303,7 @@ resource "aws_iam_role" "task" {
   managed_policy_arns = compact(concat([
     aws_iam_policy.exec.arn,
     aws_iam_policy.task.arn,
-    var.ecr_enabled ? aws_iam_policy.ecr[0].arn : aws_iam_policy.docker_hub[0].arn
+    var.ecr_enabled ? aws_iam_policy.ecr[0].arn : (var.ecs_launch_type == "FARGATE" ? "" : aws_iam_policy.docker_hub[0].arn)
   ], var.task_iam_policies))
   #  managed_policy_arns = [aws_iam_policy.task.arn]
 
@@ -1187,7 +1187,7 @@ resource "aws_iam_role" "grok_spawner_task" {
     aws_iam_policy.exec.arn,
     aws_iam_policy.task.arn,
     aws_iam_policy.grok_spawner.arn,
-    var.ecr_enabled ? aws_iam_policy.ecr[0].arn : aws_iam_policy.docker_hub[0].arn,
+    var.ecr_enabled ? aws_iam_policy.ecr[0].arn : (var.ecs_launch_type == "FARGATE" ? "" : aws_iam_policy.docker_hub[0].arn),
     var.grok_spawner_docker_build_enabled ? aws_iam_policy.grok_spawner_kaniko[0].arn : "",
     var.grok_spawner_docker_build_enabled ? aws_iam_policy.grok_spawner_ecr[0].arn : ""
   ])
@@ -1214,7 +1214,7 @@ resource "aws_iam_role" "grok_spawner_kaniko_task" {
   managed_policy_arns = compact([
     aws_iam_policy.exec.arn,
     aws_iam_policy.task.arn,
-    var.ecr_enabled ? aws_iam_policy.ecr[0].arn : aws_iam_policy.docker_hub[0].arn,
+    var.ecr_enabled ? aws_iam_policy.ecr[0].arn : (var.ecs_launch_type == "FARGATE" ? "" : aws_iam_policy.docker_hub[0].arn),
     var.grok_spawner_docker_build_enabled ? aws_iam_policy.grok_spawner_kaniko_ecr[0].arn : ""
   ])
   #  managed_policy_arns = [aws_iam_policy.task.arn]
@@ -1302,7 +1302,7 @@ resource "aws_ecs_task_definition" "grok_spawner" {
       environment = [
         {
           name  = "DOCKER_REGISTRY_SECRET_ARN",
-          value = var.ecr_enabled ? "" : try(aws_secretsmanager_secret.docker_hub[0].arn, var.docker_hub_credentials.secret_arn)
+          value = var.ecr_enabled || var.ecs_launch_type == "FARGATE" ? "" : try(aws_secretsmanager_secret.docker_hub[0].arn, var.docker_hub_credentials.secret_arn)
         },
         {
           name  = "ECS_SUBNETS",
@@ -1608,7 +1608,7 @@ resource "aws_iam_role" "ec2" {
   managed_policy_arns = compact([
     aws_iam_policy.exec.arn,
     aws_iam_policy.ec2.arn,
-    var.ecr_enabled ? aws_iam_policy.ecr[0].arn : aws_iam_policy.docker_hub[0].arn
+    var.ecr_enabled ? aws_iam_policy.ecr[0].arn : (var.ecs_launch_type == "FARGATE" ? "" : aws_iam_policy.docker_hub[0].arn)
   ])
 
   tags = local.tags
