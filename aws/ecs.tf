@@ -1083,7 +1083,8 @@ resource "aws_iam_policy" "grok_spawner" {
       {
         "Effect" = "Allow",
         "Action" : [
-          "ecs:CreateService"
+          "ecs:CreateService",
+          "ecs:TagResource"
         ],
         "Condition" = {
           "ArnEquals" : {
