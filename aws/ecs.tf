@@ -1322,53 +1322,78 @@ resource "aws_iam_role" "grok_spawner_task" {
       ]
     })
   }
-    inline_policy {
-      name        = "${local.ecs_name}_task"
-      policy = jsonencode({
-        "Version" = "2012-10-17",
-        "Statement" = [
-          {
-            "Action" = [
-              "s3:PutObject",
-              "s3:GetObject",
-              "s3:DeleteObject",
-              "s3:ListBucket"
-            ],
-            "Condition" = {},
-            "Effect"    = "Allow",
-            "Resource" = [
-              module.s3_bucket.s3_bucket_arn,
-              "${module.s3_bucket.s3_bucket_arn}/*"
-            ]
+  inline_policy {
+    name = "${local.ecs_name}_task"
+    policy = jsonencode({
+      "Version" = "2012-10-17",
+      "Statement" = [
+        {
+          "Action" = [
+            "s3:PutObject",
+            "s3:GetObject",
+            "s3:DeleteObject",
+            "s3:ListBucket"
+          ],
+          "Condition" = {},
+          "Effect"    = "Allow",
+          "Resource" = [
+            module.s3_bucket.s3_bucket_arn,
+            "${module.s3_bucket.s3_bucket_arn}/*"
+          ]
+        }
+      ]
+    })
+
+  }
+
+  inline_policy {
+    name = "${local.ecs_name}_exec"
+    policy = jsonencode({
+      "Version" = "2012-10-17",
+      "Statement" = [
+        {
+          "Action" = [
+            "logs:CreateLogStream",
+            "logs:PutLogEvents"
+          ],
+          "Effect" = "Allow",
+          "Resource" = [
+            var.create_cloudwatch_log_group ? aws_cloudwatch_log_group.ecs[0].arn : var.cloudwatch_log_group_arn,
+            "${var.create_cloudwatch_log_group ? aws_cloudwatch_log_group.ecs[0].arn : var.cloudwatch_log_group_arn}:log-stream:*"
+          ]
+        }
+      ]
+    })
+
+  }
+  inline_policy {
+    name = "${local.ecs_name}_tags"
+    policy = jsonencode({
+      "Version" : "2012-10-17",
+      "Statement" : [
+        {
+          "Effect" : "Allow",
+          "Action" : "ecs:TagResource",
+          "Resource" : [
+            "arn:aws:ecs:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:task-definition/*",
+            "arn:aws:ecs:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:service/${module.ecs.cluster_name}/*"
+          ],
+          "Condition" : {
+            "StringEquals" : {
+              "ecs:CreateAction" : [
+                "CreateService",
+                "RegisterTaskDefinition",
+                "UpdateService"
+              ]
+            }
           }
-        ]
-      })
-
-    }
-    
-    inline_policy {
-      name        = "${local.ecs_name}_exec"
-        policy = jsonencode({
-        "Version" = "2012-10-17",
-        "Statement" = [
-          {
-            "Action" = [
-              "logs:CreateLogStream",
-              "logs:PutLogEvents"
-            ],
-            "Effect" = "Allow",
-            "Resource" = [
-              var.create_cloudwatch_log_group ? aws_cloudwatch_log_group.ecs[0].arn : var.cloudwatch_log_group_arn,
-              "${var.create_cloudwatch_log_group ? aws_cloudwatch_log_group.ecs[0].arn : var.cloudwatch_log_group_arn}:log-stream:*"
-            ]
-          }
-        ]
-      })
-
-    }
+        }
+      ]
+    })
+  }
 
 
-  
+
   managed_policy_arns = compact([
     # aws_iam_policy.exec.arn,
     # aws_iam_policy.task.arn,
