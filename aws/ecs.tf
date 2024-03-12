@@ -157,27 +157,27 @@ resource "null_resource" "ecr_push" {
   depends_on = [aws_ecr_repository.ecr]
 }
 
-# resource "aws_iam_policy" "exec" {
-#   name        = "${local.ecs_name}_exec"
-#   description = "Datagrok execution policy for ECS task"
+resource "aws_iam_policy" "exec" {
+  name        = "${local.ecs_name}_exec"
+  description = "Datagrok execution policy for ECS task"
 
-#   policy = jsonencode({
-#     "Version" = "2012-10-17",
-#     "Statement" = [
-#       {
-#         "Action" = [
-#           "logs:CreateLogStream",
-#           "logs:PutLogEvents"
-#         ],
-#         "Effect" = "Allow",
-#         "Resource" = [
-#           var.create_cloudwatch_log_group ? aws_cloudwatch_log_group.ecs[0].arn : var.cloudwatch_log_group_arn,
-#           "${var.create_cloudwatch_log_group ? aws_cloudwatch_log_group.ecs[0].arn : var.cloudwatch_log_group_arn}:log-stream:*"
-#         ]
-#       }
-#     ]
-#   })
-# }
+  policy = jsonencode({
+    "Version" = "2012-10-17",
+    "Statement" = [
+      {
+        "Action" = [
+          "logs:CreateLogStream",
+          "logs:PutLogEvents"
+        ],
+        "Effect" = "Allow",
+        "Resource" = [
+          var.create_cloudwatch_log_group ? aws_cloudwatch_log_group.ecs[0].arn : var.cloudwatch_log_group_arn,
+          "${var.create_cloudwatch_log_group ? aws_cloudwatch_log_group.ecs[0].arn : var.cloudwatch_log_group_arn}:log-stream:*"
+        ]
+      }
+    ]
+  })
+}
 
 resource "aws_iam_policy" "ecr" {
   count       = var.ecr_enabled ? 1 : 0
@@ -260,30 +260,30 @@ resource "aws_iam_role" "exec" {
 
   tags = local.tags
 }
-# resource "aws_iam_policy" "task" {
-#   name        = "${local.ecs_name}_task"
-#   description = "Datagrok policy to access AWS resources from tasks"
+resource "aws_iam_policy" "task" {
+  name        = "${local.ecs_name}_task"
+  description = "Datagrok policy to access AWS resources from tasks"
 
-#   policy = jsonencode({
-#     "Version" = "2012-10-17",
-#     "Statement" = [
-#       {
-#         "Action" = [
-#           "s3:PutObject",
-#           "s3:GetObject",
-#           "s3:DeleteObject",
-#           "s3:ListBucket"
-#         ],
-#         "Condition" = {},
-#         "Effect"    = "Allow",
-#         "Resource" = [
-#           module.s3_bucket.s3_bucket_arn,
-#           "${module.s3_bucket.s3_bucket_arn}/*"
-#         ]
-#       }
-#     ]
-#   })
-# }
+  policy = jsonencode({
+    "Version" = "2012-10-17",
+    "Statement" = [
+      {
+        "Action" = [
+          "s3:PutObject",
+          "s3:GetObject",
+          "s3:DeleteObject",
+          "s3:ListBucket"
+        ],
+        "Condition" = {},
+        "Effect"    = "Allow",
+        "Resource" = [
+          module.s3_bucket.s3_bucket_arn,
+          "${module.s3_bucket.s3_bucket_arn}/*"
+        ]
+      }
+    ]
+  })
+}
 resource "aws_iam_role" "task" {
   name = "${local.ecs_name}_task"
 
@@ -982,144 +982,143 @@ resource "aws_iam_policy" "grok_spawner_ecr" {
     ]
   })
 }
-# resource "aws_iam_policy" "grok_spawner_kaniko_ecr" {
-#   count       = var.grok_spawner_docker_build_enabled ? 1 : 0
-#   name        = "${local.ecs_name}_grok_spawner_kaniko_ecr"
-#   description = "Grok Spawner Kaniko ECR policy"
+resource "aws_iam_policy" "grok_spawner_kaniko_ecr" {
+  count       = var.grok_spawner_docker_build_enabled ? 1 : 0
+  name        = "${local.ecs_name}_grok_spawner_kaniko_ecr"
+  description = "Grok Spawner Kaniko ECR policy"
 
-#   policy = jsonencode({
-#     "Version" = "2012-10-17",
-#     "Statement" = [
-#       {
-#         "Action" : [
-#           "ecr:GetAuthorizationToken"
-#         ]
-#         "Condition" = {},
-#         "Effect" : "Allow",
-#         "Resource" : "*"
-#       },
-#       {
-#         "Action" = [
-#           "ecr:CompleteLayerUpload",
-#           "ecr:UploadLayerPart",
-#           "ecr:InitiateLayerUpload",
-#           "ecr:BatchCheckLayerAvailability",
-#           "ecr:PutImage",
-#           "ecr:TagResource"
-#         ],
-#         "Condition" = {},
-#         "Effect"    = "Allow",
-#         "Resource" = [
-#           "arn:aws:ecr:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:repository/datagrok/*"
-#         ]
-#       },
-#       {
-#         "Action" = [
-#           "ecr:BatchCheckLayerAvailability",
-#           "ecr:BatchGetImage"
-#         ],
-#         "Condition" = {},
-#         "Effect"    = "Allow",
-#         "Resource" = [
-#           "arn:aws:ecr:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:repository/datagrok/*"
-#         ]
-#       }
-#     ]
-#   })
-# }
+  policy = jsonencode({
+    "Version" = "2012-10-17",
+    "Statement" = [
+      {
+        "Action" : [
+          "ecr:GetAuthorizationToken"
+        ]
+        "Condition" = {},
+        "Effect" : "Allow",
+        "Resource" : "*"
+      },
+      {
+        "Action" = [
+          "ecr:CompleteLayerUpload",
+          "ecr:UploadLayerPart",
+          "ecr:InitiateLayerUpload",
+          "ecr:BatchCheckLayerAvailability",
+          "ecr:PutImage",
+          "ecr:TagResource"
+        ],
+        "Condition" = {},
+        "Effect"    = "Allow",
+        "Resource" = [
+          "arn:aws:ecr:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:repository/datagrok/*"
+        ]
+      },
+      {
+        "Action" = [
+          "ecr:BatchCheckLayerAvailability",
+          "ecr:BatchGetImage"
+        ],
+        "Condition" = {},
+        "Effect"    = "Allow",
+        "Resource" = [
+          "arn:aws:ecr:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:repository/datagrok/*"
+        ]
+      }
+    ]
+  })
+}
 
-# resource "aws_iam_policy" "grok_spawner" {
-#   name        = "${local.ecs_name}_grok_spawner"
-#   description = "Grok Spawner policy"
+resource "aws_iam_policy" "grok_spawner" {
+  name        = "${local.ecs_name}_grok_spawner"
+  description = "Grok Spawner policy"
 
-# policy = jsonencode({
-#   "Version" = "2012-10-17",
-#   "Statement" = [
-#     {
-#       "Action" = [
-#         "ecs:ListTasks"
-#       ],
-#       "Condition" = {
-#         "ArnEquals" : {
-#           "ecs:cluster" : module.ecs.cluster_arn
-#         }
-#       },
-#       "Effect"   = "Allow",
-#       "Resource" = "*"
-#     },
-#     {
-#       "Action" = [
-#         "ecs:RegisterTaskDefinition",
-#       ],
-#       "Condition" = {
-#         "StringEquals" : {
-#           "aws:RequestTag/caller" : ["grok_spawner"]
-#         }
-#       },
-#       "Effect"   = "Allow",
-#       "Resource" = "*"
-#     },
-#     {
-#       "Action" = [
-#         "ecs:DescribeTaskDefinition",
-#       ],
-#       "Condition" = {},
-#       "Effect"    = "Allow",
-#       "Resource"  = "*"
-#     },
-#     {
-#       "Effect" = "Allow",
-#       "Action" : [
-#         "ecs:DescribeServices",
-#         "ecs:UpdateService"
-#       ],
-#       "Condition" = {
-#         "ArnEquals" : {
-#           "ecs:cluster" : module.ecs.cluster_arn
-#         }
-#       },
-#       "Resource" : "arn:aws:ecs:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:service/${module.ecs.cluster_name}/*"
-#     },
-#     {
-#       "Effect" = "Allow",
-#       "Action" : [
-#         "ecs:CreateService",
-#         "ecs:TagResource"
-#       ],
-#       "Condition" = {
-#         "ArnEquals" : {
-#           "ecs:cluster" : module.ecs.cluster_arn
-#         },
-#         "StringEquals" : {
-#           "aws:RequestTag/caller" : ["grok_spawner"]
-#         }
-#       },
-#       "Resource" : "arn:aws:ecs:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:service/${module.ecs.cluster_name}/*"
-#     },
-#     {
-#       "Effect" = "Allow",
-#       "Action" : [
-#         "ecs:DescribeTasks"
-#       ],
-#       "Condition" = {
-#         "ArnEquals" : {
-#           "ecs:cluster" : module.ecs.cluster_arn
-#         }
-#       },
-#       "Resource" : "arn:aws:ecs:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:task/${module.ecs.cluster_name}/*"
-#     },
-#     {
-#       "Action" = [
-#         "logs:GetLogEvents"
-#       ],
-#       "Effect" = "Allow",
-#       "Resource" = [
-#         "${var.create_cloudwatch_log_group ? aws_cloudwatch_log_group.ecs[0].arn : var.cloudwatch_log_group_arn}:log-stream:grok_spawner/*"
-#       ]
-#     }
-#   ]
-# })
-# }
+  policy = jsonencode({
+    "Version" = "2012-10-17",
+    "Statement" = [
+      {
+        "Action" = [
+          "ecs:ListTasks"
+        ],
+        "Condition" = {
+          "ArnEquals" : {
+            "ecs:cluster" : module.ecs.cluster_arn
+          }
+        },
+        "Effect"   = "Allow",
+        "Resource" = "*"
+      },
+      {
+        "Action" = [
+          "ecs:RegisterTaskDefinition",
+        ],
+        "Condition" = {
+          "StringEquals" : {
+            "aws:RequestTag/caller" : ["grok_spawner"]
+          }
+        },
+        "Effect"   = "Allow",
+        "Resource" = "*"
+      },
+      {
+        "Action" = [
+          "ecs:DescribeTaskDefinition",
+        ],
+        "Condition" = {},
+        "Effect"    = "Allow",
+        "Resource"  = "*"
+      },
+      {
+        "Effect" = "Allow",
+        "Action" : [
+          "ecs:DescribeServices",
+          "ecs:UpdateService"
+        ],
+        "Condition" = {
+          "ArnEquals" : {
+            "ecs:cluster" : module.ecs.cluster_arn
+          }
+        },
+        "Resource" : "arn:aws:ecs:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:service/${module.ecs.cluster_name}/*"
+      },
+      {
+        "Effect" = "Allow",
+        "Action" : [
+          "ecs:CreateService"
+        ],
+        "Condition" = {
+          "ArnEquals" : {
+            "ecs:cluster" : module.ecs.cluster_arn
+          },
+          "StringEquals" : {
+            "aws:RequestTag/caller" : ["grok_spawner"]
+          }
+        },
+        "Resource" : "arn:aws:ecs:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:service/${module.ecs.cluster_name}/*"
+      },
+      {
+        "Effect" = "Allow",
+        "Action" : [
+          "ecs:DescribeTasks"
+        ],
+        "Condition" = {
+          "ArnEquals" : {
+            "ecs:cluster" : module.ecs.cluster_arn
+          }
+        },
+        "Resource" : "arn:aws:ecs:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:task/${module.ecs.cluster_name}/*"
+      },
+      {
+        "Action" = [
+          "logs:GetLogEvents"
+        ],
+        "Effect" = "Allow",
+        "Resource" = [
+          "${var.create_cloudwatch_log_group ? aws_cloudwatch_log_group.ecs[0].arn : var.cloudwatch_log_group_arn}:log-stream:grok_spawner/*"
+        ]
+      }
+    ]
+  })
+}
 resource "aws_iam_policy" "grok_spawner_kaniko" {
   count       = var.grok_spawner_docker_build_enabled ? 1 : 0
   name        = "${local.ecs_name}_grok_spawner_kaniko"
@@ -1168,53 +1167,6 @@ resource "aws_iam_policy" "grok_spawner_kaniko" {
   })
 }
 
-resource "aws_iam_policy" "grok_spawner_tags" {
-  count       = var.grok_spawner_docker_build_enabled ? 1 : 0
-  name        = "${local.ecs_name}_grok_spawner_kaniko"
-  description = "Grok Spawner Kaniko policy"
-
-  policy = jsonencode({
-    "Version" = "2012-10-17",
-    "Statement" = [
-      {
-        "Effect" = "Allow",
-        "Action" : [
-          "ecs:RunTask"
-        ],
-        "Condition" = {
-          "ArnEquals" : {
-            "ecs:cluster" : module.ecs.cluster_arn
-          }
-        },
-        "Resource" : [
-          aws_ecs_task_definition.grok_spawner_kaniko.arn
-        ]
-      },
-      {
-        "Effect" = "Allow",
-        "Action" : [
-          "iam:PassRole"
-        ],
-        "Condition" = {
-          #          "StringEquals" : {
-          #            "iam:PassedToService" : "ecs-tasks.amazonaws.com"
-          #          },
-          #          "ArnLike" : {
-          #            "iam:AssociatedResourceARN" : [
-          #              "arn:aws:ecs:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:task/${module.ecs.cluster_name}/*",
-          #              "arn:aws:ecs:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:service/${module.ecs.cluster_name}/*"
-          #            ]
-          #          }
-        },
-        "Resource" : [
-          aws_iam_role.grok_spawner_kaniko_task.arn,
-          aws_iam_role.exec.arn,
-          aws_iam_role.grok_spawner_exec.arn
-        ]
-      }
-    ]
-  })
-}
 resource "aws_iam_role" "grok_spawner_task" {
   name = "${local.ecs_name}_grok_spawner_task"
 
@@ -1232,140 +1184,7 @@ resource "aws_iam_role" "grok_spawner_task" {
     ]
   })
 
-  inline_policy {
-    name = "${local.ecs_name}_grok_spawner"
-    policy = jsonencode({
-      "Version" = "2012-10-17",
-      "Statement" = [
-        {
-          "Action" = [
-            "ecs:ListTasks"
-          ],
-          "Condition" = {
-            "ArnEquals" : {
-              "ecs:cluster" : module.ecs.cluster_arn
-            }
-          },
-          "Effect"   = "Allow",
-          "Resource" = "*"
-        },
-        {
-          "Action" = [
-            "ecs:RegisterTaskDefinition",
-          ],
-          "Condition" = {
-            "StringEquals" : {
-              "aws:RequestTag/caller" : ["grok_spawner"]
-            }
-          },
-          "Effect"   = "Allow",
-          "Resource" = "*"
-        },
-        {
-          "Action" = [
-            "ecs:DescribeTaskDefinition",
-          ],
-          "Condition" = {},
-          "Effect"    = "Allow",
-          "Resource"  = "*"
-        },
-        {
-          "Effect" = "Allow",
-          "Action" : [
-            "ecs:DescribeServices",
-            "ecs:UpdateService"
-          ],
-          "Condition" = {
-            "ArnEquals" : {
-              "ecs:cluster" : module.ecs.cluster_arn
-            }
-          },
-          "Resource" : "arn:aws:ecs:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:service/${module.ecs.cluster_name}/*"
-        },
-        {
-          "Effect" = "Allow",
-          "Action" : [
-            "ecs:CreateService",
-            "ecs:TagResource"
-          ],
-          "Condition" = {
-            "ArnEquals" : {
-              "ecs:cluster" : module.ecs.cluster_arn
-            },
-            "StringEquals" : {
-              "aws:RequestTag/caller" : ["grok_spawner"]
-            }
-          },
-          "Resource" : "arn:aws:ecs:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:service/${module.ecs.cluster_name}/*"
-        },
-        {
-          "Effect" = "Allow",
-          "Action" : [
-            "ecs:DescribeTasks"
-          ],
-          "Condition" = {
-            "ArnEquals" : {
-              "ecs:cluster" : module.ecs.cluster_arn
-            }
-          },
-          "Resource" : "arn:aws:ecs:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:task/${module.ecs.cluster_name}/*"
-        },
-        {
-          "Action" = [
-            "logs:GetLogEvents"
-          ],
-          "Effect" = "Allow",
-          "Resource" = [
-            "${var.create_cloudwatch_log_group ? aws_cloudwatch_log_group.ecs[0].arn : var.cloudwatch_log_group_arn}:log-stream:grok_spawner/*"
-          ]
-        }
-      ]
-    })
-  }
-  inline_policy {
-    name = "${local.ecs_name}_task"
-    policy = jsonencode({
-      "Version" = "2012-10-17",
-      "Statement" = [
-        {
-          "Action" = [
-            "s3:PutObject",
-            "s3:GetObject",
-            "s3:DeleteObject",
-            "s3:ListBucket"
-          ],
-          "Condition" = {},
-          "Effect"    = "Allow",
-          "Resource" = [
-            module.s3_bucket.s3_bucket_arn,
-            "${module.s3_bucket.s3_bucket_arn}/*"
-          ]
-        }
-      ]
-    })
 
-  }
-
-  inline_policy {
-    name = "${local.ecs_name}_exec"
-    policy = jsonencode({
-      "Version" = "2012-10-17",
-      "Statement" = [
-        {
-          "Action" = [
-            "logs:CreateLogStream",
-            "logs:PutLogEvents"
-          ],
-          "Effect" = "Allow",
-          "Resource" = [
-            var.create_cloudwatch_log_group ? aws_cloudwatch_log_group.ecs[0].arn : var.cloudwatch_log_group_arn,
-            "${var.create_cloudwatch_log_group ? aws_cloudwatch_log_group.ecs[0].arn : var.cloudwatch_log_group_arn}:log-stream:*"
-          ]
-        }
-      ]
-    })
-
-  }
   inline_policy {
     name = "${local.ecs_name}_tags"
     policy = jsonencode({
@@ -1395,9 +1214,9 @@ resource "aws_iam_role" "grok_spawner_task" {
 
 
   managed_policy_arns = compact([
-    # aws_iam_policy.exec.arn,
-    # aws_iam_policy.task.arn,
-    # aws_iam_policy.grok_spawner.arn,
+    aws_iam_policy.exec.arn,
+    aws_iam_policy.task.arn,
+    aws_iam_policy.grok_spawner.arn,
     var.ecr_enabled ? aws_iam_policy.ecr[0].arn : (var.ecs_launch_type == "FARGATE" ? "" : aws_iam_policy.docker_hub[0].arn),
     var.grok_spawner_docker_build_enabled ? aws_iam_policy.grok_spawner_kaniko[0].arn : "",
     var.grok_spawner_docker_build_enabled ? aws_iam_policy.grok_spawner_ecr[0].arn : ""
