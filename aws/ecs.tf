@@ -926,6 +926,53 @@ resource "aws_ecs_service" "smtp" {
 }
 
 
+resource "aws_iam_policy" "grok_spawner_kaniko_ecr" {
+  count       = var.grok_spawner_docker_build_enabled ? 1 : 0
+  name        = "${local.ecs_name}_grok_spawner_kaniko_ecr"
+  description = "Grok Spawner Kaniko ECR policy"
+
+  policy = jsonencode({
+    "Version" = "2012-10-17",
+    "Statement" = [
+      {
+        "Action" : [
+          "ecr:GetAuthorizationToken"
+        ]
+        "Condition" = {},
+        "Effect" : "Allow",
+        "Resource" : "*"
+      },
+      {
+        "Action" = [
+          "ecr:CompleteLayerUpload",
+          "ecr:UploadLayerPart",
+          "ecr:InitiateLayerUpload",
+          "ecr:BatchCheckLayerAvailability",
+          "ecr:PutImage",
+          "ecr:TagResource"
+        ],
+        "Condition" = {},
+        "Effect"    = "Allow",
+        "Resource" = [
+          "arn:aws:ecr:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:repository/datagrok/*"
+        ]
+      },
+      {
+        "Action" = [
+          "ecr:BatchCheckLayerAvailability",
+          "ecr:BatchGetImage"
+        ],
+        "Condition" = {},
+        "Effect"    = "Allow",
+        "Resource" = [
+          "arn:aws:ecr:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:repository/datagrok/*"
+        ]
+      }
+    ]
+  })
+}
+
+
 resource "aws_iam_role" "grok_spawner_task" {
   name = "${local.ecs_name}_grok_spawner_task"
 
