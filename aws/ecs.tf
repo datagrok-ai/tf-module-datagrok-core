@@ -1228,12 +1228,8 @@ resource "aws_iam_role" "grok_spawner_task" {
   managed_policy_arns = compact([
     aws_iam_policy.exec.arn,
     aws_iam_policy.task.arn,
-    # aws_iam_policy.grok_spawner.arn,
     var.ecr_enabled ? aws_iam_policy.ecr[0].arn : (var.ecs_launch_type == "FARGATE" ? "" : aws_iam_policy.docker_hub[0].arn),
-    # var.grok_spawner_docker_build_enabled ? aws_iam_policy.grok_spawner_kaniko[0].arn : "",
-    # var.grok_spawner_docker_build_enabled ? aws_iam_policy.grok_spawner_ecr[0].arn : ""
   ])
-  #  managed_policy_arns = [aws_iam_policy.task.arn]
 
   tags = local.tags
 }
