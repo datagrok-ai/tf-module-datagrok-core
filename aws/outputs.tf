@@ -43,6 +43,16 @@ output "s3_name" {
   value       = local.s3_name
 }
 
+output "s3_bucket_name" {
+  description = "The S3 Bucket name of a stand."
+  value       = local.s3_name
+}
+
+output "s3_bucket_region" {
+  description = "The S3 Bucket region for a stand."
+  value       = data.aws_region.current.name
+}
+
 output "ec2_name" {
   description = "The EC2 instance name of a stand."
   value       = var.ecs_launch_type == "EC2" ? local.ec2_name : ""
@@ -161,4 +171,24 @@ output "alb_external_arn" {
 output "alb_internal_arn" {
   description = "The ARN of the external Application Load balancer"
   value       = module.lb_int.lb_arn
+}
+
+output "db_instance_address" {
+  description = "The address of the Datagrok DB"
+  value       = try(aws_route53_record.db_private_dns[0].name, module.db.db_instance_address)
+}
+
+output "db_instance_port" {
+  description = "The port of the Datagrok DB"
+  value       = tonumber(module.db.db_instance_port)
+}
+
+output "db_dg_login" {
+  description = "The user to the Datagrok DB"
+  value       = "datagrok"
+}
+
+output "db_dg_password" {
+  description = "The password to the Datagrok DB"
+  value       = try(random_password.db_datagrok_password[0].result, var.rds_dg_password)
 }
