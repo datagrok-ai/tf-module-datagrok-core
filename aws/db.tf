@@ -40,7 +40,7 @@ module "db" {
   major_engine_version           = var.rds_major_engine_version
   allow_major_version_upgrade    = false
   auto_minor_version_upgrade     = true
-  family                         = "postgres${var.rds_major_engine_version}"
+  family                         = "postgres${split(".", var.rds_major_engine_version)[0]}"
   instance_class                 = var.rds_instance_class
   allocated_storage              = var.rds_allocated_storage
   max_allocated_storage          = var.rds_max_allocated_storage
