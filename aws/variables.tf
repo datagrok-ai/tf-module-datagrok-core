@@ -172,8 +172,8 @@ variable "rds_dg_password" {
   description = "The password for datagrok user in RDS. If it is not specified, the random password will be generated, 16 symbols long without special characters."
 }
 variable "private_zone_name" {
-  type = string
-  default = "datagrok.datagrok.public.internal"
+  type        = string
+  default     = "datagrok.datagrok.public.internal"
   description = "Private hosted_zone nane"
 }
 variable "rds_instance_class" {
