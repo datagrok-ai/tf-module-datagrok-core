@@ -81,14 +81,9 @@ module "db" {
   tags = local.tags
 }
 
-data "aws_route53_zone" "private_zone" {
-  name         = var.private_zone_name
-  private_zone = true
-}
-
 resource "aws_route53_record" "www" {
-  zone_id = data.aws_route53_zone.private_zone.zone_id
-  name    = "public_db.${data.aws_route53_zone.private_zone.name}"
+  zone_id = aws_route53_zone.internal[0].zone_id
+  name    = "public_db.${aws_route53_zone.internal[0].name}"
   type    = "CNAME"
   ttl     = 60
   records = [split(":", module.db.db_instance_endpoint)[0]]
