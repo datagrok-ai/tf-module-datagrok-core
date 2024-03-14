@@ -359,7 +359,7 @@ resource "aws_ecs_task_definition" "datagrok" {
               {
                 amazonStorageRegion : data.aws_region.current.name,
                 amazonStorageBucket : module.s3_bucket.s3_bucket_id,
-                dbServer : module.db.db_instance_address,
+                dbServer : try(aws_route53_record.db_private_dns[0].name, module.db.db_instance_address),
                 dbPort : tonumber(module.db.db_instance_port),
                 db : "datagrok",
                 dbLogin : "datagrok",
