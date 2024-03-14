@@ -81,7 +81,7 @@ module "db" {
   tags = local.tags
 }
 
-resource "aws_route53_record" "www" {
+resource "aws_route53_record" "db_private_dns" {
   zone_id = aws_route53_zone.internal[0].zone_id
   name    = "public_db.${aws_route53_zone.internal[0].name}"
   type    = "CNAME"
