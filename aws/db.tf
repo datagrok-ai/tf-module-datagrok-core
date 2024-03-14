@@ -40,7 +40,7 @@ module "db" {
   major_engine_version           = var.rds_major_engine_version
   allow_major_version_upgrade    = false
   auto_minor_version_upgrade     = true
-  family                         = "postgres${var.rds_major_engine_version}"
+  family                         = "postgres${split(".", var.rds_major_engine_version)[0]}"
   instance_class                 = var.rds_instance_class
   allocated_storage              = var.rds_allocated_storage
   max_allocated_storage          = var.rds_max_allocated_storage
@@ -79,4 +79,14 @@ module "db" {
   ]
 
   tags = local.tags
+}
+
+resource "aws_route53_record" "db_private_dns" {
+  count = var.create_route53_internal_zone ? 1 : 0
+  zone_id = aws_route53_zone.internal[0].zone_id
+  name    = "public_db.${aws_route53_zone.internal[0].name}"
+  type    = "CNAME"
+  ttl     = 60
+  records = [split(":", module.db.db_instance_endpoint)[0]]
+
 }

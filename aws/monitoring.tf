@@ -13,7 +13,7 @@ resource "aws_sns_topic_subscription" "email" {
     compact(
       concat(
         var.monitoring.email_alerts_datagrok ?
-        ["monitoring@datagrok.ai", "spodolskaya@datagrok.ai", "dnahovskyi@datagrok.ai"] :
+        ["spodolskaya@datagrok.ai", "vhlushchenko@datagrok.ai"] :
         [],
         var.monitoring.email_alerts ? var.monitoring.email_recipients : []
       )
