@@ -137,7 +137,7 @@ variable "rds_name" {
 
 variable "rds_major_engine_version" {
   type        = string
-  default     = "12"
+  default     = "12.17"
   nullable    = false
   description = "The postgres engine major version for RDS."
 }
@@ -171,7 +171,11 @@ variable "rds_dg_password" {
   nullable    = true
   description = "The password for datagrok user in RDS. If it is not specified, the random password will be generated, 16 symbols long without special characters."
 }
-
+variable "private_zone_name" {
+  type = string
+  default = "datagrok.datagrok.public.internal"
+  description = "Private hosted_zone nane"
+}
 variable "rds_instance_class" {
   type        = string
   default     = "db.t3.large"
