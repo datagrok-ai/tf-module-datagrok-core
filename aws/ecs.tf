@@ -1169,56 +1169,46 @@ resource "aws_iam_role" "grok_spawner_task" {
     content {
       name = "${local.ecs_name}_grok_spawner_kaniko"
       policy = jsonencode({
-        "Version" = "2012-10-17",
-        "Statement" = [
-          {
-            "Action" : [
-              "ecr:GetAuthorizationToken"
-            ]
-            "Condition" = {},
-            "Effect" : "Allow",
-            "Resource" : "*"
-          },
-          {
-            "Action" : [
-              "ecr:CreateRepository"
-            ]
-            "Condition" = {
-              "StringEquals" : {
-                "aws:RequestTag/builder" : ["grok_spawner"]
-              }
-            },
-            "Effect" : "Allow",
-            "Resource" : "*"
-          },
-          {
-            "Action" = [
-              "ecr:TagResource"
-            ],
-            "Condition" = {},
-            "Effect"    = "Allow",
-            "Condition" = {
-              "StringEquals" : {
-                "aws:RequestTag/builder" : ["grok_spawner"]
-              }
-            },
-            "Resource" = [
-              "arn:aws:ecr:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:repository/datagrok/*"
-            ]
-          },
-          {
-            "Action" = [
-              "ecr:DescribeRepositories",
-              "ecr:ListImages"
-            ],
-            "Condition" = {},
-            "Effect"    = "Allow",
-            "Resource" = [
-              "arn:aws:ecr:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:repository/datagrok/*"
-            ]
+    "Version" = "2012-10-17",
+    "Statement" = [
+      {
+        "Effect" = "Allow",
+        "Action" : [
+          "ecs:RunTask"
+        ],
+        "Condition" = {
+          "ArnEquals" : {
+            "ecs:cluster" : module.ecs.cluster_arn
           }
+        },
+        "Resource" : [
+          aws_ecs_task_definition.grok_spawner_kaniko.arn
         ]
-      })
+      },
+      {
+        "Effect" = "Allow",
+        "Action" : [
+          "iam:PassRole"
+        ],
+        "Condition" = {
+          #          "StringEquals" : {
+          #            "iam:PassedToService" : "ecs-tasks.amazonaws.com"
+          #          },
+          #          "ArnLike" : {
+          #            "iam:AssociatedResourceARN" : [
+          #              "arn:aws:ecs:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:task/${module.ecs.cluster_name}/*",
+          #              "arn:aws:ecs:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:service/${module.ecs.cluster_name}/*"
+          #            ]
+          #          }
+        },
+        "Resource" : [
+          aws_iam_role.grok_spawner_kaniko_task.arn,
+          aws_iam_role.exec.arn,
+          aws_iam_role.grok_spawner_exec.arn
+        ]
+      }
+    ]
+  })
     }
 
   }
