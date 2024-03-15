@@ -180,7 +180,7 @@ output "datagrok_internal_endpoint" {
 
 output "datagrok_internal_api" {
   description = "The internal Datagrok API endpoint"
-  value       = "${module.lb_int.lb_dns_name}/api"
+  value       = "http://${module.lb_int.lb_dns_name}/api"
 }
 
 output "db_instance_address" {
