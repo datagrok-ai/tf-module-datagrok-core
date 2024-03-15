@@ -82,11 +82,10 @@ module "db" {
 }
 
 resource "aws_route53_record" "db_private_dns" {
-  count = var.create_route53_internal_zone ? 1 : 0
+  count   = var.create_route53_internal_zone ? 1 : 0
   zone_id = aws_route53_zone.internal[0].zone_id
-  name    = "public_db.${aws_route53_zone.internal[0].name}"
+  name    = "db.${aws_route53_zone.internal[0].name}"
   type    = "CNAME"
   ttl     = 60
   records = [split(":", module.db.db_instance_endpoint)[0]]
-
 }
