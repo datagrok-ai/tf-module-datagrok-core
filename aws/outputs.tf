@@ -173,6 +173,16 @@ output "alb_internal_arn" {
   value       = module.lb_int.lb_arn
 }
 
+output "datagrok_internal_endpoint" {
+  description = "The internal Datagrok endpoint"
+  value       = module.lb_int.lb_dns_name
+}
+
+output "datagrok_internal_api" {
+  description = "The internal Datagrok API endpoint"
+  value       = "${module.lb_int.lb_dns_name}/api"
+}
+
 output "db_instance_address" {
   description = "The address of the Datagrok DB"
   value       = try(aws_route53_record.db_private_dns[0].name, module.db.db_instance_address)
