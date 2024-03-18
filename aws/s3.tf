@@ -88,7 +88,7 @@ module "s3_bucket" {
   attach_policy                         = true
   policy                                = data.aws_iam_policy_document.bucket_policy.json
 
-  # S3 bucket-level Public Access Block configuration
+  # S3 bucket-level Public Access Block configuration 
   acl                     = "private"
   block_public_acls       = true
   block_public_policy     = true
