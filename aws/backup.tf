@@ -6,7 +6,7 @@ data "aws_iam_policy" "backup_default_policy" {
     name = "AWSBackupServiceRolePolicyForBackup"
 }
 resource "aws_iam_role" "rds_backup_role" {
-  name = "${var.backup_vault_name}-RDS-role"
+  name = "${var.backup_vault_name}-role"
   assume_role_policy = jsonencode({
     Version = "2012-10-17"
     Statement = [

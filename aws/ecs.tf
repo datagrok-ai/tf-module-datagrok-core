@@ -323,7 +323,6 @@ resource "aws_service_discovery_private_dns_namespace" "datagrok" {
 
 resource "aws_ecs_task_definition" "datagrok" {
   family = "${local.ecs_name}_datagrok"
-
   container_definitions = jsonencode(concat(
     var.ecs_launch_type == "FARGATE" ? [{
       name = "resolv_conf"
@@ -1172,49 +1171,39 @@ resource "aws_iam_role" "grok_spawner_task" {
         "Version" = "2012-10-17",
         "Statement" = [
           {
+            "Effect" = "Allow",
             "Action" : [
-              "ecr:GetAuthorizationToken"
-            ]
-            "Condition" = {},
-            "Effect" : "Allow",
-            "Resource" : "*"
-          },
-          {
-            "Action" : [
-              "ecr:CreateRepository"
-            ]
+              "ecs:RunTask"
+            ],
             "Condition" = {
-              "StringEquals" : {
-                "aws:RequestTag/builder" : ["grok_spawner"]
+              "ArnEquals" : {
+                "ecs:cluster" : module.ecs.cluster_arn
               }
             },
-            "Effect" : "Allow",
-            "Resource" : "*"
-          },
-          {
-            "Action" = [
-              "ecr:TagResource"
-            ],
-            "Condition" = {},
-            "Effect"    = "Allow",
-            "Condition" = {
-              "StringEquals" : {
-                "aws:RequestTag/builder" : ["grok_spawner"]
-              }
-            },
-            "Resource" = [
-              "arn:aws:ecr:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:repository/datagrok/*"
+            "Resource" : [
+              aws_ecs_task_definition.grok_spawner_kaniko.arn
             ]
           },
           {
-            "Action" = [
-              "ecr:DescribeRepositories",
-              "ecr:ListImages"
+            "Effect" = "Allow",
+            "Action" : [
+              "iam:PassRole"
             ],
-            "Condition" = {},
-            "Effect"    = "Allow",
-            "Resource" = [
-              "arn:aws:ecr:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:repository/datagrok/*"
+            "Condition" = {
+              #          "StringEquals" : {
+              #            "iam:PassedToService" : "ecs-tasks.amazonaws.com"
+              #          },
+              #          "ArnLike" : {
+              #            "iam:AssociatedResourceARN" : [
+              #              "arn:aws:ecs:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:task/${module.ecs.cluster_name}/*",
+              #              "arn:aws:ecs:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:service/${module.ecs.cluster_name}/*"
+              #            ]
+              #          }
+            },
+            "Resource" : [
+              aws_iam_role.grok_spawner_kaniko_task.arn,
+              aws_iam_role.exec.arn,
+              aws_iam_role.grok_spawner_exec.arn
             ]
           }
         ]
