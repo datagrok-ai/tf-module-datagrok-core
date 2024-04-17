@@ -1,10 +1,4 @@
-data "aws_kms_key" "backup_vault_kms" {
-  key_id = var.backup_vault_kms_key_id
-}
 
-data "aws_iam_policy" "backup_default_policy" {
-    name = "AWSBackupServiceRolePolicyForBackup"
-}
 resource "aws_iam_role" "rds_backup_role" {
   name = "${var.backup_vault_name}-role"
   assume_role_policy = jsonencode({
