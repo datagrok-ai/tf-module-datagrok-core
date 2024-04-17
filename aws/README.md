@@ -261,6 +261,12 @@ module "datagrok_core" {
 | <a name="output_cloudwatch_log_group_name"></a> [cloudwatch\_log\_group\_name](#output\_cloudwatch\_log\_group\_name) | The name of the CloudWatch Log group |
 | <a name="output_database_subnet_group"></a> [database\_subnet\_group](#output\_database\_subnet\_group) | ID of database subnet group |
 | <a name="output_database_subnets"></a> [database\_subnets](#output\_database\_subnets) | List of IDs of database subnets |
+| <a name="output_datagrok_internal_api"></a> [datagrok\_internal\_api](#output\_datagrok\_internal\_api) | The internal Datagrok API endpoint |
+| <a name="output_datagrok_internal_endpoint"></a> [datagrok\_internal\_endpoint](#output\_datagrok\_internal\_endpoint) | The internal Datagrok endpoint |
+| <a name="output_db_dg_login"></a> [db\_dg\_login](#output\_db\_dg\_login) | The user to the Datagrok DB |
+| <a name="output_db_dg_password"></a> [db\_dg\_password](#output\_db\_dg\_password) | The password to the Datagrok DB |
+| <a name="output_db_instance_address"></a> [db\_instance\_address](#output\_db\_instance\_address) | The address of the Datagrok DB |
+| <a name="output_db_instance_port"></a> [db\_instance\_port](#output\_db\_instance\_port) | The port of the Datagrok DB |
 | <a name="output_docker_hub_secret"></a> [docker\_hub\_secret](#output\_docker\_hub\_secret) | The ARN of the Secret for Docker Hub Authorisation |
 | <a name="output_domain_name"></a> [domain\_name](#output\_domain\_name) | This is the name of domain for datagrok endpoint. It is used for the external hosted zone in Route53 and to create ACM certificates. |
 | <a name="output_ec2_name"></a> [ec2\_name](#output\_ec2\_name) | The EC2 instance name of a stand. |
@@ -278,6 +284,8 @@ module "datagrok_core" {
 | <a name="output_route53_external_cloudwatch_log_group_name"></a> [route53\_external\_cloudwatch\_log\_group\_name](#output\_route53\_external\_cloudwatch\_log\_group\_name) | The name of the CloudWatch Log group for External Route53 Zone |
 | <a name="output_route_53_external_zone"></a> [route\_53\_external\_zone](#output\_route\_53\_external\_zone) | The ID of the Route53 public zone for Datagrok |
 | <a name="output_route_53_internal_zone"></a> [route\_53\_internal\_zone](#output\_route\_53\_internal\_zone) | The ID of the Route53 internal zone for Datagrok |
+| <a name="output_s3_bucket_name"></a> [s3\_bucket\_name](#output\_s3\_bucket\_name) | The S3 Bucket name of a stand. |
+| <a name="output_s3_bucket_region"></a> [s3\_bucket\_region](#output\_s3\_bucket\_region) | The S3 Bucket region for a stand. |
 | <a name="output_s3_name"></a> [s3\_name](#output\_s3\_name) | The S3 Bucket name of a stand. |
 | <a name="output_service_discovery_namespace"></a> [service\_discovery\_namespace](#output\_service\_discovery\_namespace) | The ID of the CloudMap for Datagrok |
 | <a name="output_sns_topic"></a> [sns\_topic](#output\_sns\_topic) | The ARN of the SNS topic from which messages will be sent |
