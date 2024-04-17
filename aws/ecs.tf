@@ -1339,19 +1339,19 @@ resource "aws_ecs_task_definition" "grok_spawner" {
       essential = true
       environment = [
         {
-          name  = "DOCKER_REGISTRY_SECRET_ARN",
+          name  = "GROK_SPAWNER_DOCKER_REGISTRY_SECRET_ARN",
           value = var.ecr_enabled || var.ecs_launch_type == "FARGATE" ? "" : try(aws_secretsmanager_secret.docker_hub[0].arn, var.docker_hub_credentials.secret_arn)
         },
         {
-          name  = "ECS_SUBNETS",
+          name  = "GROK_SPAWNER_ECS_SUBNETS",
           value = jsonencode(try(module.vpc[0].private_subnets, var.private_subnet_ids))
         },
         {
-          name  = "ECS_SECURITY_GROUPS",
+          name  = "GROK_SPAWNER_ECS_SECURITY_GROUPS",
           value = jsonencode([module.sg.security_group_id])
         },
         {
-          name  = "ECS_EXEC_ROLE",
+          name  = "GROK_SPAWNER_ECS_EXEC_ROLE",
           value = aws_iam_role.grok_spawner_exec.arn
         },
         {
@@ -1359,15 +1359,15 @@ resource "aws_ecs_task_definition" "grok_spawner" {
           value = local.full_name
         },
         {
-          name  = "KANIKO_S3_BUCKET"
+          name  = "GROK_SPAWNER_KANIKO_S3_BUCKET"
           value = local.s3_name
         },
         {
-          name  = "KANIKO_TASK_DEFINITION",
+          name  = "GROK_SPAWNER_KANIKO_TASK_DEFINITION",
           value = aws_ecs_task_definition.grok_spawner_kaniko.arn
         },
         {
-          name  = "ECS_LOG_GROUP",
+          name  = "GROK_SPAWNER_ECS_LOG_GROUP",
           value = var.create_cloudwatch_log_group ? aws_cloudwatch_log_group.ecs[0].arn : var.cloudwatch_log_group_arn
         }
       ]

@@ -792,3 +792,16 @@ variable "task_iam_policies" {
   nullable    = false
   default     = []
 }
+variable "backup_vault_name" {
+  default = ""
+  type = string
+  description = "Name of AWS backup vault for RDS backups"
+  
+}
+
+variable "backup_vault_kms_key_id" {
+  type = string
+  default = ""
+  description = "Key for encrypting backups in the backup vault"
+}
+
