@@ -3,7 +3,7 @@ data "aws_kms_key" "backup_vault_kms" {
 }
 
 data "aws_iam_policy" "backup_default_policy" {
-    name = "AWSBackupServiceRolePolicyForBackup"
+  name = "AWSBackupServiceRolePolicyForBackup"
 }
 resource "aws_iam_role" "rds_backup_role" {
   name = "${var.backup_vault_name}-role"
