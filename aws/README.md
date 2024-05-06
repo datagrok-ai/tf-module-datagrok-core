@@ -61,6 +61,7 @@ module "datagrok_core" {
 |------|------|
 | [aws_backup_plan.s3_backup_plan](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/backup_plan) | resource |
 | [aws_backup_selection.s3_bucket_backup_selection](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/backup_selection) | resource |
+| [aws_backup_vault.db_backup_vault](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/backup_vault) | resource |
 | [aws_backup_vault.s3_backup_vault](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/backup_vault) | resource |
 | [aws_cloudwatch_log_group.ecs](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/cloudwatch_log_group) | resource |
 | [aws_cloudwatch_log_group.external](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/cloudwatch_log_group) | resource |
@@ -101,6 +102,7 @@ module "datagrok_core" {
 | [aws_iam_policy.grok_spawner_kaniko_ecr](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/iam_policy) | resource |
 | [aws_iam_policy.s3_backup](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/iam_policy) | resource |
 | [aws_iam_policy.task](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/iam_policy) | resource |
+| [aws_iam_role.db_backup_role](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/iam_role) | resource |
 | [aws_iam_role.ec2](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/iam_role) | resource |
 | [aws_iam_role.exec](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/iam_role) | resource |
 | [aws_iam_role.grok_spawner_exec](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/iam_role) | resource |
@@ -110,6 +112,7 @@ module "datagrok_core" {
 | [aws_iam_role.task](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/iam_role) | resource |
 | [aws_iam_role_policy_attachment.backup_policy_attachment](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/iam_role_policy_attachment) | resource |
 | [aws_iam_role_policy_attachment.backup_service_role_policy](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/iam_role_policy_attachment) | resource |
+| [aws_iam_role_policy_attachment.db_attach_default_backup_policy](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/iam_role_policy_attachment) | resource |
 | [aws_instance.ec2](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/instance) | resource |
 | [aws_key_pair.ec2](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/key_pair) | resource |
 | [aws_kms_ciphertext.slack_url](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/kms_ciphertext) | resource |
@@ -137,6 +140,7 @@ module "datagrok_core" {
 | [aws_ami.aws_optimized_ecs](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/ami) | data source |
 | [aws_availability_zones.available](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/availability_zones) | data source |
 | [aws_caller_identity.current](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/caller_identity) | data source |
+| [aws_iam_policy.backup_default_policy](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/iam_policy) | data source |
 | [aws_iam_policy_document.bucket_policy](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/iam_policy_document) | data source |
 | [aws_iam_policy_document.external](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/iam_policy_document) | data source |
 | [aws_iam_policy_document.vpc_endpoint_policy](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/iam_policy_document) | data source |
@@ -209,11 +213,13 @@ module "datagrok_core" {
 | <a name="input_lb_access_cidr_blocks"></a> [lb\_access\_cidr\_blocks](#input\_lb\_access\_cidr\_blocks) | The CIDR to from which the access Datagrok load balancer is allowed. | `string` | `"0.0.0.0/0"` | no |
 | <a name="input_lb_name"></a> [lb\_name](#input\_lb\_name) | The name of Datagrok load balancer. If it is not specified, the name along with the environment will be used. | `string` | `null` | no |
 | <a name="input_monitoring"></a> [monitoring](#input\_monitoring) | Monitoring object.<br>`alarms_enabled` - Specifies whether CloudWatch Alarms are enabled. We recommend to set it to true for production stand.<br>`create_sns_topic` - Specifies whether Datagrok SNS topic should be created. If it is set to false, `sns_topic_arn` is required.<br>`sns_topic_name` - The name of Datagrok SNS topic. If it is not specified, the name along with the environment will be used.<br>`sns_topic_arn` - An ARN of the custom SNS topic for CloudWatch alarms.<br>`email_alerts` - Specifies whether CloudWatch Alarms are forwarded to Email. We recommend to set it to true for production stand.<br>`email_recipients` - List of email addresses to receive CloudWatch Alarms.<br>`email_alerts_datagrok` - Specifies whether CloudWatch Alarms are forwarded to Datagrok Email. We recommend to set it to true for production stand.<br>`slack_alerts` - Specifies whether CloudWatch Alarms are forwarded to Slack. We recommend to set it to true for production stand.<br>`slack_emoji` - A custom emoji that will appear on Slack messages from CloudWatch alarms.<br>`slack_webhook_url` - The URL of Slack webhook for CloudWatch alarm notifications.<br>`slack_channel` - The name of the channel in Slack for notifications from CloudWatch alarms.<br>`slack_username` - The username that will appear on Slack messages from CloudWatch alarms. | <pre>object({<br>    alarms_enabled        = bool<br>    create_sns_topic      = bool<br>    sns_topic_arn         = optional(string)<br>    sns_topic_name        = optional(string)<br>    email_alerts          = optional(bool, true)<br>    email_recipients      = optional(list(string), [])<br>    email_alerts_datagrok = bool<br>    slack_alerts          = optional(bool, false)<br>    slack_emoji           = optional(string)<br>    slack_webhook_url     = optional(string)<br>    slack_channel         = optional(string)<br>    slack_username        = optional(string)<br>  })</pre> | <pre>{<br>  "alarms_enabled": true,<br>  "create_sns_topic": true,<br>  "email_alerts": true,<br>  "email_alerts_datagrok": true,<br>  "slack_alerts": false<br>}</pre> | no |
+| <a name="input_monitoring_high_ram_custom_actions"></a> [monitoring\_high\_ram\_custom\_actions](#input\_monitoring\_high\_ram\_custom\_actions) | Custom actions to perform upon high\_ram alert | `list(string)` | `[]` | no |
 | <a name="input_name"></a> [name](#input\_name) | The name for a stand. It will be used to name resources along with the environment. | `string` | n/a | yes |
 | <a name="input_private_subnet_ids"></a> [private\_subnet\_ids](#input\_private\_subnet\_ids) | The IDs of private subnets to place resources. Required if 'vpc\_id' is specified. | `list(string)` | `[]` | no |
 | <a name="input_public_key"></a> [public\_key](#input\_public\_key) | SSH Public Key to create keypair in AWS and access EC2 instance. If not set key\_pair\_name is required. | `string` | `null` | no |
 | <a name="input_public_subnet_ids"></a> [public\_subnet\_ids](#input\_public\_subnet\_ids) | The IDs of public subnets to place resources. Required if 'vpc\_id' is specified. | `list(string)` | `[]` | no |
 | <a name="input_rds_allocated_storage"></a> [rds\_allocated\_storage](#input\_rds\_allocated\_storage) | The RDS allocated storage in gibibytes. | `number` | `50` | no |
+| <a name="input_rds_backup_name"></a> [rds\_backup\_name](#input\_rds\_backup\_name) | Name of AWS backup resources for RDS backups | `string` | `null` | no |
 | <a name="input_rds_backup_retention_period"></a> [rds\_backup\_retention\_period](#input\_rds\_backup\_retention\_period) | The RDS backup retention period. | `number` | `3` | no |
 | <a name="input_rds_dg_password"></a> [rds\_dg\_password](#input\_rds\_dg\_password) | The password for datagrok user in RDS. If it is not specified, the random password will be generated, 16 symbols long without special characters. | `string` | `null` | no |
 | <a name="input_rds_instance_class"></a> [rds\_instance\_class](#input\_rds\_instance\_class) | RDS instance class. The default value is the minimum recommended class. | `string` | `"db.t3.large"` | no |
