@@ -89,3 +89,34 @@ resource "aws_route53_record" "db_private_dns" {
   ttl     = 60
   records = [split(":", module.db.db_instance_endpoint)[0]]
 }
+
+data "aws_iam_policy" "backup_default_policy" {
+  name = "AWSBackupServiceRolePolicyForBackup"
+}
+
+resource "aws_iam_role" "db_backup_role" {
+  name = "${local.rds_backup_name}-role"
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Action = "sts:AssumeRole"
+        Effect = "Allow"
+        Sid    = ""
+        Principal = {
+          Service = "backup.amazonaws.com"
+        }
+      },
+    ]
+  })
+}
+
+resource "aws_iam_role_policy_attachment" "db_attach_default_backup_policy" {
+  role       = aws_iam_role.db_backup_role.name
+  policy_arn = data.aws_iam_policy.backup_default_policy.arn
+}
+
+resource "aws_backup_vault" "db_backup_vault" {
+  name        = "${local.rds_backup_name}-vault"
+  kms_key_arn = local.create_kms ? module.kms[0].key_id : null
+}

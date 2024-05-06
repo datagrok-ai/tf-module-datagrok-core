@@ -792,16 +792,17 @@ variable "task_iam_policies" {
   nullable    = false
   default     = []
 }
-variable "backup_vault_name" {
-  default     = ""
-  type        = string
-  description = "Name of AWS backup vault for RDS backups"
 
+variable "rds_backup_name" {
+  default     = null
+  type        = string
+  nullable    = true
+  description = "Name of AWS backup resources for RDS backups"
 }
 
-variable "backup_vault_kms_key_id" {
-  type        = string
-  default     = ""
-  description = "Key for encrypting backups in the backup vault"
+variable "monitoring_high_ram_custom_actions" {
+  default     = []
+  type        = list(string)
+  nullable    = false
+  description = "Custom actions to perform upon high_ram alert"
 }
-
