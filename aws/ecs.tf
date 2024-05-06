@@ -323,7 +323,6 @@ resource "aws_service_discovery_private_dns_namespace" "datagrok" {
 
 resource "aws_ecs_task_definition" "datagrok" {
   family = "${local.ecs_name}_datagrok"
-
   container_definitions = jsonencode(concat(
     var.ecs_launch_type == "FARGATE" ? [{
       name = "resolv_conf"

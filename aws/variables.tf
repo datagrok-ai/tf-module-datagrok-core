@@ -792,3 +792,17 @@ variable "task_iam_policies" {
   nullable    = false
   default     = []
 }
+
+variable "rds_backup_name" {
+  default     = null
+  type        = string
+  nullable    = true
+  description = "Name of AWS backup resources for RDS backups"
+}
+
+variable "monitoring_high_ram_custom_actions" {
+  default     = []
+  type        = list(string)
+  nullable    = false
+  description = "Custom actions to perform upon high_ram alert"
+}

@@ -297,7 +297,7 @@ resource "aws_cloudwatch_metric_alarm" "high_ram" {
   dimensions = {
     ClusterName = module.ecs.cluster_name
   }
-  alarm_actions = compact([
+  alarm_actions = compact(concat([
     var.monitoring.slack_alerts ?
     module.notify_slack.slack_topic_arn :
     "",
@@ -307,7 +307,7 @@ resource "aws_cloudwatch_metric_alarm" "high_ram" {
     !var.monitoring.create_sns_topic ?
     var.monitoring.sns_topic_arn :
     ""
-  ])
+  ], var.monitoring_high_ram_custom_actions))
   tags = local.tags
 }
 
