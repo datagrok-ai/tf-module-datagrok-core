@@ -417,6 +417,9 @@ resource "aws_ecs_task_definition" "datagrok" {
   task_role_arn            = aws_iam_role.task.arn
   requires_compatibilities = [var.ecs_launch_type]
   depends_on               = [null_resource.ecr_push]
+  lifecycle {
+    create_before_destroy = true
+  }
 }
 resource "aws_service_discovery_service" "datagrok" {
   count       = var.ecs_launch_type == "FARGATE" ? 1 : 0
