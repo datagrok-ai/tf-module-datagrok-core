@@ -806,3 +806,24 @@ variable "monitoring_high_ram_custom_actions" {
   nullable    = false
   description = "Custom actions to perform upon high_ram alert"
 }
+
+variable "grok_spawner_cvm_ecs_cluster" {
+  default     = null
+  nullable    = true
+  type        = string
+  description = "ECS CVM cluster to deploy tasks made by Grok Spawner"
+}
+
+variable "grok_spawner_cvm_launch_type" {
+  default     = "FARGATE"
+  nullable    = false
+  type        = string
+  description = "Launch type for ECS CVM tasks made by Grok Spawner"
+}
+
+variable "grok_spawner_log_level" {
+  default     = "INFO"
+  nullable    = false
+  type        = string
+  description = "Log level for Grok Spawner"
+}
