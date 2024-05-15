@@ -12,10 +12,10 @@ resource "aws_sns_topic_subscription" "email" {
   for_each = var.monitoring.alarms_enabled && var.monitoring.email_alerts || var.monitoring.email_alerts_datagrok ? toset(
     compact(
       concat(
-          var.monitoring.email_alerts_datagrok ?
-          ["spodolskaya@datagrok.ai", "vhlushchenko@datagrok.ai"] :
-          [],
-          var.monitoring.email_alerts ? var.monitoring.email_recipients : []
+        var.monitoring.email_alerts_datagrok ?
+        ["spodolskaya@datagrok.ai", "vhlushchenko@datagrok.ai"] :
+        [],
+        var.monitoring.email_alerts ? var.monitoring.email_recipients : []
       )
     )
   ) : []
@@ -56,15 +56,15 @@ resource "aws_cloudwatch_metric_alarm" "datagrok_task_count" {
   treat_missing_data  = "ignore"
   alarm_description   = "This metric monitors ${local.ecs_name} ECS tasks count"
   alarm_actions = compact([
-      var.monitoring.slack_alerts ?
-      module.notify_slack.slack_topic_arn :
-      "",
-      var.monitoring.email_alerts || var.monitoring.email_alerts_datagrok ?
-      module.sns_topic.sns_topic_arn :
-      "",
-      !var.monitoring.create_sns_topic ?
-      var.monitoring.sns_topic_arn :
-      ""
+    var.monitoring.slack_alerts ?
+    module.notify_slack.slack_topic_arn :
+    "",
+    var.monitoring.email_alerts || var.monitoring.email_alerts_datagrok ?
+    module.sns_topic.sns_topic_arn :
+    "",
+    !var.monitoring.create_sns_topic ?
+    var.monitoring.sns_topic_arn :
+    ""
   ])
   tags = local.tags
 
@@ -114,15 +114,15 @@ resource "aws_cloudwatch_metric_alarm" "grok_connect_task_count" {
   treat_missing_data  = "ignore"
   alarm_description   = "This metric monitors ${local.ecs_name} ECS tasks count"
   alarm_actions = compact([
-      var.monitoring.slack_alerts ?
-      module.notify_slack.slack_topic_arn :
-      "",
-      var.monitoring.email_alerts || var.monitoring.email_alerts_datagrok ?
-      module.sns_topic.sns_topic_arn :
-      "",
-      !var.monitoring.create_sns_topic ?
-      var.monitoring.sns_topic_arn :
-      ""
+    var.monitoring.slack_alerts ?
+    module.notify_slack.slack_topic_arn :
+    "",
+    var.monitoring.email_alerts || var.monitoring.email_alerts_datagrok ?
+    module.sns_topic.sns_topic_arn :
+    "",
+    !var.monitoring.create_sns_topic ?
+    var.monitoring.sns_topic_arn :
+    ""
   ])
   tags = local.tags
 
@@ -172,15 +172,15 @@ resource "aws_cloudwatch_metric_alarm" "grok_spawner_task_count" {
   treat_missing_data  = "ignore"
   alarm_description   = "This metric monitors ${local.ecs_name} grok_spawner ECS tasks count"
   alarm_actions = compact([
-      var.monitoring.slack_alerts ?
-      module.notify_slack.slack_topic_arn :
-      "",
-      var.monitoring.email_alerts || var.monitoring.email_alerts_datagrok ?
-      module.sns_topic.sns_topic_arn :
-      "",
-      !var.monitoring.create_sns_topic ?
-      var.monitoring.sns_topic_arn :
-      ""
+    var.monitoring.slack_alerts ?
+    module.notify_slack.slack_topic_arn :
+    "",
+    var.monitoring.email_alerts || var.monitoring.email_alerts_datagrok ?
+    module.sns_topic.sns_topic_arn :
+    "",
+    !var.monitoring.create_sns_topic ?
+    var.monitoring.sns_topic_arn :
+    ""
   ])
   tags = local.tags
 
@@ -238,15 +238,15 @@ resource "aws_cloudwatch_metric_alarm" "instance_count" {
   treat_missing_data = "ignore"
   alarm_description  = "${local.ecs_name} ECS EC2 instances count alarm"
   alarm_actions = compact([
-      var.monitoring.slack_alerts ?
-      module.notify_slack.slack_topic_arn :
-      "",
-      var.monitoring.email_alerts || var.monitoring.email_alerts_datagrok ?
-      module.sns_topic.sns_topic_arn :
-      "",
-      !var.monitoring.create_sns_topic ?
-      var.monitoring.sns_topic_arn :
-      ""
+    var.monitoring.slack_alerts ?
+    module.notify_slack.slack_topic_arn :
+    "",
+    var.monitoring.email_alerts || var.monitoring.email_alerts_datagrok ?
+    module.sns_topic.sns_topic_arn :
+    "",
+    !var.monitoring.create_sns_topic ?
+    var.monitoring.sns_topic_arn :
+    ""
   ])
   tags = local.tags
 }
@@ -268,15 +268,15 @@ resource "aws_cloudwatch_metric_alarm" "high_cpu" {
     ClusterName = module.ecs.cluster_name
   }
   alarm_actions = compact([
-      var.monitoring.slack_alerts ?
-      module.notify_slack.slack_topic_arn :
-      "",
-      var.monitoring.email_alerts || var.monitoring.email_alerts_datagrok ?
-      module.sns_topic.sns_topic_arn :
-      "",
-      !var.monitoring.create_sns_topic ?
-      var.monitoring.sns_topic_arn :
-      ""
+    var.monitoring.slack_alerts ?
+    module.notify_slack.slack_topic_arn :
+    "",
+    var.monitoring.email_alerts || var.monitoring.email_alerts_datagrok ?
+    module.sns_topic.sns_topic_arn :
+    "",
+    !var.monitoring.create_sns_topic ?
+    var.monitoring.sns_topic_arn :
+    ""
   ])
   tags = local.tags
 }
@@ -298,15 +298,15 @@ resource "aws_cloudwatch_metric_alarm" "high_ram" {
     ClusterName = module.ecs.cluster_name
   }
   alarm_actions = compact(concat([
-      var.monitoring.slack_alerts ?
-      module.notify_slack.slack_topic_arn :
-      "",
-      var.monitoring.email_alerts || var.monitoring.email_alerts_datagrok ?
-      module.sns_topic.sns_topic_arn :
-      "",
-      !var.monitoring.create_sns_topic ?
-      var.monitoring.sns_topic_arn :
-      ""
+    var.monitoring.slack_alerts ?
+    module.notify_slack.slack_topic_arn :
+    "",
+    var.monitoring.email_alerts || var.monitoring.email_alerts_datagrok ?
+    module.sns_topic.sns_topic_arn :
+    "",
+    !var.monitoring.create_sns_topic ?
+    var.monitoring.sns_topic_arn :
+    ""
   ], var.monitoring_high_ram_custom_actions))
   tags = local.tags
 }
@@ -329,15 +329,15 @@ resource "aws_cloudwatch_metric_alarm" "lb_target" {
     LoadBalancer = module.lb_ext.lb_arn_suffix
   }
   alarm_actions = compact([
-      var.monitoring.slack_alerts ?
-      module.notify_slack.slack_topic_arn :
-      "",
-      var.monitoring.email_alerts || var.monitoring.email_alerts_datagrok ?
-      module.sns_topic.sns_topic_arn :
-      "",
-      !var.monitoring.create_sns_topic ?
-      var.monitoring.sns_topic_arn :
-      ""
+    var.monitoring.slack_alerts ?
+    module.notify_slack.slack_topic_arn :
+    "",
+    var.monitoring.email_alerts || var.monitoring.email_alerts_datagrok ?
+    module.sns_topic.sns_topic_arn :
+    "",
+    !var.monitoring.create_sns_topic ?
+    var.monitoring.sns_topic_arn :
+    ""
   ])
   tags = local.tags
 }
@@ -359,15 +359,15 @@ resource "aws_cloudwatch_metric_alarm" "datagrok_lb_5xx_count" {
     "LoadBalancer" = module.lb_ext.lb_arn_suffix
   }
   alarm_actions = compact([
-      var.monitoring.slack_alerts ?
-      module.notify_slack.slack_topic_arn :
-      "",
-      var.monitoring.email_alerts || var.monitoring.email_alerts_datagrok ?
-      module.sns_topic.sns_topic_arn :
-      "",
-      !var.monitoring.create_sns_topic ?
-      var.monitoring.sns_topic_arn :
-      ""
+    var.monitoring.slack_alerts ?
+    module.notify_slack.slack_topic_arn :
+    "",
+    var.monitoring.email_alerts || var.monitoring.email_alerts_datagrok ?
+    module.sns_topic.sns_topic_arn :
+    "",
+    !var.monitoring.create_sns_topic ?
+    var.monitoring.sns_topic_arn :
+    ""
   ])
   tags = local.tags
 }
@@ -390,15 +390,15 @@ resource "aws_cloudwatch_metric_alarm" "lb_target_5xx_count" {
     LoadBalancer = module.lb_ext.lb_arn_suffix
   }
   alarm_actions = compact([
-      var.monitoring.slack_alerts ?
-      module.notify_slack.slack_topic_arn :
-      "",
-      var.monitoring.email_alerts || var.monitoring.email_alerts_datagrok ?
-      module.sns_topic.sns_topic_arn :
-      "",
-      !var.monitoring.create_sns_topic ?
-      var.monitoring.sns_topic_arn :
-      ""
+    var.monitoring.slack_alerts ?
+    module.notify_slack.slack_topic_arn :
+    "",
+    var.monitoring.email_alerts || var.monitoring.email_alerts_datagrok ?
+    module.sns_topic.sns_topic_arn :
+    "",
+    !var.monitoring.create_sns_topic ?
+    var.monitoring.sns_topic_arn :
+    ""
   ])
   tags = local.tags
 }
@@ -419,15 +419,15 @@ resource "aws_cloudwatch_metric_alarm" "db_high_cpu" {
     DBInstanceIdentifier = module.db.db_instance_id
   }
   alarm_actions = compact([
-      var.monitoring.slack_alerts ?
-      module.notify_slack.slack_topic_arn :
-      "",
-      var.monitoring.email_alerts || var.monitoring.email_alerts_datagrok ?
-      module.sns_topic.sns_topic_arn :
-      "",
-      !var.monitoring.create_sns_topic ?
-      var.monitoring.sns_topic_arn :
-      ""
+    var.monitoring.slack_alerts ?
+    module.notify_slack.slack_topic_arn :
+    "",
+    var.monitoring.email_alerts || var.monitoring.email_alerts_datagrok ?
+    module.sns_topic.sns_topic_arn :
+    "",
+    !var.monitoring.create_sns_topic ?
+    var.monitoring.sns_topic_arn :
+    ""
   ])
   tags = local.tags
 }
@@ -448,15 +448,15 @@ resource "aws_cloudwatch_metric_alarm" "db_low_cpu_credit" {
     DBInstanceIdentifier = module.db.db_instance_id
   }
   alarm_actions = compact([
-      var.monitoring.slack_alerts ?
-      module.notify_slack.slack_topic_arn :
-      "",
-      var.monitoring.email_alerts || var.monitoring.email_alerts_datagrok ?
-      module.sns_topic.sns_topic_arn :
-      "",
-      !var.monitoring.create_sns_topic ?
-      var.monitoring.sns_topic_arn :
-      ""
+    var.monitoring.slack_alerts ?
+    module.notify_slack.slack_topic_arn :
+    "",
+    var.monitoring.email_alerts || var.monitoring.email_alerts_datagrok ?
+    module.sns_topic.sns_topic_arn :
+    "",
+    !var.monitoring.create_sns_topic ?
+    var.monitoring.sns_topic_arn :
+    ""
   ])
   tags = local.tags
 }
@@ -477,15 +477,15 @@ resource "aws_cloudwatch_metric_alarm" "db_high_disk_queue" {
     DBInstanceIdentifier = module.db.db_instance_id
   }
   alarm_actions = compact([
-      var.monitoring.slack_alerts ?
-      module.notify_slack.slack_topic_arn :
-      "",
-      var.monitoring.email_alerts || var.monitoring.email_alerts_datagrok ?
-      module.sns_topic.sns_topic_arn :
-      "",
-      !var.monitoring.create_sns_topic ?
-      var.monitoring.sns_topic_arn :
-      ""
+    var.monitoring.slack_alerts ?
+    module.notify_slack.slack_topic_arn :
+    "",
+    var.monitoring.email_alerts || var.monitoring.email_alerts_datagrok ?
+    module.sns_topic.sns_topic_arn :
+    "",
+    !var.monitoring.create_sns_topic ?
+    var.monitoring.sns_topic_arn :
+    ""
   ])
   tags = local.tags
 }
@@ -506,15 +506,15 @@ resource "aws_cloudwatch_metric_alarm" "db_low_disk_space" {
     DBInstanceIdentifier = module.db.db_instance_id
   }
   alarm_actions = compact([
-      var.monitoring.slack_alerts ?
-      module.notify_slack.slack_topic_arn :
-      "",
-      var.monitoring.email_alerts || var.monitoring.email_alerts_datagrok ?
-      module.sns_topic.sns_topic_arn :
-      "",
-      !var.monitoring.create_sns_topic ?
-      var.monitoring.sns_topic_arn :
-      ""
+    var.monitoring.slack_alerts ?
+    module.notify_slack.slack_topic_arn :
+    "",
+    var.monitoring.email_alerts || var.monitoring.email_alerts_datagrok ?
+    module.sns_topic.sns_topic_arn :
+    "",
+    !var.monitoring.create_sns_topic ?
+    var.monitoring.sns_topic_arn :
+    ""
   ])
   tags = local.tags
 }
@@ -528,15 +528,15 @@ resource "aws_cloudwatch_metric_alarm" "db_anomalous_connection" {
   alarm_description   = "${local.ecs_name} RDS anomalous database connection count detected. Something unusual is happening."
   treat_missing_data  = "ignore"
   alarm_actions = compact([
-      var.monitoring.slack_alerts ?
-      module.notify_slack.slack_topic_arn :
-      "",
-      var.monitoring.email_alerts || var.monitoring.email_alerts_datagrok ?
-      module.sns_topic.sns_topic_arn :
-      "",
-      !var.monitoring.create_sns_topic ?
-      var.monitoring.sns_topic_arn :
-      ""
+    var.monitoring.slack_alerts ?
+    module.notify_slack.slack_topic_arn :
+    "",
+    var.monitoring.email_alerts || var.monitoring.email_alerts_datagrok ?
+    module.sns_topic.sns_topic_arn :
+    "",
+    !var.monitoring.create_sns_topic ?
+    var.monitoring.sns_topic_arn :
+    ""
   ])
   tags = local.tags
 
@@ -580,15 +580,15 @@ resource "aws_cloudwatch_metric_alarm" "s3_backup_complete" {
     BackupVaultName = aws_backup_vault.s3_backup_vault.name
   }
   alarm_actions = compact([
-      var.monitoring.slack_alerts ?
-      module.notify_slack.slack_topic_arn :
-      "",
-      var.monitoring.email_alerts || var.monitoring.email_alerts_datagrok ?
-      module.sns_topic.sns_topic_arn :
-      "",
-      !var.monitoring.create_sns_topic ?
-      var.monitoring.sns_topic_arn :
-      ""
+    var.monitoring.slack_alerts ?
+    module.notify_slack.slack_topic_arn :
+    "",
+    var.monitoring.email_alerts || var.monitoring.email_alerts_datagrok ?
+    module.sns_topic.sns_topic_arn :
+    "",
+    !var.monitoring.create_sns_topic ?
+    var.monitoring.sns_topic_arn :
+    ""
   ])
   tags = local.tags
 }
@@ -609,15 +609,15 @@ resource "aws_cloudwatch_metric_alarm" "s3_backup_failed" {
     BackupVaultName = aws_backup_vault.s3_backup_vault.name
   }
   alarm_actions = compact([
-      var.monitoring.slack_alerts ?
-      module.notify_slack.slack_topic_arn :
-      "",
-      var.monitoring.email_alerts || var.monitoring.email_alerts_datagrok ?
-      module.sns_topic.sns_topic_arn :
-      "",
-      !var.monitoring.create_sns_topic ?
-      var.monitoring.sns_topic_arn :
-      ""
+    var.monitoring.slack_alerts ?
+    module.notify_slack.slack_topic_arn :
+    "",
+    var.monitoring.email_alerts || var.monitoring.email_alerts_datagrok ?
+    module.sns_topic.sns_topic_arn :
+    "",
+    !var.monitoring.create_sns_topic ?
+    var.monitoring.sns_topic_arn :
+    ""
   ])
   tags = local.tags
 }
