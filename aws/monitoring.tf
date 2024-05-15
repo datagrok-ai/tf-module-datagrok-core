@@ -49,7 +49,7 @@ module "notify_slack" {
 
 resource "aws_cloudwatch_metric_alarm" "datagrok_task_count" {
   count               = var.monitoring.alarms_enabled && var.ecs_cluster_insights ? 1 : 0
-  alarm_name          = "Critical-${local.ecs_name}-datagrok-task-count"
+  alarm_name          = "CRITICAL_${local.ecs_name}-datagrok-task-count"
   comparison_operator = "LessThanThreshold"
   threshold           = "1"
   evaluation_periods  = "2"
@@ -107,7 +107,7 @@ resource "aws_cloudwatch_metric_alarm" "datagrok_task_count" {
 }
 resource "aws_cloudwatch_metric_alarm" "grok_connect_task_count" {
   count               = var.monitoring.alarms_enabled && var.ecs_cluster_insights ? 1 : 0
-  alarm_name          = "Critical-${local.ecs_name}-grok_connect-task-count"
+  alarm_name          = "CRITICAL_${local.ecs_name}-grok_connect-task-count"
   comparison_operator = "LessThanThreshold"
   threshold           = "1"
   evaluation_periods  = "2"
@@ -165,7 +165,7 @@ resource "aws_cloudwatch_metric_alarm" "grok_connect_task_count" {
 }
 resource "aws_cloudwatch_metric_alarm" "grok_spawner_task_count" {
   count               = var.monitoring.alarms_enabled && var.ecs_cluster_insights ? 1 : 0
-  alarm_name          = "Critical-${local.ecs_name}-grok_spawner-task-count"
+  alarm_name          = "CRITICAL_${local.ecs_name}-grok_spawner-task-count"
   comparison_operator = "LessThanThreshold"
   threshold           = "1"
   evaluation_periods  = "2"
@@ -253,7 +253,7 @@ resource "aws_cloudwatch_metric_alarm" "instance_count" {
 
 resource "aws_cloudwatch_metric_alarm" "high_cpu" {
   count               = var.monitoring.alarms_enabled ? 1 : 0
-  alarm_name          = "Critical-${local.ecs_name}-ecs-high-cpu"
+  alarm_name          = "CRITICAL_${local.ecs_name}-ecs-high-cpu"
   comparison_operator = "GreaterThanOrEqualToThreshold"
   period              = "60"
   evaluation_periods  = "3"
@@ -344,7 +344,7 @@ resource "aws_cloudwatch_metric_alarm" "lb_target" {
 
 resource "aws_cloudwatch_metric_alarm" "datagrok_lb_5xx_count" {
   count               = var.monitoring.alarms_enabled ? 1 : 0
-  alarm_name          = "Critical-${local.lb_name}-datagrok-lb-5xx"
+  alarm_name          = "CRITICAL_${local.lb_name}-datagrok-lb-5xx"
   comparison_operator = "GreaterThanThreshold"
   evaluation_periods  = "1"
   metric_name         = "HTTPCode_ELB_5XX_Count"
@@ -405,7 +405,7 @@ resource "aws_cloudwatch_metric_alarm" "lb_target_5xx_count" {
 
 resource "aws_cloudwatch_metric_alarm" "db_high_cpu" {
   count               = var.monitoring.alarms_enabled ? 1 : 0
-  alarm_name          = "Critical-${local.rds_name}-db-high-cpu"
+  alarm_name          = "CRITICAL_${local.rds_name}-db-high-cpu"
   comparison_operator = "GreaterThanThreshold"
   evaluation_periods  = 1
   metric_name         = "CPUUtilization"
@@ -492,7 +492,7 @@ resource "aws_cloudwatch_metric_alarm" "db_high_disk_queue" {
 
 resource "aws_cloudwatch_metric_alarm" "db_low_disk_space" {
   count               = var.monitoring.alarms_enabled ? 1 : 0
-  alarm_name          = "Critical-${local.rds_name}-db-low-disk-space"
+  alarm_name          = "CRITICAL_${local.rds_name}-db-low-disk-space"
   comparison_operator = "LessThanThreshold"
   evaluation_periods  = "1"
   metric_name         = "FreeStorageSpace"
