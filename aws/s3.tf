@@ -123,6 +123,7 @@ module "s3_bucket" {
 
   tags = local.tags
 }
+
 # aws S3 backup //////////////////////
 resource "aws_backup_vault" "s3_backup_vault" {
   name          = "${var.name}-${var.environment}-s3-backup-vault"

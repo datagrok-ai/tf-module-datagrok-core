@@ -324,90 +324,94 @@ resource "aws_service_discovery_private_dns_namespace" "datagrok" {
 resource "aws_ecs_task_definition" "datagrok" {
   family = "${local.ecs_name}_datagrok"
   container_definitions = jsonencode(concat(
-    var.ecs_launch_type == "FARGATE" ? [{
-      name = "resolv_conf"
-      command = [
-        "${data.aws_region.current.name}.compute.internal",
-        var.create_route53_internal_zone ? aws_route53_zone.internal[0].name : data.aws_route53_zone.internal[0].name,
-        "datagrok.${var.name}.${var.environment}.cn.internal"
-      ]
-      essential = false
-      image     = "${var.ecr_enabled ? aws_ecr_repository.ecr["ecs-searchdomain-sidecar-${var.name}-${var.environment}"].repository_url : local.images["ecs-searchdomain-sidecar-${var.name}-${var.environment}"]["image"]}:${local.images["ecs-searchdomain-sidecar-${var.name}-${var.environment}"]["tag"]}"
-      logConfiguration = {
-        LogDriver = "awslogs"
-        Options = {
-          awslogs-group         = var.create_cloudwatch_log_group ? aws_cloudwatch_log_group.ecs[0].name : var.cloudwatch_log_group_name
-          awslogs-region        = data.aws_region.current.name
-          awslogs-stream-prefix = "datagrok"
-        }
-      }
-      memoryReservation = 100
-    }] : [],
-    [merge({
-      name  = "datagrok"
-      image = "${var.ecr_enabled ? aws_ecr_repository.ecr["datagrok"].repository_url : var.docker_datagrok_image}:${var.ecr_enabled ? local.images["datagrok"]["tag"] : (var.ecr_enabled ? local.images["datagrok"]["tag"] : var.docker_datagrok_tag)}"
-      environment = [
-        {
-          name  = "GROK_MODE",
-          value = var.datagrok_startup_mode
-        },
-        {
-          name = "GROK_PARAMETERS",
-          value = jsonencode(
-            merge(
-              {
-                amazonStorageRegion : data.aws_region.current.name,
-                amazonStorageBucket : module.s3_bucket.s3_bucket_id,
-                dbServer : try(aws_route53_record.db_private_dns[0].name, module.db.db_instance_address),
-                dbPort : tonumber(module.db.db_instance_port),
-                db : "datagrok",
-                dbLogin : "datagrok",
-                dbPassword : try(random_password.db_datagrok_password[0].result, var.rds_dg_password),
-                dbAdminLogin : var.rds_master_username,
-                dbAdminPassword : module.db.db_instance_password,
-                dbSsl : false,
-                deployDemo : false,
-                deployTestDemo : false
-                }, var.set_admin_password ? {
-                adminPassword : try(length(var.admin_password) > 0, false) ? var.admin_password : random_password.admin_password[0].result
-          } : {}))
-        }
-      ]
-      essential = true
-      logConfiguration = {
-        "LogDriver" : "awslogs",
-        "Options" : {
-          "awslogs-group" : var.create_cloudwatch_log_group ? aws_cloudwatch_log_group.ecs[0].name : var.cloudwatch_log_group_name
-          "awslogs-region" : data.aws_region.current.name
-          "awslogs-stream-prefix" : "datagrok"
-        }
-      }
-      portMappings = [
-        {
-          hostPort      = var.ecs_launch_type == "FARGATE" ? 8080 : 0
-          protocol      = "tcp"
-          containerPort = 8080
-        }
-      ]
-      memoryReservation = var.ecs_launch_type == "FARGATE" ? var.datagrok_memory - 200 : var.datagrok_container_memory_reservation
-      cpu               = var.datagrok_container_cpu
-      }, var.ecr_enabled ? {} : (var.ecs_launch_type == "FARGATE" ? {} : {
-        repositoryCredentials = {
-          credentialsParameter = try(aws_secretsmanager_secret.docker_hub[0].arn, var.docker_hub_credentials.secret_arn)
-        }
-      }), var.ecs_launch_type == "FARGATE" ? {
-      dependsOn = [
-        {
-          "condition" : "SUCCESS",
-          "containerName" : "resolv_conf"
-        }
-      ] } : {},
-      var.ecs_launch_type == "FARGATE" ? {} : {
-        dnsSearchDomains = compact([
+    var.ecs_launch_type == "FARGATE" ? [
+      {
+        name = "resolv_conf"
+        command = [
           "${data.aws_region.current.name}.compute.internal",
           var.create_route53_internal_zone ? aws_route53_zone.internal[0].name : data.aws_route53_zone.internal[0].name,
-        ])
+          "datagrok.${var.name}.${var.environment}.cn.internal"
+        ]
+        essential = false
+        image     = "${var.ecr_enabled ? aws_ecr_repository.ecr["ecs-searchdomain-sidecar-${var.name}-${var.environment}"].repository_url : local.images["ecs-searchdomain-sidecar-${var.name}-${var.environment}"]["image"]}:${local.images["ecs-searchdomain-sidecar-${var.name}-${var.environment}"]["tag"]}"
+        logConfiguration = {
+          LogDriver = "awslogs"
+          Options = {
+            awslogs-group         = var.create_cloudwatch_log_group ? aws_cloudwatch_log_group.ecs[0].name : var.cloudwatch_log_group_name
+            awslogs-region        = data.aws_region.current.name
+            awslogs-stream-prefix = "datagrok"
+          }
+        }
+        memoryReservation = 100
       }
+    ] : [],
+    [
+      merge({
+        name  = "datagrok"
+        image = "${var.ecr_enabled ? aws_ecr_repository.ecr["datagrok"].repository_url : var.docker_datagrok_image}:${var.ecr_enabled ? local.images["datagrok"]["tag"] : (var.ecr_enabled ? local.images["datagrok"]["tag"] : var.docker_datagrok_tag)}"
+        environment = [
+          {
+            name  = "GROK_MODE",
+            value = var.datagrok_startup_mode
+          },
+          {
+            name = "GROK_PARAMETERS",
+            value = jsonencode(
+              merge(
+                {
+                  amazonStorageRegion : data.aws_region.current.name,
+                  amazonStorageBucket : module.s3_bucket.s3_bucket_id,
+                  dbServer : try(aws_route53_record.db_private_dns[0].name, module.db.db_instance_address),
+                  dbPort : tonumber(module.db.db_instance_port),
+                  db : "datagrok",
+                  dbLogin : "datagrok",
+                  dbPassword : try(random_password.db_datagrok_password[0].result, var.rds_dg_password),
+                  dbAdminLogin : var.rds_master_username,
+                  dbAdminPassword : module.db.db_instance_password,
+                  dbSsl : false,
+                  deployDemo : false,
+                  deployTestDemo : false
+                  }, var.set_admin_password ? {
+                  adminPassword : try(length(var.admin_password) > 0, false) ? var.admin_password : random_password.admin_password[0].result
+            } : {}))
+          }
+        ]
+        essential = true
+        logConfiguration = {
+          "LogDriver" : "awslogs",
+          "Options" : {
+            "awslogs-group" : var.create_cloudwatch_log_group ? aws_cloudwatch_log_group.ecs[0].name : var.cloudwatch_log_group_name
+            "awslogs-region" : data.aws_region.current.name
+            "awslogs-stream-prefix" : "datagrok"
+          }
+        }
+        portMappings = [
+          {
+            hostPort      = var.ecs_launch_type == "FARGATE" ? 8080 : 0
+            protocol      = "tcp"
+            containerPort = 8080
+          }
+        ]
+        memoryReservation = var.ecs_launch_type == "FARGATE" ? var.datagrok_memory - 200 : var.datagrok_container_memory_reservation
+        cpu               = var.datagrok_container_cpu
+        }, var.ecr_enabled ? {} : (var.ecs_launch_type == "FARGATE" ? {} : {
+          repositoryCredentials = {
+            credentialsParameter = try(aws_secretsmanager_secret.docker_hub[0].arn, var.docker_hub_credentials.secret_arn)
+          }
+        }), var.ecs_launch_type == "FARGATE" ? {
+        dependsOn = [
+          {
+            "condition" : "SUCCESS",
+            "containerName" : "resolv_conf"
+          }
+        ]
+        } : {},
+        var.ecs_launch_type == "FARGATE" ? {} : {
+          dnsSearchDomains = compact([
+            "${data.aws_region.current.name}.compute.internal",
+            var.create_route53_internal_zone ? aws_route53_zone.internal[0].name : data.aws_route53_zone.internal[0].name,
+          ])
+        }
       )
   ]))
   cpu                      = var.ecs_launch_type == "FARGATE" ? var.datagrok_cpu : null
@@ -552,64 +556,67 @@ resource "aws_ecs_task_definition" "grok_connect" {
   family = "${local.ecs_name}_grok_connect"
 
   container_definitions = jsonencode(concat(
-    var.ecs_launch_type == "FARGATE" ? [{
-      name = "resolv_conf"
-      command = [
-        "${data.aws_region.current.name}.compute.internal",
-        var.create_route53_internal_zone ? aws_route53_zone.internal[0].name : data.aws_route53_zone.internal[0].name,
-        "datagrok.${var.name}.${var.environment}.cn.internal"
-      ]
-      essential = false
-      image     = "${var.ecr_enabled ? aws_ecr_repository.ecr["ecs-searchdomain-sidecar-${var.name}-${var.environment}"].repository_url : local.images["ecs-searchdomain-sidecar-${var.name}-${var.environment}"]["image"]}:${local.images["ecs-searchdomain-sidecar-${var.name}-${var.environment}"]["tag"]}"
-      logConfiguration = {
-        LogDriver = "awslogs"
-        Options = {
-          awslogs-group         = var.create_cloudwatch_log_group ? aws_cloudwatch_log_group.ecs[0].name : var.cloudwatch_log_group_name
-          awslogs-region        = data.aws_region.current.name
-          awslogs-stream-prefix = "grok_connect"
-        }
-      }
-      memoryReservation = 100
-    }] : [],
-    [merge({
-      name      = "grok_connect"
-      image     = "${var.ecr_enabled ? aws_ecr_repository.ecr["grok_connect"].repository_url : var.docker_grok_connect_image}:${var.ecr_enabled ? local.images["grok_connect"]["tag"] : (var.ecr_enabled ? local.images["grok_connect"]["tag"] : var.docker_grok_connect_tag)}"
-      essential = true
-      logConfiguration = {
-        "LogDriver" : "awslogs",
-        "Options" : {
-          "awslogs-group" : var.create_cloudwatch_log_group ? aws_cloudwatch_log_group.ecs[0].name : var.cloudwatch_log_group_name
-          "awslogs-region" : data.aws_region.current.name
-          "awslogs-stream-prefix" : "grok_connect"
-        }
-      }
-      portMappings = [
-        {
-          hostPort      = var.ecs_launch_type == "FARGATE" ? 1234 : 0
-          protocol      = "tcp"
-          containerPort = 1234
-        }
-      ]
-      memoryReservation = var.ecs_launch_type == "FARGATE" ? var.grok_connect_memory - 200 : var.grok_connect_container_memory_reservation
-      cpu               = var.grok_connect_container_cpu
-      }, var.ecr_enabled ? {} : (var.ecs_launch_type == "FARGATE" ? {} : {
-        repositoryCredentials = {
-          credentialsParameter = try(aws_secretsmanager_secret.docker_hub[0].arn, var.docker_hub_credentials.secret_arn)
-        }
-      }), var.ecs_launch_type == "FARGATE" ? {
-      dependsOn = [
-        {
-          "condition" : "SUCCESS",
-          "containerName" : "resolv_conf"
-        }
-      ]
-      } : {},
-      var.ecs_launch_type == "FARGATE" ? {} : {
-        dnsSearchDomains = compact([
+    var.ecs_launch_type == "FARGATE" ? [
+      {
+        name = "resolv_conf"
+        command = [
           "${data.aws_region.current.name}.compute.internal",
           var.create_route53_internal_zone ? aws_route53_zone.internal[0].name : data.aws_route53_zone.internal[0].name,
-        ])
+          "datagrok.${var.name}.${var.environment}.cn.internal"
+        ]
+        essential = false
+        image     = "${var.ecr_enabled ? aws_ecr_repository.ecr["ecs-searchdomain-sidecar-${var.name}-${var.environment}"].repository_url : local.images["ecs-searchdomain-sidecar-${var.name}-${var.environment}"]["image"]}:${local.images["ecs-searchdomain-sidecar-${var.name}-${var.environment}"]["tag"]}"
+        logConfiguration = {
+          LogDriver = "awslogs"
+          Options = {
+            awslogs-group         = var.create_cloudwatch_log_group ? aws_cloudwatch_log_group.ecs[0].name : var.cloudwatch_log_group_name
+            awslogs-region        = data.aws_region.current.name
+            awslogs-stream-prefix = "grok_connect"
+          }
+        }
+        memoryReservation = 100
       }
+    ] : [],
+    [
+      merge({
+        name      = "grok_connect"
+        image     = "${var.ecr_enabled ? aws_ecr_repository.ecr["grok_connect"].repository_url : var.docker_grok_connect_image}:${var.ecr_enabled ? local.images["grok_connect"]["tag"] : (var.ecr_enabled ? local.images["grok_connect"]["tag"] : var.docker_grok_connect_tag)}"
+        essential = true
+        logConfiguration = {
+          "LogDriver" : "awslogs",
+          "Options" : {
+            "awslogs-group" : var.create_cloudwatch_log_group ? aws_cloudwatch_log_group.ecs[0].name : var.cloudwatch_log_group_name
+            "awslogs-region" : data.aws_region.current.name
+            "awslogs-stream-prefix" : "grok_connect"
+          }
+        }
+        portMappings = [
+          {
+            hostPort      = var.ecs_launch_type == "FARGATE" ? 1234 : 0
+            protocol      = "tcp"
+            containerPort = 1234
+          }
+        ]
+        memoryReservation = var.ecs_launch_type == "FARGATE" ? var.grok_connect_memory - 200 : var.grok_connect_container_memory_reservation
+        cpu               = var.grok_connect_container_cpu
+        }, var.ecr_enabled ? {} : (var.ecs_launch_type == "FARGATE" ? {} : {
+          repositoryCredentials = {
+            credentialsParameter = try(aws_secretsmanager_secret.docker_hub[0].arn, var.docker_hub_credentials.secret_arn)
+          }
+        }), var.ecs_launch_type == "FARGATE" ? {
+        dependsOn = [
+          {
+            "condition" : "SUCCESS",
+            "containerName" : "resolv_conf"
+          }
+        ]
+        } : {},
+        var.ecs_launch_type == "FARGATE" ? {} : {
+          dnsSearchDomains = compact([
+            "${data.aws_region.current.name}.compute.internal",
+            var.create_route53_internal_zone ? aws_route53_zone.internal[0].name : data.aws_route53_zone.internal[0].name,
+          ])
+        }
       )
   ]))
   cpu                      = var.ecs_launch_type == "FARGATE" ? var.grok_connect_cpu : null
@@ -999,8 +1006,11 @@ resource "aws_iam_role" "grok_spawner_task" {
             "ecs:ListTasks"
           ],
           "Condition" = {
-            "ArnEquals" : {
-              "ecs:cluster" : module.ecs.cluster_arn
+            "ArnLike" : {
+              "ecs:cluster" : distinct(compact([
+                module.ecs.cluster_arn,
+                try(length(var.grok_spawner_cvm_ecs_cluster) > 0, false) ? "arn:aws:ecs:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:cluster/${var.grok_spawner_cvm_ecs_cluster}" : ""
+              ]))
             }
           },
           "Effect"   = "Allow",
@@ -1021,6 +1031,8 @@ resource "aws_iam_role" "grok_spawner_task" {
         {
           "Action" = [
             "ecs:DescribeTaskDefinition",
+            "ecs:ListTaskDefinitions",
+            "ecs:DeregisterTaskDefinition"
           ],
           "Condition" = {},
           "Effect"    = "Allow",
@@ -1030,14 +1042,21 @@ resource "aws_iam_role" "grok_spawner_task" {
           "Effect" = "Allow",
           "Action" : [
             "ecs:DescribeServices",
-            "ecs:UpdateService"
+            "ecs:UpdateService",
+            "ecs:DeleteService"
           ],
           "Condition" = {
-            "ArnEquals" : {
-              "ecs:cluster" : module.ecs.cluster_arn
+            "ArnLike" : {
+              "ecs:cluster" : distinct(compact([
+                module.ecs.cluster_arn,
+                try(length(var.grok_spawner_cvm_ecs_cluster) > 0, false) ? "arn:aws:ecs:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:cluster/${var.grok_spawner_cvm_ecs_cluster}" : ""
+              ]))
             }
           },
-          "Resource" : "arn:aws:ecs:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:service/${module.ecs.cluster_name}/*"
+          "Resource" : [
+            "arn:aws:ecs:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:service/${module.ecs.cluster_name}/*",
+            try(length(var.grok_spawner_cvm_ecs_cluster) > 0, false) ? "arn:aws:ecs:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:service/${var.grok_spawner_cvm_ecs_cluster}/*" : ""
+          ]
         },
         {
           "Effect" = "Allow",
@@ -1046,14 +1065,20 @@ resource "aws_iam_role" "grok_spawner_task" {
             "ecs:TagResource"
           ],
           "Condition" = {
-            "ArnEquals" : {
-              "ecs:cluster" : module.ecs.cluster_arn
+            "ArnLike" : {
+              "ecs:cluster" : distinct(compact([
+                module.ecs.cluster_arn,
+                try(length(var.grok_spawner_cvm_ecs_cluster) > 0, false) ? "arn:aws:ecs:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:cluster/${var.grok_spawner_cvm_ecs_cluster}" : ""
+              ]))
             },
             "StringEquals" : {
               "aws:RequestTag/caller" : ["grok_spawner"]
             }
           },
-          "Resource" : "arn:aws:ecs:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:service/${module.ecs.cluster_name}/*"
+          "Resource" : distinct(compact([
+            "arn:aws:ecs:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:service/${module.ecs.cluster_name}/*",
+            try(length(var.grok_spawner_cvm_ecs_cluster) > 0, false) ? "arn:aws:ecs:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:service/${var.grok_spawner_cvm_ecs_cluster}/*" : ""
+          ]))
         },
         {
           "Effect" = "Allow",
@@ -1061,11 +1086,17 @@ resource "aws_iam_role" "grok_spawner_task" {
             "ecs:DescribeTasks"
           ],
           "Condition" = {
-            "ArnEquals" : {
-              "ecs:cluster" : module.ecs.cluster_arn
+            "ArnLike" : {
+              "ecs:cluster" : distinct(compact([
+                module.ecs.cluster_arn,
+                try(length(var.grok_spawner_cvm_ecs_cluster) > 0, false) ? "arn:aws:ecs:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:cluster/${var.grok_spawner_cvm_ecs_cluster}" : ""
+              ]))
             }
           },
-          "Resource" : "arn:aws:ecs:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:task/${module.ecs.cluster_name}/*"
+          "Resource" = distinct(compact([
+            "arn:aws:ecs:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:task/${module.ecs.cluster_name}/*",
+            try(length(var.grok_spawner_cvm_ecs_cluster) > 0, false) ? "arn:aws:ecs:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:task/${var.grok_spawner_cvm_ecs_cluster}/*" : ""
+          ]))
         },
         {
           "Action" = [
@@ -1075,6 +1106,46 @@ resource "aws_iam_role" "grok_spawner_task" {
           "Resource" = [
             "${var.create_cloudwatch_log_group ? aws_cloudwatch_log_group.ecs[0].arn : var.cloudwatch_log_group_arn}:log-stream:grok_spawner/*"
           ]
+        },
+        {
+          "Action" = [
+            "ecs:DescribeClusters"
+          ],
+          "Effect" = "Allow",
+          "Resource" = distinct(compact([
+            module.ecs.cluster_arn,
+            try(length(var.grok_spawner_cvm_ecs_cluster) > 0, false) ? "arn:aws:ecs:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:cluster/${var.grok_spawner_cvm_ecs_cluster}" : ""
+          ]))
+        },
+        {
+          "Action" = [
+            "ecs:DescribeContainerInstances"
+          ],
+          "Effect" = "Allow",
+          "Condition" = {
+            "ArnLike" : {
+              "ecs:cluster" : distinct(compact([
+                module.ecs.cluster_arn,
+                try(length(var.grok_spawner_cvm_ecs_cluster) > 0, false) ? "arn:aws:ecs:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:cluster/${var.grok_spawner_cvm_ecs_cluster}" : ""
+              ]))
+            }
+          },
+          "Resource" = distinct(compact([
+            "arn:aws:ecs:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:container-instance/${module.ecs.cluster_name}/*",
+            try(length(var.grok_spawner_cvm_ecs_cluster) > 0, false) ? "arn:aws:ecs:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:container-instance/${var.grok_spawner_cvm_ecs_cluster}/*" : ""
+          ]))
+        },
+        {
+          "Action" = [
+            "ec2:DescribeInstances"
+          ],
+          "Effect" = "Allow",
+          "Condition" = {
+            "StringEquals" : {
+              "ec2:Region" : [data.aws_region.current.name]
+            }
+          },
+          "Resource" : "*"
         }
       ]
     })
@@ -1105,8 +1176,9 @@ resource "aws_iam_role" "grok_spawner_task" {
       ]
     })
   }
+
   dynamic "inline_policy" {
-    for_each = var.grok_spawner_docker_build_enabled ? { "enabled" = true } : {}
+    for_each = var.grok_spawner_docker_build_enabled ? { enabled = true } : {}
     content {
       name = "${local.ecs_name}_grok_spawner_ecr"
 
@@ -1163,8 +1235,9 @@ resource "aws_iam_role" "grok_spawner_task" {
       })
     }
   }
+
   dynamic "inline_policy" {
-    for_each = var.grok_spawner_docker_build_enabled ? { "enabled" = true } : {}
+    for_each = var.grok_spawner_docker_build_enabled ? { enabled = true } : {}
     content {
       name = "${local.ecs_name}_grok_spawner_kaniko"
       policy = jsonencode({
@@ -1176,8 +1249,11 @@ resource "aws_iam_role" "grok_spawner_task" {
               "ecs:RunTask"
             ],
             "Condition" = {
-              "ArnEquals" : {
-                "ecs:cluster" : module.ecs.cluster_arn
+              "ArnLike" : {
+                "ecs:cluster" : distinct(compact([
+                  module.ecs.cluster_arn,
+                  try(length(var.grok_spawner_cvm_ecs_cluster) > 0, false) ? "arn:aws:ecs:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:cluster/${var.grok_spawner_cvm_ecs_cluster}" : ""
+                ]))
               }
             },
             "Resource" : [
@@ -1189,17 +1265,6 @@ resource "aws_iam_role" "grok_spawner_task" {
             "Action" : [
               "iam:PassRole"
             ],
-            "Condition" = {
-              #          "StringEquals" : {
-              #            "iam:PassedToService" : "ecs-tasks.amazonaws.com"
-              #          },
-              #          "ArnLike" : {
-              #            "iam:AssociatedResourceARN" : [
-              #              "arn:aws:ecs:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:task/${module.ecs.cluster_name}/*",
-              #              "arn:aws:ecs:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:service/${module.ecs.cluster_name}/*"
-              #            ]
-              #          }
-            },
             "Resource" : [
               aws_iam_role.grok_spawner_kaniko_task.arn,
               aws_iam_role.exec.arn,
@@ -1211,8 +1276,6 @@ resource "aws_iam_role" "grok_spawner_task" {
     }
 
   }
-
-
 
   managed_policy_arns = compact([
     aws_iam_policy.exec.arn,
@@ -1303,97 +1366,116 @@ resource "aws_ecs_task_definition" "grok_spawner" {
   family = "${local.ecs_name}_grok_spawner"
 
   container_definitions = jsonencode(concat(
-    var.ecs_launch_type == "FARGATE" ? [{
-      name = "resolv_conf"
-      command = [
-        "${data.aws_region.current.name}.compute.internal",
-        var.create_route53_internal_zone ? aws_route53_zone.internal[0].name : data.aws_route53_zone.internal[0].name,
-        "datagrok.${var.name}.${var.environment}.cn.internal"
-      ]
-      essential = false
-      image     = "${var.ecr_enabled ? aws_ecr_repository.ecr["ecs-searchdomain-sidecar-${var.name}-${var.environment}"].repository_url : local.images["ecs-searchdomain-sidecar-${var.name}-${var.environment}"]["image"]}:${local.images["ecs-searchdomain-sidecar-${var.name}-${var.environment}"]["tag"]}"
-      logConfiguration = {
-        LogDriver = "awslogs"
-        Options = {
-          awslogs-group         = var.create_cloudwatch_log_group ? aws_cloudwatch_log_group.ecs[0].name : var.cloudwatch_log_group_name
-          awslogs-region        = data.aws_region.current.name
-          awslogs-stream-prefix = "grok_spawner"
+    var.ecs_launch_type == "FARGATE" ? [
+      {
+        name = "resolv_conf"
+        command = [
+          "${data.aws_region.current.name}.compute.internal",
+          var.create_route53_internal_zone ? aws_route53_zone.internal[0].name : data.aws_route53_zone.internal[0].name,
+          "datagrok.${var.name}.${var.environment}.cn.internal"
+        ]
+        essential = false
+        image     = "${var.ecr_enabled ? aws_ecr_repository.ecr["ecs-searchdomain-sidecar-${var.name}-${var.environment}"].repository_url : local.images["ecs-searchdomain-sidecar-${var.name}-${var.environment}"]["image"]}:${local.images["ecs-searchdomain-sidecar-${var.name}-${var.environment}"]["tag"]}"
+        logConfiguration = {
+          LogDriver = "awslogs"
+          Options = {
+            awslogs-group         = var.create_cloudwatch_log_group ? aws_cloudwatch_log_group.ecs[0].name : var.cloudwatch_log_group_name
+            awslogs-region        = data.aws_region.current.name
+            awslogs-stream-prefix = "grok_spawner"
+          }
         }
+        memoryReservation = 100
       }
-      memoryReservation = 100
-    }] : [],
-    [merge({
-      name      = "grok_spawner"
-      image     = "${var.ecr_enabled ? aws_ecr_repository.ecr["grok_spawner"].repository_url : var.docker_grok_spawner_image}:${var.ecr_enabled ? local.images["grok_spawner"]["tag"] : (var.ecr_enabled ? local.images["grok_spawner"]["tag"] : var.docker_grok_spawner_tag)}"
-      essential = true
-      environment = [
-        {
-          name  = "GROK_SPAWNER_DOCKER_REGISTRY_SECRET_ARN",
-          value = var.ecr_enabled || var.ecs_launch_type == "FARGATE" ? "" : try(aws_secretsmanager_secret.docker_hub[0].arn, var.docker_hub_credentials.secret_arn)
-        },
-        {
-          name  = "GROK_SPAWNER_ECS_SUBNETS",
-          value = jsonencode(try(module.vpc[0].private_subnets, var.private_subnet_ids))
-        },
-        {
-          name  = "GROK_SPAWNER_ECS_SECURITY_GROUPS",
-          value = jsonencode([module.sg.security_group_id])
-        },
-        {
-          name  = "GROK_SPAWNER_ECS_EXEC_ROLE",
-          value = aws_iam_role.grok_spawner_exec.arn
-        },
-        {
-          name  = "GROK_SPAWNER_ENVIRONMENT",
-          value = local.full_name
-        },
-        {
-          name  = "GROK_SPAWNER_KANIKO_S3_BUCKET"
-          value = local.s3_name
-        },
-        {
-          name  = "GROK_SPAWNER_KANIKO_TASK_DEFINITION",
-          value = aws_ecs_task_definition.grok_spawner_kaniko.arn
-        },
-        {
-          name  = "GROK_SPAWNER_ECS_LOG_GROUP",
-          value = var.create_cloudwatch_log_group ? aws_cloudwatch_log_group.ecs[0].arn : var.cloudwatch_log_group_arn
+    ] : [],
+    [
+      merge({
+        name      = "grok_spawner"
+        image     = "${var.ecr_enabled ? aws_ecr_repository.ecr["grok_spawner"].repository_url : var.docker_grok_spawner_image}:${var.ecr_enabled ? local.images["grok_spawner"]["tag"] : (var.ecr_enabled ? local.images["grok_spawner"]["tag"] : var.docker_grok_spawner_tag)}"
+        essential = true
+        environment = [
+          {
+            name  = "GROK_SPAWNER_ENVIRONMENT",
+            value = local.full_name
+          },
+          {
+            name  = "GROK_SPAWNER_LOG_LEVEL",
+            value = var.grok_spawner_log_level
+          },
+          {
+            name  = "GROK_SPAWNER_DOCKER_REGISTRY_SECRET_ARN",
+            value = var.ecr_enabled || var.ecs_launch_type == "FARGATE" ? "" : try(aws_secretsmanager_secret.docker_hub[0].arn, var.docker_hub_credentials.secret_arn)
+          },
+          {
+            name  = "GROK_SPAWNER_DATAGROK_ECS_CLUSTER",
+            value = module.ecs.cluster_name
+          },
+          {
+            name  = "GROK_SPAWNER_DATAGROK_ECS_SUBNETS",
+            value = jsonencode(try(module.vpc[0].private_subnets, var.private_subnet_ids))
+          },
+          {
+            name  = "GROK_SPAWNER_DATAGROK_ECS_SECURITY_GROUPS",
+            value = jsonencode([module.sg.security_group_id])
+          },
+          {
+            name  = "GROK_SPAWNER_DATAGROK_ECS_EXEC_ROLE",
+            value = aws_iam_role.grok_spawner_exec.arn
+          },
+          {
+            name  = "GROK_SPAWNER_DATAGROK_ECS_LOG_GROUP",
+            value = var.create_cloudwatch_log_group ? aws_cloudwatch_log_group.ecs[0].arn : var.cloudwatch_log_group_arn
+          },
+          {
+            name  = "GROK_SPAWNER_CVM_ECS_CLUSTER",
+            value = try(length(var.grok_spawner_cvm_ecs_cluster) > 0, false) ? var.grok_spawner_cvm_ecs_cluster : module.ecs.cluster_name
+          },
+          {
+            name  = "CVM_LAUNCH_TYPE",
+            value = try(length(var.grok_spawner_cvm_launch_type) > 0, false) ? var.grok_spawner_cvm_launch_type : module.ecs.cluster_name
+          },
+          {
+            name  = "GROK_SPAWNER_KANIKO_S3_BUCKET"
+            value = local.s3_name
+          },
+          {
+            name  = "GROK_SPAWNER_KANIKO_TASK_DEFINITION",
+            value = aws_ecs_task_definition.grok_spawner_kaniko.arn
+          }
+        ]
+        logConfiguration = {
+          "LogDriver" : "awslogs",
+          "Options" : {
+            "awslogs-group" : var.create_cloudwatch_log_group ? aws_cloudwatch_log_group.ecs[0].name : var.cloudwatch_log_group_name
+            "awslogs-region" : data.aws_region.current.name
+            "awslogs-stream-prefix" : "grok_spawner"
+          }
         }
-      ]
-      logConfiguration = {
-        "LogDriver" : "awslogs",
-        "Options" : {
-          "awslogs-group" : var.create_cloudwatch_log_group ? aws_cloudwatch_log_group.ecs[0].name : var.cloudwatch_log_group_name
-          "awslogs-region" : data.aws_region.current.name
-          "awslogs-stream-prefix" : "grok_spawner"
-        }
-      }
-      portMappings = [
-        {
-          hostPort      = var.ecs_launch_type == "FARGATE" ? 8000 : 0
-          protocol      = "tcp"
-          containerPort = 8000
-        }
-      ]
-      memoryReservation = var.ecs_launch_type == "FARGATE" ? var.grok_spawner_memory - 200 : var.grok_spawner_container_memory_reservation
-      cpu               = var.grok_spawner_container_cpu
-      }, var.ecr_enabled ? {} : (var.ecs_launch_type == "FARGATE" ? {} : {
-        repositoryCredentials = {
-          credentialsParameter = try(aws_secretsmanager_secret.docker_hub[0].arn, var.docker_hub_credentials.secret_arn)
-        }
-      }), var.ecs_launch_type == "FARGATE" ? {} : {
-      dnsSearchDomains = compact([
-        "${data.aws_region.current.name}.compute.internal",
-        var.create_route53_internal_zone ? aws_route53_zone.internal[0].name : data.aws_route53_zone.internal[0].name,
-      ])
-      }, var.ecs_launch_type == "FARGATE" ? {
-      dependsOn = [
-        {
-          "condition" : "SUCCESS",
-          "containerName" : "resolv_conf"
-        }
-      ]
-      } : {}
+        portMappings = [
+          {
+            hostPort      = var.ecs_launch_type == "FARGATE" ? 8000 : 0
+            protocol      = "tcp"
+            containerPort = 8000
+          }
+        ]
+        memoryReservation = var.ecs_launch_type == "FARGATE" ? var.grok_spawner_memory - 200 : var.grok_spawner_container_memory_reservation
+        cpu               = var.grok_spawner_container_cpu
+        }, var.ecr_enabled ? {} : (var.ecs_launch_type == "FARGATE" ? {} : {
+          repositoryCredentials = {
+            credentialsParameter = try(aws_secretsmanager_secret.docker_hub[0].arn, var.docker_hub_credentials.secret_arn)
+          }
+        }), var.ecs_launch_type == "FARGATE" ? {} : {
+        dnsSearchDomains = compact([
+          "${data.aws_region.current.name}.compute.internal",
+          var.create_route53_internal_zone ? aws_route53_zone.internal[0].name : data.aws_route53_zone.internal[0].name,
+        ])
+        }, var.ecs_launch_type == "FARGATE" ? {
+        dependsOn = [
+          {
+            "condition" : "SUCCESS",
+            "containerName" : "resolv_conf"
+          }
+        ]
+        } : {}
       )
   ]))
   cpu                      = var.ecs_launch_type == "FARGATE" ? var.grok_spawner_cpu : null
@@ -1407,25 +1489,26 @@ resource "aws_ecs_task_definition" "grok_spawner" {
 resource "aws_ecs_task_definition" "grok_spawner_kaniko" {
   family = "${local.ecs_name}_grok_spawner_kaniko"
 
-  container_definitions = jsonencode([{
-    name      = "grok_spawner_kaniko"
-    image     = "${var.ecr_enabled ? aws_ecr_repository.ecr["kaniko-${var.name}-${var.environment}"].repository_url : local.images["kaniko-${var.name}-${var.environment}"]["image"]}:${local.images["kaniko-${var.name}-${var.environment}"]["tag"]}"
-    essential = true
-    logConfiguration = {
-      "LogDriver" : "awslogs",
-      "Options" : {
-        "awslogs-group" : var.create_cloudwatch_log_group ? aws_cloudwatch_log_group.ecs[0].name : var.cloudwatch_log_group_name
-        "awslogs-region" : data.aws_region.current.name
-        "awslogs-stream-prefix" : "grok_spawner_kaniko"
-      }
-    },
-    portMappings = [
-      {
-        hostPort      = 8000
-        protocol      = "tcp"
-        containerPort = 8000
-      }
-    ]
+  container_definitions = jsonencode([
+    {
+      name      = "grok_spawner_kaniko"
+      image     = "${var.ecr_enabled ? aws_ecr_repository.ecr["kaniko-${var.name}-${var.environment}"].repository_url : local.images["kaniko-${var.name}-${var.environment}"]["image"]}:${local.images["kaniko-${var.name}-${var.environment}"]["tag"]}"
+      essential = true
+      logConfiguration = {
+        "LogDriver" : "awslogs",
+        "Options" : {
+          "awslogs-group" : var.create_cloudwatch_log_group ? aws_cloudwatch_log_group.ecs[0].name : var.cloudwatch_log_group_name
+          "awslogs-region" : data.aws_region.current.name
+          "awslogs-stream-prefix" : "grok_spawner_kaniko"
+        }
+      },
+      portMappings = [
+        {
+          hostPort      = 8000
+          protocol      = "tcp"
+          containerPort = 8000
+        }
+      ]
     }
   ])
   cpu                      = 1024
