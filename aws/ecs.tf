@@ -1053,10 +1053,10 @@ resource "aws_iam_role" "grok_spawner_task" {
               ]))
             }
           },
-          "Resource" : [
+          "Resource" : distinct(compact([
             "arn:aws:ecs:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:service/${module.ecs.cluster_name}/*",
             try(length(var.grok_spawner_cvm_ecs_cluster) > 0, false) ? "arn:aws:ecs:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:service/${var.grok_spawner_cvm_ecs_cluster}/*" : ""
-          ]
+          ]))
         },
         {
           "Effect" = "Allow",
