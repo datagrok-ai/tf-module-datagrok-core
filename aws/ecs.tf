@@ -59,26 +59,6 @@ resource "random_password" "admin_password" {
   special = false
 }
 
-# TODO: check AWS principal (autoscaling group) for ecs
-#resource "aws_secretsmanager_secret_policy" "docker_hub" {
-#  count      = try(length(var.docker_hub_secret_arn) > 0, false) ? 0 : 1
-#  secret_arn = aws_secretsmanager_secret.docker_hub[0].arn
-#
-#  policy = <<POLICY
-#{
-#  "Version": "2012-10-17",
-#  "Statement": [
-#    {
-#      "Sid": "EnableToReadTheSecret",
-#      "Effect": "Allow",
-#      "Action": "secretsmanager:GetSecretValue",
-#      "Resource": "*"
-#    }
-#  ]
-#}
-#POLICY
-#}
-
 resource "aws_secretsmanager_secret" "docker_hub" {
   count       = try(var.docker_hub_credentials.create_secret, false) && !var.ecr_enabled && var.ecs_launch_type != "FARGATE" ? 1 : 0
   name_prefix = "${local.full_name}_docker_hub"
@@ -135,12 +115,6 @@ resource "aws_ecr_repository_policy" "ecr" {
     ]
   })
 }
-
-# https://github.com/mathspace/terraform-aws-ecr-docker-image/blob/master/hash.shÏ
-#data "external" "docker_hash" {
-#  for_each = var.ecr_enabled ? local.images : {}
-#  program  = ["${path.module}/docker_hash.sh", each.value["image"], each.value["tag"]]
-#}
 
 resource "null_resource" "ecr_push" {
   for_each = var.ecr_enabled ? local.images : {}
@@ -305,7 +279,6 @@ resource "aws_iam_role" "task" {
     aws_iam_policy.task.arn,
     var.ecr_enabled ? aws_iam_policy.ecr[0].arn : (var.ecs_launch_type == "FARGATE" ? "" : aws_iam_policy.docker_hub[0].arn)
   ], var.task_iam_policies))
-  #  managed_policy_arns = [aws_iam_policy.task.arn]
 
   tags = local.tags
 }
@@ -442,63 +415,6 @@ resource "aws_service_discovery_service" "datagrok" {
     failure_threshold = 1
   }
 }
-#resource "aws_iam_policy" "service" {
-#  name        = "${local.ecs_name}_service"
-#  description = "Datagrok policy for ECS Service to access AWS resources"
-#
-#  policy = jsonencode({
-#    "Version" : "2012-10-17",
-#    "Statement" : [
-#      {
-#        "Sid" : "0",
-#        "Effect" : "Allow",
-#        "Action" : [
-#          "elasticloadbalancing:RegisterTargets",
-#          "elasticloadbalancing:DeregisterTargets"
-#        ],
-#        "Resource" : concat(module.lb_ext.target_group_arns, module.lb_int.target_group_arns)
-#      },
-#      {
-#        "Sid" : "1",
-#        "Effect" : "Allow",
-#        "Action" : [
-#          "ec2:DescribeInstances",
-#          "elasticloadbalancing:DescribeTags",
-#          "ec2:DescribeTags",
-#          "elasticloadbalancing:DescribeLoadBalancers",
-#          "elasticloadbalancing:DescribeTargetHealth",
-#          "elasticloadbalancing:DescribeTargetGroups",
-#          "elasticloadbalancing:DescribeInstanceHealth",
-#          "ec2:DescribeInstanceStatus"
-#        ],
-#        "Resource" : "*"
-#      }
-#    ]
-#  })
-#}
-#resource "aws_iam_role" "service" {
-#  name = "${local.ecs_name}_service"
-#
-#  assume_role_policy  = jsonencode({
-#    Version   = "2012-10-17"
-#    Statement = [
-#      {
-#        Action    = "sts:AssumeRole"
-#        Effect    = "Allow"
-#        Sid       = ""
-#        Principal = {
-#          Service = ["ec2.amazonaws.com"]
-#        }
-#      },
-#    ]
-#  })
-#  managed_policy_arns = [aws_iam_policy.service.arn]
-#
-#  tags = local.tags
-#}
-#resource "aws_iam_service_linked_role" "service" {
-#  aws_service_name = "ecs.amazonaws.com"
-#}
 resource "aws_ecs_service" "datagrok" {
   name            = "${local.ecs_name}_datagrok"
   cluster         = module.ecs.cluster_arn
@@ -514,8 +430,6 @@ resource "aws_ecs_service" "datagrok" {
   }
   enable_execute_command = true
   force_new_deployment   = true
-
-  #  iam_role = aws_ecs_task_definition.datagrok.network_mode == "awsvpc" ? null : aws_iam_service_linked_role.service.arn
 
   dynamic "service_registries" {
     for_each = var.ecs_launch_type == "FARGATE" ? [
@@ -647,63 +561,6 @@ resource "aws_service_discovery_service" "grok_connect" {
     failure_threshold = 1
   }
 }
-#resource "aws_iam_policy" "service" {
-#  name        = "${local.ecs_name}_service"
-#  description = "Datagrok policy for ECS Service to access AWS resources"
-#
-#  policy = jsonencode({
-#    "Version" : "2012-10-17",
-#    "Statement" : [
-#      {
-#        "Sid" : "0",
-#        "Effect" : "Allow",
-#        "Action" : [
-#          "elasticloadbalancing:RegisterTargets",
-#          "elasticloadbalancing:DeregisterTargets"
-#        ],
-#        "Resource" : concat(module.lb_ext.target_group_arns, module.lb_int.target_group_arns)
-#      },
-#      {
-#        "Sid" : "1",
-#        "Effect" : "Allow",
-#        "Action" : [
-#          "ec2:DescribeInstances",
-#          "elasticloadbalancing:DescribeTags",
-#          "ec2:DescribeTags",
-#          "elasticloadbalancing:DescribeLoadBalancers",
-#          "elasticloadbalancing:DescribeTargetHealth",
-#          "elasticloadbalancing:DescribeTargetGroups",
-#          "elasticloadbalancing:DescribeInstanceHealth",
-#          "ec2:DescribeInstanceStatus"
-#        ],
-#        "Resource" : "*"
-#      }
-#    ]
-#  })
-#}
-#resource "aws_iam_role" "service" {
-#  name = "${local.ecs_name}_service"
-#
-#  assume_role_policy  = jsonencode({
-#    Version   = "2012-10-17"
-#    Statement = [
-#      {
-#        Action    = "sts:AssumeRole"
-#        Effect    = "Allow"
-#        Sid       = ""
-#        Principal = {
-#          Service = ["ec2.amazonaws.com"]
-#        }
-#      },
-#    ]
-#  })
-#  managed_policy_arns = [aws_iam_policy.service.arn]
-#
-#  tags = local.tags
-#}
-#resource "aws_iam_service_linked_role" "service" {
-#  aws_service_name = "ecs.amazonaws.com"
-#}
 resource "aws_ecs_service" "grok_connect" {
   name            = "${local.ecs_name}_grok_connect"
   cluster         = module.ecs.cluster_arn
@@ -719,8 +576,6 @@ resource "aws_ecs_service" "grok_connect" {
   }
   enable_execute_command = true
   force_new_deployment   = true
-
-  #  iam_role = aws_ecs_task_definition.grok_connect.network_mode == "awsvpc" ? null : aws_iam_service_linked_role.service.arn
 
   dynamic "service_registries" {
     for_each = var.ecs_launch_type == "FARGATE" ? [
@@ -831,63 +686,6 @@ resource "aws_service_discovery_service" "smtp" {
     failure_threshold = 1
   }
 }
-#resource "aws_iam_policy" "service" {
-#  name        = "${local.ecs_name}_service"
-#  description = "Datagrok policy for ECS Service to access AWS resources"
-#
-#  policy = jsonencode({
-#    "Version" : "2012-10-17",
-#    "Statement" : [
-#      {
-#        "Sid" : "0",
-#        "Effect" : "Allow",
-#        "Action" : [
-#          "elasticloadbalancing:RegisterTargets",
-#          "elasticloadbalancing:DeregisterTargets"
-#        ],
-#        "Resource" : concat(module.lb_ext.target_group_arns, module.lb_int.target_group_arns)
-#      },
-#      {
-#        "Sid" : "1",
-#        "Effect" : "Allow",
-#        "Action" : [
-#          "ec2:DescribeInstances",
-#          "elasticloadbalancing:DescribeTags",
-#          "ec2:DescribeTags",
-#          "elasticloadbalancing:DescribeLoadBalancers",
-#          "elasticloadbalancing:DescribeTargetHealth",
-#          "elasticloadbalancing:DescribeTargetGroups",
-#          "elasticloadbalancing:DescribeInstanceHealth",
-#          "ec2:DescribeInstanceStatus"
-#        ],
-#        "Resource" : "*"
-#      }
-#    ]
-#  })
-#}
-#resource "aws_iam_role" "service" {
-#  name = "${local.ecs_name}_service"
-#
-#  assume_role_policy  = jsonencode({
-#    Version   = "2012-10-17"
-#    Statement = [
-#      {
-#        Action    = "sts:AssumeRole"
-#        Effect    = "Allow"
-#        Sid       = ""
-#        Principal = {
-#          Service = ["ec2.amazonaws.com"]
-#        }
-#      },
-#    ]
-#  })
-#  managed_policy_arns = [aws_iam_policy.service.arn]
-#
-#  tags = local.tags
-#}
-#resource "aws_iam_service_linked_role" "service" {
-#  aws_service_name = "ecs.amazonaws.com"
-#}
 resource "aws_ecs_service" "smtp" {
   count           = var.smtp_server ? 1 : 0
   name            = "${local.ecs_name}_smtp"
@@ -904,8 +702,6 @@ resource "aws_ecs_service" "smtp" {
   }
   enable_execute_command = true
   force_new_deployment   = true
-
-  #  iam_role = aws_ecs_task_definition.smtp[0].network_mode == "awsvpc" ? null : aws_iam_service_linked_role.service.arn
 
   dynamic "service_registries" {
     for_each = var.ecs_launch_type == "FARGATE" ? [
@@ -1307,7 +1103,6 @@ resource "aws_iam_role" "grok_spawner_kaniko_task" {
     var.ecr_enabled ? aws_iam_policy.ecr[0].arn : (var.ecs_launch_type == "FARGATE" ? "" : aws_iam_policy.docker_hub[0].arn),
     var.grok_spawner_docker_build_enabled ? aws_iam_policy.grok_spawner_kaniko_ecr[0].arn : ""
   ])
-  #  managed_policy_arns = [aws_iam_policy.task.arn]
 
   tags = local.tags
 }
@@ -1358,7 +1153,6 @@ resource "aws_iam_role" "grok_spawner_exec" {
     aws_iam_policy.exec.arn,
     var.grok_spawner_docker_build_enabled ? aws_iam_policy.grok_spawner_exec[0].arn : ""
   ])
-  #  managed_policy_arns = [aws_iam_policy.task.arn]
 
   tags = local.tags
 }
@@ -1512,7 +1306,7 @@ resource "aws_ecs_task_definition" "grok_spawner_kaniko" {
     }
   ])
   cpu                      = 1024
-  memory                   = 4096
+  memory                   = 5120
   network_mode             = "awsvpc"
   execution_role_arn       = aws_iam_role.exec.arn
   task_role_arn            = aws_iam_role.grok_spawner_kaniko_task.arn
@@ -1539,63 +1333,6 @@ resource "aws_service_discovery_service" "grok_spawner" {
     failure_threshold = 1
   }
 }
-#resource "aws_iam_policy" "service" {
-#  name        = "${local.ecs_name}_service"
-#  description = "Datagrok policy for ECS Service to access AWS resources"
-#
-#  policy = jsonencode({
-#    "Version" : "2012-10-17",
-#    "Statement" : [
-#      {
-#        "Sid" : "0",
-#        "Effect" : "Allow",
-#        "Action" : [
-#          "elasticloadbalancing:RegisterTargets",
-#          "elasticloadbalancing:DeregisterTargets"
-#        ],
-#        "Resource" : concat(module.lb_ext.target_group_arns, module.lb_int.target_group_arns)
-#      },
-#      {
-#        "Sid" : "1",
-#        "Effect" : "Allow",
-#        "Action" : [
-#          "ec2:DescribeInstances",
-#          "elasticloadbalancing:DescribeTags",
-#          "ec2:DescribeTags",
-#          "elasticloadbalancing:DescribeLoadBalancers",
-#          "elasticloadbalancing:DescribeTargetHealth",
-#          "elasticloadbalancing:DescribeTargetGroups",
-#          "elasticloadbalancing:DescribeInstanceHealth",
-#          "ec2:DescribeInstanceStatus"
-#        ],
-#        "Resource" : "*"
-#      }
-#    ]
-#  })
-#}
-#resource "aws_iam_role" "service" {
-#  name = "${local.ecs_name}_service"
-#
-#  assume_role_policy  = jsonencode({
-#    Version   = "2012-10-17"
-#    Statement = [
-#      {
-#        Action    = "sts:AssumeRole"
-#        Effect    = "Allow"
-#        Sid       = ""
-#        Principal = {
-#          Service = ["ec2.amazonaws.com"]
-#        }
-#      },
-#    ]
-#  })
-#  managed_policy_arns = [aws_iam_policy.service.arn]
-#
-#  tags = local.tags
-#}
-#resource "aws_iam_service_linked_role" "service" {
-#  aws_service_name = "ecs.amazonaws.com"
-#}
 resource "aws_ecs_service" "grok_spawner" {
   name            = "${local.ecs_name}_grok_spawner"
   cluster         = module.ecs.cluster_arn
@@ -1611,8 +1348,6 @@ resource "aws_ecs_service" "grok_spawner" {
   }
   enable_execute_command = true
   force_new_deployment   = true
-
-  #  iam_role = aws_ecs_task_definition.grok_spawner.network_mode == "awsvpc" ? null : aws_iam_service_linked_role.service.arn
 
   dynamic "service_registries" {
     for_each = var.ecs_launch_type == "FARGATE" ? [
