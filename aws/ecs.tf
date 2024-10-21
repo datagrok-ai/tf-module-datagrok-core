@@ -343,7 +343,7 @@ resource "aws_ecs_task_definition" "datagrok" {
                   dbAdminPassword : module.db.db_instance_password,
                   dbSsl : false,
                   deployDemo : false,
-                  allowImpersonate: true,
+                  allowImpersonate : true,
                   deployTestDemo : false
                   }, var.set_admin_password ? {
                   adminPassword : try(length(var.admin_password) > 0, false) ? var.admin_password : random_password.admin_password[0].result
