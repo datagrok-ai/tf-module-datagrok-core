@@ -594,7 +594,7 @@ variable "grok_spawner_container_cpu" {
 
 variable "grok_spawner_memory" {
   type        = number
-  default     = 512
+  default     = 1024
   nullable    = false
   description = "Amount (in MiB) of memory used by the Grok Spawner FARGATE task. The hard limit of memory (in MiB) to present to the task."
 }
