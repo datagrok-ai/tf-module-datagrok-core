@@ -1224,7 +1224,7 @@ resource "aws_ecs_task_definition" "grok_spawner" {
             value = try(length(var.grok_spawner_cvm_ecs_cluster) > 0, false) ? var.grok_spawner_cvm_ecs_cluster : module.ecs.cluster_name
           },
           {
-            name  = "CVM_LAUNCH_TYPE",
+            name  = "GROK_SPAWNER_CVM_LAUNCH_TYPE",
             value = try(length(var.grok_spawner_cvm_launch_type) > 0, false) ? var.grok_spawner_cvm_launch_type : module.ecs.cluster_name
           },
           {
