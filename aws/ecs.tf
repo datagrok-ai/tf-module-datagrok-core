@@ -430,6 +430,10 @@ resource "aws_ecs_service" "datagrok" {
   }
   enable_execute_command = true
   force_new_deployment   = true
+  deployment_circuit_breaker {
+    enable   = true
+    rollback = true
+  }
 
   dynamic "service_registries" {
     for_each = var.ecs_launch_type == "FARGATE" ? [
@@ -576,6 +580,10 @@ resource "aws_ecs_service" "grok_connect" {
   }
   enable_execute_command = true
   force_new_deployment   = true
+  deployment_circuit_breaker {
+    enable   = true
+    rollback = true
+  }
 
   dynamic "service_registries" {
     for_each = var.ecs_launch_type == "FARGATE" ? [
@@ -702,6 +710,10 @@ resource "aws_ecs_service" "smtp" {
   }
   enable_execute_command = true
   force_new_deployment   = true
+  deployment_circuit_breaker {
+    enable   = true
+    rollback = true
+  }
 
   dynamic "service_registries" {
     for_each = var.ecs_launch_type == "FARGATE" ? [
@@ -1196,43 +1208,67 @@ resource "aws_ecs_task_definition" "grok_spawner" {
             value = var.grok_spawner_log_level
           },
           {
-            name  = "GROK_SPAWNER_DOCKER_REGISTRY_SECRET_ARN",
-            value = var.ecr_enabled || var.ecs_launch_type == "FARGATE" ? "" : try(aws_secretsmanager_secret.docker_hub[0].arn, var.docker_hub_credentials.secret_arn)
+            name  = "GROK_SPAWNER_PROFILE_MEMORY",
+            value = var.grok_spawner_log_level == "debug" ? "true" : "false"
           },
           {
-            name  = "GROK_SPAWNER_DATAGROK_ECS_CLUSTER",
+            name  = "GROK_SPAWNER_X_API_KEY",
+            value = "test-x-api-key"
+          },
+          {
+            name  = "GROK_SPAWNER_DATAGROK_ECS__CLUSTER",
             value = module.ecs.cluster_name
           },
           {
-            name  = "GROK_SPAWNER_DATAGROK_ECS_SUBNETS",
+            name  = "GROK_SPAWNER_DATAGROK_ECS__CLUSTER_REGION"
+            value = data.aws_region.current.name
+          },
+          {
+            name  = "GROK_SPAWNER_DATAGROK_ECS__SUBNETS",
             value = jsonencode(try(module.vpc[0].private_subnets, var.private_subnet_ids))
           },
           {
-            name  = "GROK_SPAWNER_DATAGROK_ECS_SECURITY_GROUPS",
+            name  = "GROK_SPAWNER_DATAGROK_ECS__SECURITY_GROUPS",
             value = jsonencode([module.sg.security_group_id])
           },
           {
-            name  = "GROK_SPAWNER_DATAGROK_ECS_EXEC_ROLE",
+            name  = "GROK_SPAWNER_DATAGROK_ECS__EXEC_ROLE",
             value = aws_iam_role.grok_spawner_exec.arn
           },
           {
-            name  = "GROK_SPAWNER_DATAGROK_ECS_LOG_GROUP",
+            name  = "GROK_SPAWNER_DATAGROK_ECS__LOG_GROUP",
             value = var.create_cloudwatch_log_group ? aws_cloudwatch_log_group.ecs[0].arn : var.cloudwatch_log_group_arn
           },
           {
-            name  = "GROK_SPAWNER_CVM_ECS_CLUSTER",
+            name  = "GROK_SPAWNER_CVM_ECS__CLUSTER",
             value = try(length(var.grok_spawner_cvm_ecs_cluster) > 0, false) ? var.grok_spawner_cvm_ecs_cluster : module.ecs.cluster_name
           },
           {
-            name  = "GROK_SPAWNER_CVM_LAUNCH_TYPE",
-            value = try(length(var.grok_spawner_cvm_launch_type) > 0, false) ? var.grok_spawner_cvm_launch_type : module.ecs.cluster_name
+            name  = "GROK_SPAWNER_CVM_ECS__CLUSTER_REGION",
+            value = try(length(var.grok_spawner_cvm_ecs_cluster) > 0, false) ? var.grok_spawner_cvm_ecs_cluster_region : data.aws_region.current.name
           },
           {
-            name  = "GROK_SPAWNER_KANIKO_S3_BUCKET"
+            name  = "GROK_SPAWNER_CVM_ECS__LAUNCH_TYPE",
+            value = try(length(var.grok_spawner_cvm_launch_type) > 0, false) ? var.grok_spawner_cvm_launch_type : var.ecs_launch_type
+          },
+          {
+            name  = "GROK_SPAWNER_DATAGROK_ECS__LAUNCH_TYPE",
+            value = var.ecs_launch_type
+          },
+          {
+            name  = "GROK_SPAWNER_DATAGROK_ECS__KANIKO_S3_BUCKET"
             value = local.s3_name
           },
           {
-            name  = "GROK_SPAWNER_KANIKO_TASK_DEFINITION",
+            name  = "GROK_SPAWNER_DATAGROK_ECS__KANIKO_TASK_DEFINITION",
+            value = aws_ecs_task_definition.grok_spawner_kaniko.arn
+          },
+          {
+            name  = "GROK_SPAWNER_CVM_ECS__KANIKO_S3_BUCKET"
+            value = local.s3_name
+          },
+          {
+            name  = "GROK_SPAWNER_CVM_ECS__KANIKO_TASK_DEFINITION",
             value = aws_ecs_task_definition.grok_spawner_kaniko.arn
           }
         ]
@@ -1348,6 +1384,10 @@ resource "aws_ecs_service" "grok_spawner" {
   }
   enable_execute_command = true
   force_new_deployment   = true
+  deployment_circuit_breaker {
+    enable   = true
+    rollback = true
+  }
 
   dynamic "service_registries" {
     for_each = var.ecs_launch_type == "FARGATE" ? [
