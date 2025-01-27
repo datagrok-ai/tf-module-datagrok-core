@@ -1243,7 +1243,7 @@ resource "aws_ecs_task_definition" "grok_spawner" {
           },
           {
             name  = "GROK_SPAWNER_CVM_ECS__CLUSTER_REGION",
-            value = try(length(var.grok_spawner_cvm_ecs_cluster) > 0, false) ? var.grok_spawner_cvm_ecs_cluster_region : data.aws_region.current.name
+            value = try(length(var.grok_spawner_cvm_ecs_cluster_region) > 0, false) ? var.grok_spawner_cvm_ecs_cluster_region : data.aws_region.current.name
           },
           {
             name  = "GROK_SPAWNER_CVM_ECS__LAUNCH_TYPE",
