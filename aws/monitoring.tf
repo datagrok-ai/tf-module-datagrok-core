@@ -290,7 +290,7 @@ resource "aws_cloudwatch_metric_alarm" "high_ram" {
   datapoints_to_alarm = 3
   treat_missing_data  = "ignore"
   statistic           = "Average"
-  threshold           = "85"
+  threshold           = "75"
   alarm_description   = "${local.ecs_name} ECS cluster RAM capacity alarm"
   metric_name         = "MemoryUtilization"
   namespace           = "AWS/ECS"
