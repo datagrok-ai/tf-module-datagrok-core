@@ -1064,9 +1064,7 @@ resource "aws_iam_role" "grok_spawner_task" {
                 ]))
               }
             },
-            "Resource" : [
-              aws_ecs_task_definition.grok_spawner_kaniko.arn
-            ]
+            "Resource" : ["${aws_ecs_task_definition.grok_spawner_kaniko.arn_without_revision}:*"]
           },
           {
             "Effect" = "Allow",
