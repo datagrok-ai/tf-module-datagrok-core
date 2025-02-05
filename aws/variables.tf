@@ -827,3 +827,37 @@ variable "grok_spawner_log_level" {
   type        = string
   description = "Log level for Grok Spawner"
 }
+
+variable "rabbitmq_name" {
+  type        = string
+  default     = null
+  nullable    = true
+  description = "The name of RDS for Datagrok. If it is not specified, the name along with the environment will be used."
+}
+variable "rabbitmq_version" {
+  type        = string
+  default     = "4.0.5"
+  nullable    = false
+  description = "The rabbitmq version for AmazonMQ."
+}
+
+variable "rabbitmq_instance_type" {
+  type        = string
+  default     = "mq.t3.micro"
+  nullable    = false
+  description = "AmazonMQ instance type. The default value is the minimum recommended type."
+}
+
+variable "rabbitmq_username" {
+  type        = string
+  default     = "user"
+  nullable    = false
+  description = "default user for AmazonMQ"
+}
+
+variable "rabbitmq_password" {
+  type        = string
+  default     = "default-password"
+  nullable    = false
+  description = "default password for AmazonMQ"
+}

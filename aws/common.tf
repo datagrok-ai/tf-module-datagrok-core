@@ -8,6 +8,7 @@ locals {
   full_name       = "${var.name}-${var.environment}"
   vpc_name        = coalesce(var.vpc_name, "${var.name}-${var.environment}")
   rds_name        = coalesce(var.rds_name, "${var.name}-${var.environment}")
+  rabbitmq_name   = coalesce(var.rabbitmq_name, "${var.name}-${var.environment}")
   s3_name         = coalesce(var.s3_name, "${var.name}-${var.environment}")
   ecs_name        = coalesce(var.ecs_name, "${var.name}-${var.environment}")
   lb_name         = coalesce(var.lb_name, "${var.name}-${var.environment}")
