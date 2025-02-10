@@ -601,7 +601,7 @@ variable "grok_spawner_memory" {
 
 variable "grok_spawner_cpu" {
   type        = number
-  default     = 256
+  default     = 512
   nullable    = false
   description = "Number of cpu units used by the Grok Spawner FARGATE task. The hard limit of CPU units to present for the task."
 }
@@ -812,6 +812,13 @@ variable "grok_spawner_cvm_ecs_cluster" {
   nullable    = true
   type        = string
   description = "ECS CVM cluster to deploy tasks made by Grok Spawner"
+}
+
+variable "grok_spawner_cvm_ecs_cluster_region" {
+  default     = null
+  nullable    = true
+  type        = string
+  description = "ECS CVM cluster region to deploy tasks made by Grok Spawner"
 }
 
 variable "grok_spawner_cvm_launch_type" {
