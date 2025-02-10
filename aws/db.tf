@@ -79,6 +79,7 @@ module "db" {
   ]
 
   tags = local.tags
+
 }
 
 resource "aws_route53_record" "db_private_dns" {

@@ -137,7 +137,7 @@ variable "rds_name" {
 
 variable "rds_major_engine_version" {
   type        = string
-  default     = "12"
+  default     = "12.19"
   nullable    = false
   description = "The postgres engine major version for RDS."
 }
@@ -860,4 +860,46 @@ variable "rabbitmq_password" {
   default     = "default-password"
   nullable    = false
   description = "default password for AmazonMQ"
+}
+
+variable "grok_pipe_container_memory_reservation" {
+  type        = number
+  default     = 512
+  nullable    = false
+  description = "The soft limit (in MiB) of memory to reserve for the Grok Connect container."
+}
+
+variable "grok_pipe_container_cpu" {
+  type        = number
+  default     = 256
+  nullable    = false
+  description = "The number of cpu units the Amazon ECS container agent reserves for the Grok Connect container."
+}
+
+variable "grok_pipe_memory" {
+  type        = number
+  default     = 4096
+  nullable    = false
+  description = "Amount (in MiB) of memory used by the Grok Connect FARGATE task. The hard limit of memory (in MiB) to present to the task."
+}
+
+variable "grok_pipe_cpu" {
+  type        = number
+  default     = 1024
+  nullable    = false
+  description = "Number of cpu units used by the Grok Connect FARGATE task. The hard limit of CPU units to present for the task."
+}
+
+variable "docker_grok_pipe_tag" {
+  type        = string
+  default     = "latest"
+  nullable    = false
+  description = "Tag from Docker Registry for Datagrok Grok Connect Image"
+}
+
+variable "docker_grok_pipe_image" {
+  type        = string
+  default     = "docker.io/datagrok/grok_pipe"
+  nullable    = false
+  description = "Grok Connect Docker Image registry location. By default the official image from Docker Hub will be used."
 }
