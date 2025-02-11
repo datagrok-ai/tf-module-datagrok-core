@@ -38,7 +38,7 @@ module "db" {
   engine                         = "postgres"
   engine_version                 = var.rds_major_engine_version
   major_engine_version           = var.rds_major_engine_version
-  allow_major_version_upgrade    = false
+  allow_major_version_upgrade    = true
   auto_minor_version_upgrade     = true
   family                         = "postgres${split(".", var.rds_major_engine_version)[0]}"
   instance_class                 = var.rds_instance_class
@@ -52,6 +52,7 @@ module "db" {
   create_db_subnet_group         = false
   db_subnet_group_name           = try(module.vpc[0].database_subnet_group, var.database_subnet_group)
   vpc_security_group_ids         = [module.db_sg.security_group_id]
+
 
   iam_database_authentication_enabled   = true
   apply_immediately                     = false
