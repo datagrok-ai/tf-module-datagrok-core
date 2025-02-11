@@ -203,6 +203,11 @@ module "lb_int" {
       port               = 8000
       protocol           = "HTTP"
       target_group_index = 2
+    },
+    {
+      port               = 3000
+      protocol           = "HTTP"
+      target_group_index = 3
     }
   ]
 
@@ -300,4 +305,15 @@ resource "aws_route53_query_log" "external" {
   depends_on               = [aws_cloudwatch_log_resource_policy.external]
   cloudwatch_log_group_arn = aws_cloudwatch_log_group.external[0].arn
   zone_id                  = aws_route53_zone.external[0].zone_id
+}
+
+resource "aws_route53_record" "grok_pipe" {
+  zone_id = var.create_route53_internal_zone ? aws_route53_zone.internal[0].id : var.route53_internal_zone
+  name    = "grok_pipe.datagrok.${var.name}.${var.environment}.internal"
+  type    = "A"
+  alias {
+    name                   = module.lb_int.lb_dns_name
+    zone_id                = module.lb_int.lb_zone_id
+    evaluate_target_health = true
+  }
 }

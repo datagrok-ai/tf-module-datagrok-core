@@ -84,6 +84,19 @@ locals {
         path                = "/info"
         matcher             = "200"
       }
+    },
+    {
+      name             = "pipe"
+      backend_protocol = "HTTP"
+      backend_port     = 3000
+      target_type      = aws_ecs_task_definition.grok_spawner.network_mode == "awsvpc" ? "ip" : "instance"
+      health_check = {
+        enabled             = true
+        interval            = 60
+        unhealthy_threshold = 5
+        path                = "/info"
+        matcher             = "200"
+      }
     }
   ]
 }

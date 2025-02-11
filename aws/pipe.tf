@@ -119,7 +119,7 @@ resource "aws_ecs_service" "grok_pipe" {
   }
 
   load_balancer {
-    target_group_arn = module.lb_int.target_group_arns[1]
+    target_group_arn = module.lb_int.target_group_arns[3]
     container_name   = "grok_pipe"
     container_port   = 3000
   }
@@ -136,5 +136,43 @@ resource "aws_ecs_service" "grok_pipe" {
       security_groups  = network_configuration.value["security_groups"]
       assign_public_ip = false
     }
+  }
+}
+resource "aws_ssm_parameter" "grok_parameters" {
+  name  = "/datagrok/GROK_PARAMETERS"
+  type  = "String" # Можно использовать "String", но "SecureString" лучше для паролей
+  value = jsonencode(
+    merge(
+      {
+        amazonStorageRegion = data.aws_region.current.name
+        amazonStorageBucket = module.s3_bucket.s3_bucket_id
+        dbServer = try(aws_route53_record.db_private_dns[0].name, module.db.db_instance_address)
+        dbPort = tonumber(module.db.db_instance_port)
+        db = "datagrok"
+        dbLogin = "datagrok"
+        dbPassword = try(random_password.db_datagrok_password[0].result, var.rds_dg_password)
+        dbAdminLogin = var.rds_master_username
+        dbAdminPassword = module.db.db_instance_password
+        dbSsl = false
+        deployDemo = false
+        deployTestDemo = false
+        queuePluginSettings = {
+          amqpHost = split(":", split("://", aws_mq_broker.rabbit.instances[0].endpoints[0])[1])[0]
+          amqpPassword = var.rabbitmq_password
+          amqpPort = 5672
+          amqpUser = var.rabbitmq_username
+          pipeHost = aws_route53_record.grok_pipe.fqdn
+          pipeKey = "test-key"
+        }
+      },
+        var.set_admin_password ? {
+        adminPassword = try(length(var.admin_password) > 0, false) ? var.admin_password : random_password.admin_password[0].result
+      } : {}
+    )
+  )
+  overwrite = true
+  tags = {
+    Name = "GROK_PARAMETERS"
+    Environment = "production"
   }
 }

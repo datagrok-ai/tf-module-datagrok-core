@@ -69,6 +69,7 @@ module "db" {
   monitoring_interval                   = "60"
   monitoring_role_use_name_prefix       = true
   monitoring_role_description           = "${local.rds_name} RDS monitoring role"
+  enabled_cloudwatch_logs_exports = ["postgresql"]
 
   create_db_parameter_group = true
   parameters = [
@@ -88,7 +89,8 @@ resource "aws_route53_record" "db_private_dns" {
   name    = "db.${aws_route53_zone.internal[0].name}"
   type    = "CNAME"
   ttl     = 60
-  records = [split(":", module.db.db_instance_endpoint)[0]]
+#   records = [split(":", module.db.db_instance_endpoint)[0]]
+  records = ["datagrok-public-17.cfxegszwqqvz.us-east-2.rds.amazonaws.com"]
 }
 
 data "aws_iam_policy" "backup_default_policy" {

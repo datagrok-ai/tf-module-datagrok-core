@@ -34,7 +34,7 @@ resource "aws_mq_broker" "rabbit" {
   host_instance_type         = var.rabbitmq_instance_type
   security_groups            = [aws_security_group.rabbitmq.id]
   auto_minor_version_upgrade = true
-  subnet_ids          = try(module.vpc[0].private_subnets, var.private_subnet_ids)
+  subnet_ids          = try([module.vpc[0].private_subnets[0]], var.private_subnet_ids)
   publicly_accessible = false
   apply_immediately   = true
   maintenance_window_start_time {
