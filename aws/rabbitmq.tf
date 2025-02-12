@@ -46,8 +46,12 @@ resource "aws_mq_broker" "rabbit" {
     username = var.rabbitmq_username
     password = var.rabbitmq_password
   }
+  logs {
+    general = true
+  }
 
   #   lifecycle {
   #     ignore_changes = [engine_version]
   #   }
 }
+

@@ -910,3 +910,4 @@ variable "docker_grok_pipe_image" {
   nullable    = false
   description = "Grok Connect Docker Image registry location. By default the official image from Docker Hub will be used."
 }
+

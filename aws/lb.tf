@@ -83,6 +83,13 @@ module "lb_int_sg" {
       description = "Access to Grok Spawner"
       cidr_blocks = try(module.vpc[0].vpc_cidr_block, var.cidr)
     },
+    {
+      from_port   = 3000
+      to_port     = 3000
+      protocol    = "tcp"
+      description = "Access to Grok Pipe"
+      cidr_blocks = try(module.vpc[0].vpc_cidr_block, var.cidr)
+    },
   ]
 }
 data "aws_route53_zone" "external" {
