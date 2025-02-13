@@ -353,12 +353,13 @@ resource "aws_ecs_task_definition" "datagrok" {
                   deployDemo = false
                   deployTestDemo = false
                   queuePluginSettings = {
-#                     amqpHost = aws_mq_broker.rabbit.instances[0].endpoints[0]
+                    amqpHost = split(":", split("://", aws_mq_broker.rabbit.instances[0].endpoints[0])[1])[0]
                     amqpPassword = var.rabbitmq_password
-                    amqpPort = 5672
+                    amqpPort = var.amqpPort
                     amqpUser = var.rabbitmq_username
-                    pipeHost = "datagrok-grok-pipe"
-                    pipeKey = "test-key"
+                    pipeHost = "${aws_route53_record.grok_pipe.fqdn}"
+                    pipeKey = var.pipeKey
+                    tls = var.amqpTLS
                   }
                 },
                   var.set_admin_password ? {
@@ -1596,6 +1597,16 @@ resource "aws_ecs_task_definition" "grok_pipe" {
         name      = "grok_pipe"
         image     = "${var.ecr_enabled ? aws_ecr_repository.ecr["grok_pipe"].repository_url : var.docker_grok_pipe_image}:${var.ecr_enabled ? local.images["grok_pipe"]["tag"] : (var.ecr_enabled ? local.images["grok_pipe"]["tag"] : var.docker_grok_pipe_tag)}"
         essential = true
+        environment = [{
+            name  = "API_KEY",
+            value = var.pipeKey
+
+          },
+          {
+            name = "GROK_PARAMETERS"
+            value = aws_ssm_parameter.grok_parameters.value
+          }
+        ]
         logConfiguration = {
           "LogDriver" : "awslogs",
           "Options" : {
@@ -1706,41 +1717,41 @@ resource "aws_ecs_service" "grok_pipe" {
     }
   }
 }
-# resource "aws_ssm_parameter" "grok_parameters" {
-#   name  = "/datagrok/GROK_PARAMETERS"
-#   type  = "String" # Можно использовать "String", но "SecureString" лучше для паролей
-#   value = jsonencode(
-#     merge(
-#       {
-#         amazonStorageRegion = data.aws_region.current.name
-#         amazonStorageBucket = module.s3_bucket.s3_bucket_id
-#         dbServer = try(aws_route53_record.db_private_dns[0].name, module.db.db_instance_address)
-#         dbPort = tonumber(module.db.db_instance_port)
-#         db = "datagrok"
-#         dbLogin = "datagrok"
-#         dbPassword = try(random_password.db_datagrok_password[0].result, var.rds_dg_password)
-#         dbAdminLogin = var.rds_master_username
-#         dbAdminPassword = module.db.db_instance_password
-#         dbSsl = false
-#         deployDemo = false
-#         deployTestDemo = false
-#         queuePluginSettings = {
-#           amqpHost = split(":", split("://", aws_mq_broker.rabbit.instances[0].endpoints[0])[1])[0]
-#           amqpPassword = var.rabbitmq_password
-#           amqpPort = 5672
-#           amqpUser = var.rabbitmq_username
-#           pipeHost = aws_route53_record.grok_pipe.fqdn
-#           pipeKey = "test-key"
-#         }
-#       },
-#         var.set_admin_password ? {
-#         adminPassword = try(length(var.admin_password) > 0, false) ? var.admin_password : random_password.admin_password[0].result
-#       } : {}
-#     )
-#   )
-#   overwrite = true
-#   tags = {
-#     Name = "GROK_PARAMETERS"
-#     Environment = "production"
-#   }
-# }
+resource "aws_ssm_parameter" "grok_parameters" {
+  name  = "/datagrok/GROK_PARAMETERS"
+  type  = "String" # Можно использовать "String", но "SecureString" лучше для паролей
+  value = jsonencode(
+    merge(
+      {
+        amazonStorageRegion = data.aws_region.current.name
+        amazonStorageBucket = module.s3_bucket.s3_bucket_id
+        dbServer = try(aws_route53_record.db_private_dns[0].name, module.db.db_instance_address)
+        dbPort = tonumber(module.db.db_instance_port)
+        db = "datagrok"
+        dbLogin = "datagrok"
+        dbPassword = try(random_password.db_datagrok_password[0].result, var.rds_dg_password)
+        dbAdminLogin = var.rds_master_username
+        dbAdminPassword = module.db.db_instance_password
+        dbSsl = false
+        deployDemo = false
+        deployTestDemo = false
+        queuePluginSettings = {
+          amqpHost = split(":", split("://", aws_mq_broker.rabbit.instances[0].endpoints[0])[1])[0]
+          amqpPassword = var.rabbitmq_password
+          amqpPort = 5672
+          amqpUser = var.rabbitmq_username
+          pipeHost = aws_route53_record.grok_pipe.fqdn
+          pipeKey = "test-key"
+        }
+      },
+        var.set_admin_password ? {
+        adminPassword = try(length(var.admin_password) > 0, false) ? var.admin_password : random_password.admin_password[0].result
+      } : {}
+    )
+  )
+  overwrite = true
+  tags = {
+    Name = "GROK_PARAMETERS"
+    Environment = "production"
+  }
+}

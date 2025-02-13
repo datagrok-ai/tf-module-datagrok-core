@@ -911,3 +911,19 @@ variable "docker_grok_pipe_image" {
   description = "Grok Connect Docker Image registry location. By default the official image from Docker Hub will be used."
 }
 
+variable "pipeKey" {
+  nullable = false
+  default = "test-key"
+}
+
+variable "amqpTLS" {
+  type = bool
+  nullable = false
+  default = true
+}
+
+variable "amqpPort" {
+  nullable = false
+  type = number
+  default = 5671
+}
