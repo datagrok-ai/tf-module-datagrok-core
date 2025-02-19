@@ -27,7 +27,7 @@ resource "aws_security_group_rule" "rabbit_sg_allow_egress_5671" {
 
 
 resource "aws_mq_broker" "rabbit" {
-  broker_name = "${local.rabbitmq_name}-mq"
+  broker_name = "${local.rabbitmq_name}"
 
   engine_type = "RabbitMQ"
   engine_version             = var.rabbitmq_version

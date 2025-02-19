@@ -301,9 +301,6 @@ resource "aws_service_discovery_private_dns_namespace" "datagrok" {
 
 resource "aws_ecs_task_definition" "datagrok" {
   family = "${local.ecs_name}_datagrok"
-  lifecycle {
-    ignore_changes = all
-  }
   container_definitions = jsonencode(concat(
     var.ecs_launch_type == "FARGATE" ? [
       {
@@ -831,7 +828,8 @@ resource "aws_iam_role" "grok_spawner_task" {
       "Statement" = [
         {
           "Action" = [
-            "ecs:ListTasks"
+            "ecs:ListTasks",
+            "ecs:ListServices"
           ],
           "Condition" = {
             "ArnLike" : {
