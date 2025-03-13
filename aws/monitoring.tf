@@ -282,6 +282,9 @@ resource "aws_cloudwatch_metric_alarm" "high_cpu" {
 }
 
 resource "aws_cloudwatch_metric_alarm" "high_ram" {
+  lifecycle {
+    ignore_changes = all
+  }
   count               = var.monitoring.alarms_enabled ? 1 : 0
   alarm_name          = "${local.ecs_name}-ecs-high-ram"
   comparison_operator = "GreaterThanOrEqualToThreshold"

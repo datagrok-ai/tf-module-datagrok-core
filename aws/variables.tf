@@ -919,7 +919,7 @@ variable "pipeKey" {
 variable "amqpTLS" {
   type     = bool
   nullable = false
-  default  = true
+  default  = false
 }
 
 variable "amqpPort" {

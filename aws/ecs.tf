@@ -996,6 +996,24 @@ resource "aws_iam_role" "grok_spawner_task" {
       ]
     })
   }
+  inline_policy {
+    name = "${local.ecs_name}_grok_spawner_logs"
+    policy = jsonencode({
+      "Version" : "2012-10-17",
+      "Statement" : [
+        {
+          "Effect" : "Allow",
+          "Action" : [
+            "logs:GetLogEvents",
+            "logs:DescribeLogStreams",
+            "logs:DescribeLogGroups"]
+          "Resource" : [
+            "arn:aws:logs:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:log-group:/aws/ecs/*",
+          ]
+        }
+      ]
+    })
+  }
 
   dynamic "inline_policy" {
     for_each = var.grok_spawner_docker_build_enabled ? { enabled = true } : {}
@@ -1367,7 +1385,7 @@ resource "aws_ecs_task_definition" "grok_spawner_kaniko" {
   task_role_arn            = aws_iam_role.grok_spawner_kaniko_task.arn
   requires_compatibilities = ["FARGATE"]
   depends_on               = [null_resource.ecr_push]
-  ephemeral_storage = {
+  ephemeral_storage {
     size_in_gib = 100
   }
 }
@@ -1473,7 +1491,8 @@ resource "aws_iam_policy" "ec2" {
       {
         "Action" = [
           "ec2:DescribeTags",
-          "ecs:DiscoverPollEndpoint"
+          "ecs:DiscoverPollEndpoint",
+          "ecs:ListContainerInstances"
         ],
         "Effect"   = "Allow",
         "Resource" = "*"
