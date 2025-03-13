@@ -913,19 +913,19 @@ variable "docker_grok_pipe_image" {
 
 variable "pipeKey" {
   nullable = false
-  default = "test-key"
+  default  = "test-key"
 }
 
 variable "amqpTLS" {
-  type = bool
+  type     = bool
   nullable = false
-  default = true
+  default  = true
 }
 
 variable "amqpPort" {
   nullable = false
-  type = number
-  default = 5671
+  type     = number
+  default  = 5671
 }
 
 variable "rabbitmq_container_memory_reservation" {
