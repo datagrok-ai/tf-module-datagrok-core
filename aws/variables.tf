@@ -927,3 +927,44 @@ variable "amqpPort" {
   type = number
   default = 5671
 }
+
+variable "rabbitmq_container_memory_reservation" {
+  type        = number
+  default     = 512
+  nullable    = false
+  description = "The soft limit (in MiB) of memory to reserve for the Grok Connect container."
+}
+
+variable "rabbitmq_container_cpu" {
+  type        = number
+  default     = 256
+  nullable    = false
+  description = "The number of cpu units the Amazon ECS container agent reserves for the Grok Connect container."
+}
+
+variable "rabbitmq_memory" {
+  type        = number
+  default     = 4096
+  nullable    = false
+  description = "Amount (in MiB) of memory used by the Grok Connect FARGATE task. The hard limit of memory (in MiB) to present to the task."
+}
+
+variable "rabbitmq_cpu" {
+  type        = number
+  default     = 1024
+  nullable    = false
+  description = "Number of cpu units used by the Grok Connect FARGATE task. The hard limit of CPU units to present for the task."
+}
+variable "docker_rabbitmq_image" {
+  type        = string
+  default     = "rabbitmq"
+  nullable    = false
+  description = "Grok Connect Docker Image registry location. By default the official image from Docker Hub will be used."
+}
+
+variable "docker_rabbitmq_tag" {
+  type        = string
+  default     = "4.0.5-management"
+  nullable    = false
+  description = "Tag from Docker Registry for Datagrok Grok Connect Image"
+}

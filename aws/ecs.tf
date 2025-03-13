@@ -350,7 +350,7 @@ resource "aws_ecs_task_definition" "datagrok" {
                   deployDemo = false
                   deployTestDemo = false
                   queuePluginSettings = {
-                    amqpHost = split(":", split("://", aws_mq_broker.rabbit.instances[0].endpoints[0])[1])[0]
+                    amqpHost = "rabbitmq.${local.ecs_name}.local"
                     amqpPassword = var.rabbitmq_password
                     amqpPort = var.amqpPort
                     amqpUser = var.rabbitmq_username
@@ -1249,7 +1249,15 @@ resource "aws_ecs_task_definition" "grok_spawner" {
             value = jsonencode(try(module.vpc[0].private_subnets, var.private_subnet_ids))
           },
           {
+            name  = "GROK_SPAWNER_CVM_ECS__SUBNETS",
+            value = jsonencode(try(module.vpc[0].private_subnets, var.private_subnet_ids))
+          },
+          {
             name  = "GROK_SPAWNER_DATAGROK_ECS__SECURITY_GROUPS",
+            value = jsonencode([module.sg.security_group_id])
+          },
+          {
+            name  = "GROK_SPAWNER_CVM_ECS__SECURITY_GROUPS",
             value = jsonencode([module.sg.security_group_id])
           },
           {
@@ -1734,7 +1742,7 @@ resource "aws_ssm_parameter" "grok_parameters" {
         deployDemo = false
         deployTestDemo = false
         queuePluginSettings = {
-          amqpHost = split(":", split("://", aws_mq_broker.rabbit.instances[0].endpoints[0])[1])[0]
+          amqpHost = "rabbitmq.${local.ecs_name}.local"
           amqpPassword = var.rabbitmq_password
           amqpPort = 5672
           amqpUser = var.rabbitmq_username

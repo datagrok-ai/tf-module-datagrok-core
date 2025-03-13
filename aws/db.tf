@@ -27,7 +27,6 @@ module "db_sg" {
 module "db" {
   source  = "registry.terraform.io/terraform-aws-modules/rds/aws"
   version = "~> 5.0.3"
-
   identifier                     = local.rds_name
   instance_use_identifier_prefix = false
   db_name                        = var.db_name

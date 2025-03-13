@@ -91,11 +91,12 @@ locals {
       backend_port     = 3000
       target_type      = aws_ecs_task_definition.grok_pipe.network_mode == "awsvpc" ? "ip" : "instance"
       health_check = {
+        healthy_threshold = 5
         enabled             = true
-        interval            = 60
-        unhealthy_threshold = 5
+        interval            = 30
+        unhealthy_threshold = 2
         path                = "/info"
-        matcher             = "401"
+        matcher             = "200"
       }
     }
   ]
