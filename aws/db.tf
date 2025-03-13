@@ -88,8 +88,7 @@ resource "aws_route53_record" "db_private_dns" {
   name    = "db.${aws_route53_zone.internal[0].name}"
   type    = "CNAME"
   ttl     = 60
-#   records = [split(":", module.db.db_instance_endpoint)[0]]
-  records = ["datagrok-public-17.cfxegszwqqvz.us-east-2.rds.amazonaws.com"]
+  records = [split(":", module.db.db_instance_endpoint)[0]]
 }
 
 data "aws_iam_policy" "backup_default_policy" {

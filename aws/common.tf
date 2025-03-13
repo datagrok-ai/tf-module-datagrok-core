@@ -53,8 +53,8 @@ locals {
       target_type      = aws_ecs_task_definition.datagrok.network_mode == "awsvpc" ? "ip" : "instance"
       health_check = {
         enabled             = true
-        interval            = 300
-        unhealthy_threshold = 10
+        interval            = 60
+        unhealthy_threshold = 5
         path                = "/api/admin/health"
         matcher             = "200"
       }

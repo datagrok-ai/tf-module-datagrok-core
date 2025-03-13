@@ -236,9 +236,6 @@ resource "aws_iam_role" "exec" {
 }
 resource "aws_iam_policy" "task" {
   name        = "${local.ecs_name}_task"
-  lifecycle {
-    ignore_changes = all
-  }
   description = "Datagrok policy to access AWS resources from tasks"
 
   policy = jsonencode({
@@ -1083,7 +1080,6 @@ resource "aws_iam_role" "grok_spawner_task" {
               }
             },
             "Resource" : ["${aws_ecs_task_definition.grok_spawner_kaniko.arn_without_revision}:*"
-
             ]
           },
           {
@@ -1164,9 +1160,6 @@ resource "aws_iam_policy" "grok_spawner_exec" {
   })
 }
 resource "aws_iam_role" "grok_spawner_exec" {
-  lifecycle {
-    ignore_changes = all
-  }
   name = "${local.ecs_name}_grok_spawner_exec"
 
   assume_role_policy = jsonencode({

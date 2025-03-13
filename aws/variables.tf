@@ -137,7 +137,7 @@ variable "rds_name" {
 
 variable "rds_major_engine_version" {
   type        = string
-  default     = "12.19"
+  default     = "17"
   nullable    = false
   description = "The postgres engine major version for RDS."
 }
