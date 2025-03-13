@@ -260,9 +260,6 @@ resource "aws_iam_policy" "task" {
 }
 resource "aws_iam_role" "task" {
   name = "${local.ecs_name}_task"
-  lifecycle {
-    ignore_changes = all
-  }
   assume_role_policy = jsonencode({
     Version = "2012-10-17"
     Statement = [
