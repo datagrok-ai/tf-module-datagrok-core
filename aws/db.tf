@@ -25,9 +25,8 @@ module "db_sg" {
   tags = local.tags
 }
 module "db" {
-  source  = "registry.terraform.io/terraform-aws-modules/rds/aws"
-  version = "~> 5.0.3"
-
+  source                         = "registry.terraform.io/terraform-aws-modules/rds/aws"
+  version                        = "~> 5.0.3"
   identifier                     = local.rds_name
   instance_use_identifier_prefix = false
   db_name                        = var.db_name
@@ -69,6 +68,7 @@ module "db" {
   monitoring_interval                   = "60"
   monitoring_role_use_name_prefix       = true
   monitoring_role_description           = "${local.rds_name} RDS monitoring role"
+  enabled_cloudwatch_logs_exports       = ["postgresql"]
 
   create_db_parameter_group = true
   parameters = [
@@ -79,6 +79,7 @@ module "db" {
   ]
 
   tags = local.tags
+
 }
 
 resource "aws_route53_record" "db_private_dns" {

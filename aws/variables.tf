@@ -137,7 +137,7 @@ variable "rds_name" {
 
 variable "rds_major_engine_version" {
   type        = string
-  default     = "12"
+  default     = "17"
   nullable    = false
   description = "The postgres engine major version for RDS."
 }
@@ -833,4 +833,138 @@ variable "grok_spawner_log_level" {
   nullable    = false
   type        = string
   description = "Log level for Grok Spawner"
+}
+
+variable "rabbitmq_name" {
+  type        = string
+  default     = null
+  nullable    = true
+  description = "The name of RDS for Datagrok. If it is not specified, the name along with the environment will be used."
+}
+variable "rabbitmq_version" {
+  type        = string
+  default     = "4.0.5"
+  nullable    = false
+  description = "The rabbitmq version for AmazonMQ."
+}
+
+variable "rabbitmq_instance_type" {
+  type        = string
+  default     = "mq.t3.micro"
+  nullable    = false
+  description = "AmazonMQ instance type. The default value is the minimum recommended type."
+}
+
+variable "rabbitmq_username" {
+  type        = string
+  default     = "user"
+  nullable    = false
+  description = "default user for AmazonMQ"
+}
+
+variable "rabbitmq_password" {
+  type        = string
+  default     = "default-password"
+  nullable    = false
+  description = "default password for AmazonMQ"
+}
+
+variable "grok_pipe_container_memory_reservation" {
+  type        = number
+  default     = 512
+  nullable    = false
+  description = "The soft limit (in MiB) of memory to reserve for the Grok Connect container."
+}
+
+variable "grok_pipe_container_cpu" {
+  type        = number
+  default     = 256
+  nullable    = false
+  description = "The number of cpu units the Amazon ECS container agent reserves for the Grok Connect container."
+}
+
+variable "grok_pipe_memory" {
+  type        = number
+  default     = 4096
+  nullable    = false
+  description = "Amount (in MiB) of memory used by the Grok Connect FARGATE task. The hard limit of memory (in MiB) to present to the task."
+}
+
+variable "grok_pipe_cpu" {
+  type        = number
+  default     = 1024
+  nullable    = false
+  description = "Number of cpu units used by the Grok Connect FARGATE task. The hard limit of CPU units to present for the task."
+}
+
+variable "docker_grok_pipe_tag" {
+  type        = string
+  default     = "latest"
+  nullable    = false
+  description = "Tag from Docker Registry for Datagrok Grok Connect Image"
+}
+
+variable "docker_grok_pipe_image" {
+  type        = string
+  default     = "docker.io/datagrok/grok_pipe"
+  nullable    = false
+  description = "Grok Connect Docker Image registry location. By default the official image from Docker Hub will be used."
+}
+
+variable "pipeKey" {
+  nullable = false
+  default  = "test-key"
+}
+
+variable "amqpTLS" {
+  type     = bool
+  nullable = false
+  default  = true
+}
+
+variable "amqpPort" {
+  nullable = false
+  type     = number
+  default  = 5671
+}
+
+variable "rabbitmq_container_memory_reservation" {
+  type        = number
+  default     = 512
+  nullable    = false
+  description = "The soft limit (in MiB) of memory to reserve for the Grok Connect container."
+}
+
+variable "rabbitmq_container_cpu" {
+  type        = number
+  default     = 256
+  nullable    = false
+  description = "The number of cpu units the Amazon ECS container agent reserves for the Grok Connect container."
+}
+
+variable "rabbitmq_memory" {
+  type        = number
+  default     = 4096
+  nullable    = false
+  description = "Amount (in MiB) of memory used by the Grok Connect FARGATE task. The hard limit of memory (in MiB) to present to the task."
+}
+
+variable "rabbitmq_cpu" {
+  type        = number
+  default     = 1024
+  nullable    = false
+  description = "Number of cpu units used by the Grok Connect FARGATE task. The hard limit of CPU units to present for the task."
+}
+variable "docker_rabbitmq_image" {
+  type        = string
+  default     = "rabbitmq"
+  nullable    = false
+  description = "Grok Connect Docker Image registry location. By default the official image from Docker Hub will be used."
+}
+
+variable "docker_rabbitmq_tag" {
+  type        = string
+  default     = "4.0.5-management"
+  nullable    = false
+  description = "Tag from Docker Registry for Datagrok Grok Connect Image"
 }

@@ -8,6 +8,7 @@ locals {
   full_name       = "${var.name}-${var.environment}"
   vpc_name        = coalesce(var.vpc_name, "${var.name}-${var.environment}")
   rds_name        = coalesce(var.rds_name, "${var.name}-${var.environment}")
+  rabbitmq_name   = coalesce(var.rabbitmq_name, "${var.name}-${var.environment}")
   s3_name         = coalesce(var.s3_name, "${var.name}-${var.environment}")
   ecs_name        = coalesce(var.ecs_name, "${var.name}-${var.environment}")
   lb_name         = coalesce(var.lb_name, "${var.name}-${var.environment}")
@@ -80,6 +81,20 @@ locals {
         enabled             = true
         interval            = 60
         unhealthy_threshold = 5
+        path                = "/info"
+        matcher             = "200"
+      }
+    },
+    {
+      name             = "pipe"
+      backend_protocol = "HTTP"
+      backend_port     = 3000
+      target_type      = aws_ecs_task_definition.grok_pipe.network_mode == "awsvpc" ? "ip" : "instance"
+      health_check = {
+        healthy_threshold   = 5
+        enabled             = true
+        interval            = 30
+        unhealthy_threshold = 2
         path                = "/info"
         matcher             = "200"
       }
