@@ -2,7 +2,7 @@
 resource "aws_service_discovery_private_dns_namespace" "rabbitmq_ns" {
   name        = "${local.ecs_name}.local"
   description = "Namespace for RabbitMQ"
-  vpc         = try(module.vpc[0].vpc_id, var.vpc_id)  # Укажи свой VPC
+  vpc         = try(module.vpc[0].vpc_id, var.vpc_id) # Укажи свой VPC
 }
 
 resource "aws_service_discovery_service" "rabbitmq_sd" {
@@ -25,8 +25,8 @@ resource "aws_service_discovery_service" "rabbitmq_sd" {
 }
 
 resource "aws_ecs_task_definition" "rabbitmq_task" {
-  family = "${local.ecs_name}_rabbitmq"
-  requires_compatibilities = ["EC2", "FARGATE"]  # Поддержка обоих типов запуска
+  family                   = "${local.ecs_name}_rabbitmq"
+  requires_compatibilities = ["EC2", "FARGATE"] # Поддержка обоих типов запуска
   network_mode             = "awsvpc"
   cpu                      = 256
   memory                   = 512
@@ -35,10 +35,10 @@ resource "aws_ecs_task_definition" "rabbitmq_task" {
 
   container_definitions = jsonencode([
     {
-      name  = "rabbitmq"
-      image = "${var.docker_rabbitmq_image}:${var.docker_rabbitmq_tag}"
-      cpu   = 256
-      memory = 512
+      name      = "rabbitmq"
+      image     = "${var.docker_rabbitmq_image}:${var.docker_rabbitmq_tag}"
+      cpu       = 256
+      memory    = 512
       essential = true
       portMappings = [
         {
@@ -67,9 +67,9 @@ resource "aws_ecs_task_definition" "rabbitmq_task" {
 }
 
 resource "aws_ecs_service" "rabbitmq" {
-  name            = "${local.ecs_name}_rabbitmq"
-  cluster         = module.ecs.cluster_arn
-  task_definition = aws_ecs_task_definition.rabbitmq_task.arn
+  name                               = "${local.ecs_name}_rabbitmq"
+  cluster                            = module.ecs.cluster_arn
+  task_definition                    = aws_ecs_task_definition.rabbitmq_task.arn
   desired_count                      = 1
   deployment_maximum_percent         = 200
   deployment_minimum_healthy_percent = 100
@@ -83,7 +83,7 @@ resource "aws_ecs_service" "rabbitmq" {
     enable   = true
     rollback = true
   }
-  launch_type     = var.ecs_launch_type
+  launch_type = var.ecs_launch_type
 
   network_configuration {
     subnets          = try(module.vpc[0].private_subnets, var.private_subnet_ids)
@@ -99,12 +99,12 @@ resource "aws_ecs_service" "rabbitmq" {
 
 resource "aws_security_group" "rabbitmq_sg" {
   name_prefix = "rabbitmq-"
-  vpc_id                 = try(module.vpc[0].vpc_id, var.vpc_id)
+  vpc_id      = try(module.vpc[0].vpc_id, var.vpc_id)
   ingress {
     from_port   = 5672
     to_port     = 5672
     protocol    = "tcp"
-    cidr_blocks = [try(module.vpc[0].vpc_cidr_block, var.cidr)]  # Разрешаем только внутри VPC
+    cidr_blocks = [try(module.vpc[0].vpc_cidr_block, var.cidr)] # Разрешаем только внутри VPC
   }
 
   ingress {

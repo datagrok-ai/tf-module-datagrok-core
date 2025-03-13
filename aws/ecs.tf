@@ -327,33 +327,33 @@ resource "aws_ecs_task_definition" "datagrok" {
             value = var.datagrok_startup_mode
           },
           {
-            name  = "GROK_PARAMETERS"
+            name = "GROK_PARAMETERS"
             value = jsonencode(
               merge(
                 {
                   amazonStorageRegion = data.aws_region.current.name
                   amazonStorageBucket = module.s3_bucket.s3_bucket_id
-                  dbServer = try(aws_route53_record.db_private_dns[0].name, module.db.db_instance_address)
-                  dbPort = tonumber(module.db.db_instance_port)
-                  db = "datagrok"
-                  dbLogin = "datagrok"
-                  dbPassword = try(random_password.db_datagrok_password[0].result, var.rds_dg_password)
-                  dbAdminLogin = var.rds_master_username
-                  dbAdminPassword = module.db.db_instance_password
-                  dbSsl = false
-                  deployDemo = false
-                  deployTestDemo = false
+                  dbServer            = try(aws_route53_record.db_private_dns[0].name, module.db.db_instance_address)
+                  dbPort              = tonumber(module.db.db_instance_port)
+                  db                  = "datagrok"
+                  dbLogin             = "datagrok"
+                  dbPassword          = try(random_password.db_datagrok_password[0].result, var.rds_dg_password)
+                  dbAdminLogin        = var.rds_master_username
+                  dbAdminPassword     = module.db.db_instance_password
+                  dbSsl               = false
+                  deployDemo          = false
+                  deployTestDemo      = false
                   queuePluginSettings = {
-                    amqpHost = "rabbitmq.${local.ecs_name}.local"
+                    amqpHost     = "rabbitmq.${local.ecs_name}.local"
                     amqpPassword = var.rabbitmq_password
-                    amqpPort = var.amqpPort
-                    amqpUser = var.rabbitmq_username
-                    pipeHost = "${aws_route53_record.grok_pipe.fqdn}"
-                    pipeKey = var.pipeKey
-                    tls = var.amqpTLS
+                    amqpPort     = var.amqpPort
+                    amqpUser     = var.rabbitmq_username
+                    pipeHost     = "${aws_route53_record.grok_pipe.fqdn}"
+                    pipeKey      = var.pipeKey
+                    tls          = var.amqpTLS
                   }
                 },
-                  var.set_admin_password ? {
+                var.set_admin_password ? {
                   adminPassword = try(length(var.admin_password) > 0, false) ? var.admin_password : random_password.admin_password[0].result
                 } : {}
               )
@@ -1567,12 +1567,12 @@ resource "aws_ecs_task_definition" "grok_pipe" {
   family = "${local.ecs_name}_grok_pipe"
 
   container_definitions = jsonencode(concat(
-      var.ecs_launch_type == "FARGATE" ? [
+    var.ecs_launch_type == "FARGATE" ? [
       {
         name = "resolv_conf"
         command = [
           "${data.aws_region.current.name}.compute.internal",
-            var.create_route53_internal_zone ? aws_route53_zone.internal[0].name : data.aws_route53_zone.internal[0].name,
+          var.create_route53_internal_zone ? aws_route53_zone.internal[0].name : data.aws_route53_zone.internal[0].name,
           "datagrok.${var.name}.${var.environment}.cn.internal"
         ]
         essential = false
@@ -1594,12 +1594,12 @@ resource "aws_ecs_task_definition" "grok_pipe" {
         image     = "${var.ecr_enabled ? aws_ecr_repository.ecr["grok_pipe"].repository_url : var.docker_grok_pipe_image}:${var.ecr_enabled ? local.images["grok_pipe"]["tag"] : (var.ecr_enabled ? local.images["grok_pipe"]["tag"] : var.docker_grok_pipe_tag)}"
         essential = true
         environment = [{
-            name  = "API_KEY",
-            value = var.pipeKey
+          name  = "API_KEY",
+          value = var.pipeKey
 
           },
           {
-            name = "GROK_PARAMETERS"
+            name  = "GROK_PARAMETERS"
             value = aws_ssm_parameter.grok_parameters.value
           }
         ]
@@ -1620,26 +1620,26 @@ resource "aws_ecs_task_definition" "grok_pipe" {
         ]
         memoryReservation = var.ecs_launch_type == "FARGATE" ? var.grok_pipe_memory - 200 : var.grok_pipe_container_memory_reservation
         cpu               = var.grok_pipe_container_cpu
-      }, var.ecr_enabled ? {} : (var.ecs_launch_type == "FARGATE" ? {} : {
-        repositoryCredentials = {
-          credentialsParameter = try(aws_secretsmanager_secret.docker_hub[0].arn, var.docker_hub_credentials.secret_arn)
-        }
-      }), var.ecs_launch_type == "FARGATE" ? {
+        }, var.ecr_enabled ? {} : (var.ecs_launch_type == "FARGATE" ? {} : {
+          repositoryCredentials = {
+            credentialsParameter = try(aws_secretsmanager_secret.docker_hub[0].arn, var.docker_hub_credentials.secret_arn)
+          }
+        }), var.ecs_launch_type == "FARGATE" ? {
         dependsOn = [
           {
             "condition" : "SUCCESS",
             "containerName" : "resolv_conf"
           }
         ]
-      } : {},
-          var.ecs_launch_type == "FARGATE" ? {} : {
+        } : {},
+        var.ecs_launch_type == "FARGATE" ? {} : {
           dnsSearchDomains = compact([
             "${data.aws_region.current.name}.compute.internal",
-              var.create_route53_internal_zone ? aws_route53_zone.internal[0].name : data.aws_route53_zone.internal[0].name,
+            var.create_route53_internal_zone ? aws_route53_zone.internal[0].name : data.aws_route53_zone.internal[0].name,
           ])
         }
       )
-    ]))
+  ]))
   cpu                      = var.ecs_launch_type == "FARGATE" ? var.grok_pipe_cpu : null
   memory                   = var.ecs_launch_type == "FARGATE" ? var.grok_pipe_memory : null
   network_mode             = var.ecs_launch_type == "FARGATE" ? "awsvpc" : "bridge"
@@ -1714,40 +1714,40 @@ resource "aws_ecs_service" "grok_pipe" {
   }
 }
 resource "aws_ssm_parameter" "grok_parameters" {
-  name  = "/datagrok/GROK_PARAMETERS"
-  type  = "String" # Можно использовать "String", но "SecureString" лучше для паролей
+  name = "/datagrok/GROK_PARAMETERS"
+  type = "String" # Можно использовать "String", но "SecureString" лучше для паролей
   value = jsonencode(
     merge(
       {
         amazonStorageRegion = data.aws_region.current.name
         amazonStorageBucket = module.s3_bucket.s3_bucket_id
-        dbServer = try(aws_route53_record.db_private_dns[0].name, module.db.db_instance_address)
-        dbPort = tonumber(module.db.db_instance_port)
-        db = "datagrok"
-        dbLogin = "datagrok"
-        dbPassword = try(random_password.db_datagrok_password[0].result, var.rds_dg_password)
-        dbAdminLogin = var.rds_master_username
-        dbAdminPassword = module.db.db_instance_password
-        dbSsl = false
-        deployDemo = false
-        deployTestDemo = false
+        dbServer            = try(aws_route53_record.db_private_dns[0].name, module.db.db_instance_address)
+        dbPort              = tonumber(module.db.db_instance_port)
+        db                  = "datagrok"
+        dbLogin             = "datagrok"
+        dbPassword          = try(random_password.db_datagrok_password[0].result, var.rds_dg_password)
+        dbAdminLogin        = var.rds_master_username
+        dbAdminPassword     = module.db.db_instance_password
+        dbSsl               = false
+        deployDemo          = false
+        deployTestDemo      = false
         queuePluginSettings = {
-          amqpHost = "rabbitmq.${local.ecs_name}.local"
+          amqpHost     = "rabbitmq.${local.ecs_name}.local"
           amqpPassword = var.rabbitmq_password
-          amqpPort = 5672
-          amqpUser = var.rabbitmq_username
-          pipeHost = aws_route53_record.grok_pipe.fqdn
-          pipeKey = "test-key"
+          amqpPort     = 5672
+          amqpUser     = var.rabbitmq_username
+          pipeHost     = aws_route53_record.grok_pipe.fqdn
+          pipeKey      = "test-key"
         }
       },
-        var.set_admin_password ? {
+      var.set_admin_password ? {
         adminPassword = try(length(var.admin_password) > 0, false) ? var.admin_password : random_password.admin_password[0].result
       } : {}
     )
   )
   overwrite = true
   tags = {
-    Name = "GROK_PARAMETERS"
+    Name        = "GROK_PARAMETERS"
     Environment = "production"
   }
 }
