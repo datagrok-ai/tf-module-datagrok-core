@@ -343,7 +343,7 @@ resource "aws_ecs_task_definition" "datagrok" {
                   dbSsl               = false
                   deployDemo          = false
                   deployTestDemo      = false
-                  queuePluginSettings = {
+                  queueSettings = {
                     amqpHost     = "rabbitmq.${local.ecs_name}.local"
                     amqpPassword = var.rabbitmq_password
                     amqpPort     = var.amqpPort
@@ -351,6 +351,22 @@ resource "aws_ecs_task_definition" "datagrok" {
                     pipeHost     = "${aws_route53_record.grok_pipe.fqdn}"
                     pipeKey      = var.pipeKey
                     tls          = var.amqpTLS
+                  },
+                  connectorsSettings = {
+                    dataframeParsingMode: "New Process",
+                    externalDataFrameCompress: true,
+                    grokConnectHost: try("grok_connect.datagrok.${var.name}.${var.environment}.cn.internal", "grok_connect"),
+                    grokConnectPort: 1234,
+                    localFileSystemAccess: false,
+                    sambaSpaceEscape: "none",
+                    sambaVersion: "3.0",
+                  },
+                  dockerSettings = {
+                    grokSpawnerApiKey: "test-x-api-key",
+                    grokSpawnerHost: try("grok_spawner.datagrok.${var.name}.${var.environment}.cn.internal", "grok_spawner"),
+                    grokSpawnerPort: 8000,
+                    imageBuildTimeoutMinutes: 30,
+                    proxyRequestTimeout: 60000
                   }
                 },
                 var.set_admin_password ? {
