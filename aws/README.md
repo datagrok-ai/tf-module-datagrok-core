@@ -248,7 +248,6 @@ module "datagrok_core" {
 | <a name="input_rabbitmq_cpu"></a> [rabbitmq\_cpu](#input\_rabbitmq\_cpu) | Number of cpu units used by the Grok Connect FARGATE task. The hard limit of CPU units to present for the task. | `number` | `1024` | no |
 | <a name="input_rabbitmq_instance_type"></a> [rabbitmq\_instance\_type](#input\_rabbitmq\_instance\_type) | AmazonMQ instance type. The default value is the minimum recommended type. | `string` | `"mq.t3.micro"` | no |
 | <a name="input_rabbitmq_memory"></a> [rabbitmq\_memory](#input\_rabbitmq\_memory) | Amount (in MiB) of memory used by the Grok Connect FARGATE task. The hard limit of memory (in MiB) to present to the task. | `number` | `4096` | no |
-| <a name="input_rabbitmq_name"></a> [rabbitmq\_name](#input\_rabbitmq\_name) | The name of RDS for Datagrok. If it is not specified, the name along with the environment will be used. | `string` | `null` | no |
 | <a name="input_rabbitmq_password"></a> [rabbitmq\_password](#input\_rabbitmq\_password) | default password for AmazonMQ | `string` | `"default-password"` | no |
 | <a name="input_rabbitmq_username"></a> [rabbitmq\_username](#input\_rabbitmq\_username) | default user for AmazonMQ | `string` | `"user"` | no |
 | <a name="input_rabbitmq_version"></a> [rabbitmq\_version](#input\_rabbitmq\_version) | The rabbitmq version for AmazonMQ. | `string` | `"4.0.5"` | no |
