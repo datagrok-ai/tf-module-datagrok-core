@@ -83,7 +83,7 @@ resource "aws_ecs_service" "rabbitmq" {
     enable   = true
     rollback = true
   }
-  launch_type = "FARGATE"
+  launch_type = var.ecs_launch_type
 
   network_configuration {
     subnets          = try(module.vpc[0].private_subnets, var.private_subnet_ids)
