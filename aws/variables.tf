@@ -835,12 +835,6 @@ variable "grok_spawner_log_level" {
   description = "Log level for Grok Spawner"
 }
 
-variable "rabbitmq_name" {
-  type        = string
-  default     = null
-  nullable    = true
-  description = "The name of RDS for Datagrok. If it is not specified, the name along with the environment will be used."
-}
 variable "rabbitmq_version" {
   type        = string
   default     = "4.0.5"
