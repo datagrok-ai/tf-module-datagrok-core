@@ -353,26 +353,26 @@ resource "aws_ecs_task_definition" "datagrok" {
                     tls          = var.amqpTLS
                   },
                   connectorsSettings = {
-                    dataframeParsingMode: "New Process",
-                    externalDataFrameCompress: true,
-                    grokConnectHost: var.ecs_launch_type =="FARGATE"? "grok_connect.datagrok.${var.name}.${var.environment}.cn.internal" : "grok_connect",
-                    grokConnectPort: 1234,
-                    localFileSystemAccess: false,
-                    sambaSpaceEscape: "none",
-                    sambaVersion: "3.0",
+                    dataframeParsingMode : "New Process",
+                    externalDataFrameCompress : true,
+                    grokConnectHost : var.ecs_launch_type == "FARGATE" ? "grok_connect.datagrok.${var.name}.${var.environment}.cn.internal" : "grok_connect",
+                    grokConnectPort : 1234,
+                    localFileSystemAccess : false,
+                    sambaSpaceEscape : "none",
+                    sambaVersion : "3.0",
                   },
                   dockerSettings = {
-                    grokSpawnerApiKey: "test-x-api-key",
-                    grokSpawnerHost: var.ecs_launch_type =="FARGATE"? "grok_spawner.datagrok.${var.name}.${var.environment}.cn.internal": "grok_spawner"
-                    grokSpawnerPort: 8000,
-                    imageBuildTimeoutMinutes: 30,
-                    proxyRequestTimeout: 60000
+                    grokSpawnerApiKey : "test-x-api-key",
+                    grokSpawnerHost : var.ecs_launch_type == "FARGATE" ? "grok_spawner.datagrok.${var.name}.${var.environment}.cn.internal" : "grok_spawner"
+                    grokSpawnerPort : 8000,
+                    imageBuildTimeoutMinutes : 30,
+                    proxyRequestTimeout : 60000
                   },
                   notebookSettings = {
-                    apiUrl: "http://datagrok:8080/api",
-                    cvmUrl: "https://cvm.datagrok.api",
-                    cvmUrlClient: "https://cvm.datagrok.api",
-                    jupyterNotebookToken: "77974bcd14909e7ee29330ac3657edc1e8d4ac39de425210"
+                    apiUrl : "http://datagrok:8080/api",
+                    cvmUrl : "https://cvm.datagrok.api",
+                    cvmUrlClient : "https://cvm.datagrok.api",
+                    jupyterNotebookToken : "77974bcd14909e7ee29330ac3657edc1e8d4ac39de425210"
                   }
                 },
                 var.set_admin_password ? {
@@ -1030,7 +1030,7 @@ resource "aws_iam_role" "grok_spawner_task" {
           "Action" : [
             "logs:GetLogEvents",
             "logs:DescribeLogStreams",
-            "logs:DescribeLogGroups"]
+          "logs:DescribeLogGroups"]
           "Resource" : [
             "arn:aws:logs:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:log-group:/aws/ecs/*",
           ]
