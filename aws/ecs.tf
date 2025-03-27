@@ -333,14 +333,14 @@ resource "aws_ecs_task_definition" "datagrok" {
                 {
                   amazonStorageRegion = data.aws_region.current.name
                   amazonStorageBucket = module.s3_bucket.s3_bucket_id
-                  dbServer            = try(aws_route53_record.db_private_dns[0].name, module.db.db_instance_address)
+                  dbServer            = split(":", module.db.db_instance_endpoint)[0]
                   dbPort              = tonumber(module.db.db_instance_port)
                   db                  = "datagrok"
                   dbLogin             = "datagrok"
                   dbPassword          = try(random_password.db_datagrok_password[0].result, var.rds_dg_password)
                   dbAdminLogin        = var.rds_master_username
                   dbAdminPassword     = module.db.db_instance_password
-                  dbSsl               = false
+                  dbSsl               = true
                   deployDemo          = false
                   deployTestDemo      = false
                   queueSettings = {
@@ -355,7 +355,7 @@ resource "aws_ecs_task_definition" "datagrok" {
                   connectorsSettings = {
                     dataframeParsingMode: "New Process",
                     externalDataFrameCompress: true,
-                    grokConnectHost: try("grok_connect.datagrok.${var.name}.${var.environment}.cn.internal", "grok_connect"),
+                    grokConnectHost: var.ecs_launch_type =="FARGATE"? "grok_connect.datagrok.${var.name}.${var.environment}.cn.internal" : "grok_connect",
                     grokConnectPort: 1234,
                     localFileSystemAccess: false,
                     sambaSpaceEscape: "none",
@@ -363,10 +363,16 @@ resource "aws_ecs_task_definition" "datagrok" {
                   },
                   dockerSettings = {
                     grokSpawnerApiKey: "test-x-api-key",
-                    grokSpawnerHost: try("grok_spawner.datagrok.${var.name}.${var.environment}.cn.internal", "grok_spawner"),
+                    grokSpawnerHost: var.ecs_launch_type =="FARGATE"? "grok_spawner.datagrok.${var.name}.${var.environment}.cn.internal": "grok_spawner"
                     grokSpawnerPort: 8000,
                     imageBuildTimeoutMinutes: 30,
                     proxyRequestTimeout: 60000
+                  },
+                  notebookSettings = {
+                    apiUrl: "http://datagrok:8080/api",
+                    cvmUrl: "https://cvm.datagrok.api",
+                    cvmUrlClient: "https://cvm.datagrok.api",
+                    jupyterNotebookToken: "77974bcd14909e7ee29330ac3657edc1e8d4ac39de425210"
                   }
                 },
                 var.set_admin_password ? {
@@ -816,7 +822,9 @@ resource "aws_iam_policy" "grok_spawner_kaniko_ecr" {
 
 resource "aws_iam_role" "grok_spawner_task" {
   name = "${local.ecs_name}_grok_spawner_task"
-
+  lifecycle {
+    ignore_changes = all
+  }
   assume_role_policy = jsonencode({
     Version = "2012-10-17"
     Statement = [
@@ -1759,7 +1767,7 @@ resource "aws_ssm_parameter" "grok_parameters" {
       {
         amazonStorageRegion = data.aws_region.current.name
         amazonStorageBucket = module.s3_bucket.s3_bucket_id
-        dbServer            = try(aws_route53_record.db_private_dns[0].name, module.db.db_instance_address)
+        dbServer            = split(":", module.db.db_instance_endpoint)[0]
         dbPort              = tonumber(module.db.db_instance_port)
         db                  = "datagrok"
         dbLogin             = "datagrok"

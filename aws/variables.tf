@@ -925,7 +925,7 @@ variable "amqpTLS" {
 variable "amqpPort" {
   nullable = false
   type     = number
-  default  = 5671
+  default  = 5672
 }
 
 variable "rabbitmq_container_memory_reservation" {
