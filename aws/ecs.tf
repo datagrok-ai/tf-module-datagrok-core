@@ -822,9 +822,6 @@ resource "aws_iam_policy" "grok_spawner_kaniko_ecr" {
 
 resource "aws_iam_role" "grok_spawner_task" {
   name = "${local.ecs_name}_grok_spawner_task"
-  lifecycle {
-    ignore_changes = all
-  }
   assume_role_policy = jsonencode({
     Version = "2012-10-17"
     Statement = [
@@ -859,6 +856,13 @@ resource "aws_iam_role" "grok_spawner_task" {
           },
           "Effect"   = "Allow",
           "Resource" = "*"
+        },
+        {
+          "Action": [
+            "ecs:ListContainerInstances"
+          ],
+          "Effect": "Allow",
+          "Resource": "*"
         },
         {
           "Action" = [
@@ -963,7 +967,8 @@ resource "aws_iam_role" "grok_spawner_task" {
         },
         {
           "Action" = [
-            "ecs:DescribeContainerInstances"
+            "ecs:DescribeContainerInstances",
+            "ecs:ListContainerInstances"
           ],
           "Effect" = "Allow",
           "Condition" = {
