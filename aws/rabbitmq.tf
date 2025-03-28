@@ -28,8 +28,8 @@ resource "aws_ecs_task_definition" "rabbitmq_task" {
   family                   = "${local.ecs_name}_rabbitmq"
   requires_compatibilities = ["EC2", "FARGATE"] # Поддержка обоих типов запуска
   network_mode             = "awsvpc"
-  cpu                      = 256
-  memory                   = 512
+  cpu                      = 512
+  memory                   = 1024
   execution_role_arn       = aws_iam_role.exec.arn
   task_role_arn            = aws_iam_role.task.arn
 
@@ -119,5 +119,11 @@ resource "aws_security_group" "rabbitmq_sg" {
     to_port     = 0
     protocol    = "-1"
     cidr_blocks = [try(module.vpc[0].vpc_cidr_block, var.cidr)]
+  }
+  egress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
   }
 }
