@@ -1,0 +1,90 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ template "datagrok.fullname" . }}
+  labels:
+  {{- include "datagrok.labels" . | nindent 4 }}
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      {{- include "datagrok.selectorLabels" . | nindent 6 }}
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 25%
+      maxSurge: 25%
+  revisionHistoryLimit: 5
+  progressDeadlineSeconds: 120
+  template:
+    metadata:
+      annotations:
+      {{- if .Values.podAnnotations }}
+        {{ toYaml .Values.podAnnotations | nindent 8 }}
+      {{- end }}
+      labels:
+        {{- include "datagrok.labels" . | nindent 8 }}
+    spec:
+      containers:
+        - name: {{ .Chart.Name }}
+          image: "{{ .Values.datagrok.image.docker_image }}:{{ .Values.datagrok.image.tag }}"
+          imagePullPolicy: {{ .Values.datagrok.image.pullPolicy }}
+          volumeMounts:
+            - mountPath: /tmp/data
+              name: tmpfs-datagrok-data
+            - mountPath: /tmp/cfg
+              name: tmpfs-datagrok-cfg
+          envFrom:
+          - configMapRef:
+              name: {{ template "datagrok.fullname" . }}-config-cm
+              optional: false
+          ports:
+            - name: http
+              containerPort: {{ .Values.datagrok.ports.api.port | default 8080 }}
+              protocol: TCP
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            runAsNonRoot: true
+            runAsUser: {{ .Values.security.userNameId }}
+            capabilities:
+              drop:
+                - all
+              add: ["MKNOD"]
+          {{- if .Values.livenessProbe.enabled }}
+          livenessProbe:
+            {{- toYaml (omit .Values.livenessProbe "enabled") | nindent 12 }}
+          {{- end }}
+          {{- if .Values.readinessProbe.enabled }}
+          readinessProbe:
+            {{- toYaml (omit .Values.readinessProbe "enabled") | nindent 12 }}
+          {{- end }}
+          {{- if .Values.startupProbe.enabled }}
+          startupProbe:
+            {{- toYaml (omit .Values.startupProbe "enabled") | nindent 12 }}
+          {{- end }}
+          resources:
+{{ toYaml .Values.resources | indent 12 }}
+      securityContext:
+        fsGroup: {{ .Values.security.userGroupId }}
+      volumes:
+        - emptyDir:
+            medium: Memory
+            sizeLimit: 200Mi
+          name: tmpfs-datagrok-data
+        - emptyDir:
+            medium: Memory
+            sizeLimit: 200Mi
+          name: tmpfs-datagrok-cfg
+    {{- with .Values.nodeSelector }}
+      nodeSelector:
+{{ toYaml . | indent 8 }}
+    {{- end }}
+    {{- with .Values.affinity }}
+      affinity:
+{{ toYaml . | indent 8 }}
+    {{- end }}
+    {{- with .Values.tolerations }}
+      tolerations:
+{{ toYaml . | indent 8 }}
+    {{- end }}

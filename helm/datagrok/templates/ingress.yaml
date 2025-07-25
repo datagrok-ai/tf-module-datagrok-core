@@ -1,0 +1,40 @@
+{{- if .Values.ingress.enable }}
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: {{ template "datagrok.fullname" $ }}
+  labels:
+    {{- include "datagrok.labels" . | nindent 4 }}
+  annotations:
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+    nginx.ingress.kubernetes.io/enable-cors: "{{ .Values.ingress.cors }}"
+    nginx.ingress.kubernetes.io/cors-allow-credentials: "true"
+    nginx.ingress.kubernetes.io/cors-allow-origin: "*"
+    nginx.ingress.kubernetes.io/cors-allow-methods: "*"
+    nginx.ingress.kubernetes.io/cors-allow-headers: "*"
+    nginx.ingress.kubernetes.io/proxy-body-size: "10m"
+    nginx.ingress.kubernetes.io/client-body-buffer-size: "10m"
+    nginx.ingress.kubernetes.io/configuration-snippet: |
+      more_set_headers “X-Request-Id: $req_id”;
+      more_set_headers "X-Ingress-Name: datagrok-{{ .Values.environment }}";
+      proxy_set_header Authorization $http_authorization;
+spec:
+  ingressClassName: "nginx"
+  tls:
+    - hosts:
+        - {{ template "datagrok.fqdn" $ }}
+      {{- if .Values.custom_cert }}
+      secretName: cert-{{ .Values.ingress.subdomain }}-{{ template "datagrok.certSecretName" $ }}
+      {{- end }}
+  rules:
+    - host: {{ template "datagrok.fqdn" $ }}
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: {{ template "datagrok.fullname" $ }}
+                port:
+                  name: http
+{{- end }}

@@ -1,0 +1,102 @@
+{{- if .Values.rabbitmq.enable }}
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ template "datagrok.fullname" . }}-rabbitmq
+  labels:
+  {{- include "datagrok.labels" . | nindent 4 }}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: rabbitmq
+      app.kubernetes.io/instance: {{ .Release.Name }}
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 25%
+      maxSurge: 25%
+  revisionHistoryLimit: 5
+  progressDeadlineSeconds: 120
+  template:
+    metadata:
+      annotations:
+      {{- if .Values.podAnnotations }}
+        {{ toYaml .Values.podAnnotations | nindent 8 }}
+      {{- end }}
+      labels:
+        {{- include "datagrok.labels" . | nindent 8 }}
+    spec:
+      containers:
+        - name: {{ .Chart.Name }}
+          image: "{{ .Values.rabbitmq.image.docker_image }}:{{ .Values.rabbitmq.image.tag }}"
+          imagePullPolicy: {{ .Values.rabbitmq.image.pullPolicy }}
+          ports:
+            - name: amqp
+              containerPort: {{ .Values.rabbitmq.ports.amqp.port }}
+              protocol: TCP
+            - name: mgmt
+              containerPort: {{ .Values.rabbitmq.ports.mgmt.port }}
+              protocol: TCP
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            runAsNonRoot: true
+            runAsUser: {{ .Values.security.userNameId }}
+            capabilities:
+              drop:
+                - all
+              add: ["MKNOD"]
+          {{- if .Values.livenessProbe.enabled }}
+          livenessProbe:
+            {{- toYaml (omit .Values.livenessProbe "enabled") | nindent 12 }}
+          {{- end }}
+          {{- if .Values.readinessProbe.enabled }}
+          readinessProbe:
+            {{- toYaml (omit .Values.readinessProbe "enabled") | nindent 12 }}
+          {{- end }}
+          {{- if .Values.startupProbe.enabled }}
+          startupProbe:
+            {{- toYaml (omit .Values.startupProbe "enabled") | nindent 12 }}
+          {{- end }}
+          resources:
+{{ toYaml .Values.resources | indent 12 }}
+      securityContext:
+        fsGroup: {{ .Values.security.userGroupId }}
+    {{- with .Values.nodeSelector }}
+      nodeSelector:
+{{ toYaml . | indent 8 }}
+    {{- end }}
+    {{- with .Values.affinity }}
+      affinity:
+{{ toYaml . | indent 8 }}
+    {{- end }}
+    {{- with .Values.tolerations }}
+      tolerations:
+{{ toYaml . | indent 8 }}
+    {{- end }}
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    {{- include "datagrok.labels" . | nindent 4 }}
+  name: {{ template "datagrok.fullname" $ }}-rabbitmq
+spec:
+  ports:
+  - protocol: TCP
+    port: {{ .Values.rabbitmq.ports.amqp.port }}
+    targetPort: amqp
+    name: amqp
+  - protocol: TCP
+    port: {{ .Values.rabbitmq.ports.mgmt.port }}
+    targetPort: mgmt
+    name: mgmt
+  selector:
+    app.kubernetes.io/name: rabbitmq
+    app.kubernetes.io/instance: {{ .Release.Name }}
+
+{{- end }}
+

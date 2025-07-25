@@ -1,0 +1,78 @@
+{{- if .Values.jupyter_kernel_gateway.enable }}
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ template "datagrok.fullname" . }}-jupyter-kernel-gateway
+  labels:
+  {{- include "datagrok.labels" . | nindent 4 }}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: jupyter-kernel-gateway
+      app.kubernetes.io/instance: {{ .Release.Name }}
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 25%
+      maxSurge: 25%
+  revisionHistoryLimit: 5
+  progressDeadlineSeconds: 120
+  template:
+    metadata:
+      annotations:
+      {{- if .Values.podAnnotations }}
+        {{ toYaml .Values.podAnnotations | nindent 8 }}
+      {{- end }}
+      labels:
+        {{- include "datagrok.labels" . | nindent 8 }}
+    spec:
+      containers:
+        - name: {{ .Chart.Name }}
+          image: "{{ .Values.jupyter_kernel_gateway.image.docker_image }}:{{ .Values.jupyter_kernel_gateway.image.tag }}"
+          imagePullPolicy: {{ .Values.jupyter_kernel_gateway.image.pullPolicy }}
+          ports:
+            - name: service
+              containerPort: {{ .Values.jupyter_kernel_gateway.ports.service.port }}
+              protocol: TCP
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            runAsNonRoot: true
+            runAsUser: {{ .Values.security.userNameId }}
+            capabilities:
+              drop:
+                - all
+              add: ["MKNOD"]
+          {{- if .Values.livenessProbe.enabled }}
+          livenessProbe:
+            {{- toYaml (omit .Values.livenessProbe "enabled") | nindent 12 }}
+          {{- end }}
+          {{- if .Values.readinessProbe.enabled }}
+          readinessProbe:
+            {{- toYaml (omit .Values.readinessProbe "enabled") | nindent 12 }}
+          {{- end }}
+          {{- if .Values.startupProbe.enabled }}
+          startupProbe:
+            {{- toYaml (omit .Values.startupProbe "enabled") | nindent 12 }}
+          {{- end }}
+          resources:
+{{ toYaml .Values.resources | indent 12 }}
+      securityContext:
+        fsGroup: {{ .Values.security.userGroupId }}
+    {{- with .Values.nodeSelector }}
+      nodeSelector:
+{{ toYaml . | indent 8 }}
+    {{- end }}
+    {{- with .Values.affinity }}
+      affinity:
+{{ toYaml . | indent 8 }}
+    {{- end }}
+    {{- with .Values.tolerations }}
+      tolerations:
+{{ toYaml . | indent 8 }}
+    {{- end }}
+
+{{- end }}
+
