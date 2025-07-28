@@ -35,22 +35,13 @@ spec:
             - mountPath: /tmp/cfg
               name: tmpfs-datagrok-cfg
           envFrom:
-          - configMapRef:
-              name: {{ template "datagrok.fullname" . }}-config-cm
+          - secretRef:
+              name: {{ template "datagrok.fullname" . }}-secret
               optional: false
           ports:
             - name: http
               containerPort: {{ .Values.datagrok.ports.api.port | default 8080 }}
               protocol: TCP
-          securityContext:
-            allowPrivilegeEscalation: false
-            readOnlyRootFilesystem: true
-            runAsNonRoot: true
-            runAsUser: {{ .Values.security.userNameId }}
-            capabilities:
-              drop:
-                - all
-              add: ["MKNOD"]
           {{- if .Values.livenessProbe.enabled }}
           livenessProbe:
             {{- toYaml (omit .Values.livenessProbe "enabled") | nindent 12 }}
@@ -65,8 +56,6 @@ spec:
           {{- end }}
           resources:
 {{ toYaml .Values.resources | indent 12 }}
-      securityContext:
-        fsGroup: {{ .Values.security.userGroupId }}
       volumes:
         - emptyDir:
             medium: Memory

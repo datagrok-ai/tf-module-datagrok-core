@@ -1,16 +1,16 @@
-{{- if .Values.jupyter_kernel_gateway.enable }}
+{{- if .Values.grok_connect.enable }}
 ---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: {{ template "datagrok.fullname" . }}-jupyter-kernel-gateway
+  name: {{ template "datagrok.fullname" . }}-grok-connect
   labels:
-  {{- include "datagrok-jupyter-kernel-gateway.labels" . | nindent 4 }}
+  {{- include "datagrok-grok-connect.labels" . | nindent 4 }}
 spec:
   replicas: 1
   selector:
     matchLabels:
-      {{- include "datagrok-jupyter-kernel-gateway.selectorLabels" . | nindent 6 }}
+      {{- include "datagrok-grok-connect.selectorLabels" . | nindent 6 }}
   strategy:
     type: RollingUpdate
     rollingUpdate:
@@ -25,19 +25,19 @@ spec:
         {{ toYaml .Values.podAnnotations | nindent 8 }}
       {{- end }}
       labels:
-        {{- include "datagrok-jupyter-kernel-gateway.labels" . | nindent 8 }}
+        {{- include "datagrok-grok-connect.labels" . | nindent 8 }}
     spec:
       containers:
-        - name: jupyter
-          image: {{ .Values.jupyter_kernel_gateway.image.docker_image }}:{{ .Values.jupyter_kernel_gateway.image.tag }}
-          imagePullPolicy: {{ .Values.jupyter_kernel_gateway.image.pullPolicy }}
+        - name: grok-connect
+          image: {{ .Values.grok_connect.image.prefix }}:{{ .Values.grok_connect.image.tag }}
+          imagePullPolicy: {{ .Values.grok_connect.image.pullPolicy }}
           envFrom:
           - configMapRef:
-              name: {{ template "datagrok.fullname" $ }}-jupyter-kernel-gateway-cm
+              name: {{ template "datagrok.fullname" $ }}-grok-connect-cm
               optional: false
           ports:
             - name: service
-              containerPort: {{ .Values.jupyter_kernel_gateway.ports.service.port }}
+              containerPort: {{ .Values.grok_connect.ports.service.port }}
               protocol: TCP
           securityContext:
             allowPrivilegeEscalation: false
@@ -82,13 +82,30 @@ apiVersion: v1
 kind: ConfigMap
 metadata:
   annotations:
-    name: {{ template "datagrok.fullname" $ }}-jupyter-kernel-gateway-cm
+    name: {{ template "datagrok.fullname" $ }}-grok-connect-cm
   labels:
-    {{- include "datagrok-jupyter-kernel-gateway.labels" . | nindent 4 }}
-  name: {{ template "datagrok.fullname" $ }}-jupyter-kernel-gateway-cm
+    {{- include "datagrok-grok-connect.labels" . | nindent 4 }}
+  name: {{ template "datagrok.fullname" $ }}-grok-connect-cm
 data:
-  {{- range $key, $val := .Values.jupyter_kernel_gateway.environment }}
+  {{- range $key, $val := .Values.grok_connect.environment }}
   {{ $key }}: {{ $val | quote }}
   {{- end }}
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    {{- include "datagrok-grok-connect.labels" . | nindent 4 }}
+  name: {{ template "datagrok.fullname" $ }}-grok-connect
+spec:
+  ports:
+  - protocol: TCP
+    port: {{ .Values.grok_connect.ports.service.port }}
+    targetPort: service
+    name: service
+  selector:
+  {{- include "datagrok-grok-connect.selectorLabels" . | nindent 4 }}
+
 {{- end }}
 

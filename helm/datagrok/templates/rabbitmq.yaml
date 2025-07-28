@@ -5,13 +5,12 @@ kind: Deployment
 metadata:
   name: {{ template "datagrok.fullname" . }}-rabbitmq
   labels:
-  {{- include "datagrok.labels" . | nindent 4 }}
+  {{- include "datagrok-rabbitmq.labels" . | nindent 4 }}
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app.kubernetes.io/name: rabbitmq
-      app.kubernetes.io/instance: {{ .Release.Name }}
+      {{- include "datagrok-rabbitmq.selectorLabels" . | nindent 6 }}
   strategy:
     type: RollingUpdate
     rollingUpdate:
@@ -26,11 +25,11 @@ spec:
         {{ toYaml .Values.podAnnotations | nindent 8 }}
       {{- end }}
       labels:
-        {{- include "datagrok.labels" . | nindent 8 }}
+        {{- include "datagrok-rabbitmq.labels" . | nindent 8 }}
     spec:
       containers:
         - name: {{ .Chart.Name }}
-          image: "{{ .Values.rabbitmq.image.docker_image }}:{{ .Values.rabbitmq.image.tag }}"
+          image: "{{ .Values.rabbitmq.image.prefix }}:{{ .Values.rabbitmq.image.tag }}"
           imagePullPolicy: {{ .Values.rabbitmq.image.pullPolicy }}
           ports:
             - name: amqp
@@ -82,7 +81,7 @@ apiVersion: v1
 kind: Service
 metadata:
   labels:
-    {{- include "datagrok.labels" . | nindent 4 }}
+    {{- include "datagrok-rabbitmq.labels" . | nindent 4 }}
   name: {{ template "datagrok.fullname" $ }}-rabbitmq
 spec:
   ports:
@@ -95,8 +94,7 @@ spec:
     targetPort: mgmt
     name: mgmt
   selector:
-    app.kubernetes.io/name: rabbitmq
-    app.kubernetes.io/instance: {{ .Release.Name }}
+  {{- include "datagrok-rabbitmq.selectorLabels" . | nindent 4 }}
 
 {{- end }}
 

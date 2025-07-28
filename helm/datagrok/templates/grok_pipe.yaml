@@ -5,13 +5,12 @@ kind: Deployment
 metadata:
   name: {{ template "datagrok.fullname" . }}-grok-pipe
   labels:
-  {{- include "datagrok.labels" . | nindent 4 }}
+  {{- include "datagrok-grok-pipe.labels" . | nindent 4 }}
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app.kubernetes.io/name: grok-pipe
-      app.kubernetes.io/instance: {{ .Release.Name }}
+      {{- include "datagrok-grok-pipe.selectorLabels" . | nindent 6 }}
   strategy:
     type: RollingUpdate
     rollingUpdate:
@@ -26,12 +25,16 @@ spec:
         {{ toYaml .Values.podAnnotations | nindent 8 }}
       {{- end }}
       labels:
-        {{- include "datagrok.labels" . | nindent 8 }}
+        {{- include "datagrok-grok-pipe.labels" . | nindent 8 }}
     spec:
       containers:
-        - name: {{ .Chart.Name }}
+        - name: pipe
           image: "{{ .Values.grok_pipe.image.docker_image }}:{{ .Values.grok_pipe.image.tag }}"
           imagePullPolicy: {{ .Values.grok_pipe.image.pullPolicy }}
+          envFrom:
+          - configMapRef:
+              name: {{ template "datagrok.fullname" $ }}-grok-pipe-cm
+              optional: false
           ports:
             - name: service
               containerPort: {{ .Values.grok_pipe.ports.service.port }}
@@ -76,10 +79,24 @@ spec:
 
 ---
 apiVersion: v1
+kind: ConfigMap
+metadata:
+  annotations:
+    name: {{ template "datagrok.fullname" $ }}-grok-pipe-cm
+  labels:
+    {{- include "datagrok-grok-pipe.labels" . | nindent 4 }}
+  name: {{ template "datagrok.fullname" $ }}-grok-pipe-cm
+data:
+  {{- range $key, $val := .Values.grok_pipe.environment }}
+  {{ $key }}: {{ $val | quote }}
+  {{- end }}
+
+---
+apiVersion: v1
 kind: Service
 metadata:
   labels:
-    {{- include "datagrok.labels" . | nindent 4 }}
+    {{- include "datagrok-grok-pipe.labels" . | nindent 4 }}
   name: {{ template "datagrok.fullname" $ }}-grok-pipe
 spec:
   ports:
@@ -88,8 +105,7 @@ spec:
     targetPort: service
     name: service
   selector:
-      app.kubernetes.io/name: grok-pipe
-      app.kubernetes.io/instance: {{ .Release.Name }}
+{{- include "datagrok-grok-pipe.selectorLabels" . | nindent 4 }}
 
 {{- end }}
 

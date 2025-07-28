@@ -10,6 +10,12 @@ variable "gcp_region" {
   default     = "europe-west3"
 }
 
+variable "gcp_location" {
+  description = "GCP region for all resources"
+  type        = string
+  default     = "europe-west3-a"
+}
+
 variable "node_location" {
   type        = string
   default     = null

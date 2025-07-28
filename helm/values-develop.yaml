@@ -1,7 +1,7 @@
 # File: helm/datagrok/values.yaml
 # rev.0.0.1
 #
-# Last modified: 2025/07/25 20:48:16
+# Last modified: 2025/07/28 07:28:07
 
 certNameOverride: ""
 nameOverride: ""
@@ -27,10 +27,10 @@ env_domain: ""
 
 # Ingress
 ingress:
-  enable: false
+  enable: true
   cors: false
   subdomain: develop
-  frontendId: ""
+  fqdn: public.datagrok.ai
 
 # Horizontal pods autoscalling
 hpa:
@@ -47,14 +47,23 @@ datagrok:
   image:
     docker_image: datagrok/datagrok
     prefix: datagrok
-    # :${DATAGROK_VERSION:-latest}
-    tag: latest
+    tag: latest # :${DATAGROK_VERSION:-latest}
     pullPolicy: Always
   ports:
     api:
       port: 8080
+  rabbitmq: datagrok-rabbitmq
+  sql:
+    user: datagrok
+    password: "1FAI:M?mF0BDcYUV)n%m%iI!)VINas]N"
+    database: datagrok
+    host: "34.89.193.223"
+    server: "ornate-unity-466209-q1:europe-west3:datagrog-postgres"
   db_admin_user: postgres
   db_admin_password: postgres_password
+  storage:
+    bucket: datagrok-bucket-test-dkt23
+    credentials_json_file: gcp-storage-credentials.json
   environment:
     grok_parameters:
       test: |-
@@ -65,7 +74,7 @@ datagrok:
 rabbitmq:
   enable: true
   image:
-    docker_image: rabbitmq:4.0.5-management
+    docker_image: rabbitmq
     prefix: rabbitmq
     tag: 4.0.5-management
     pullPolicy: Always
@@ -80,7 +89,7 @@ grok_pipe:
   image:
     docker_image: datagrok/grok_pipe
     registry: datagrok
-    prefix: grok_pipe
+    prefix: datagrok/grok_pipe
     tag: 1.0.1
     pullPolicy: Always
   ports:
@@ -94,7 +103,7 @@ grok_connect:
   image:
     docker_image: datagrok/grok_connect
     registry: datagrok
-    prefix: grok_connect
+    prefix: datagrok/grok_connect
     tag: 2.3.30
     pullPolicy: Always
   ports:
@@ -110,7 +119,7 @@ jupyter_kernel_gateway:
   image:
     docker_image: datagrok/gjupyter_kernel_gateway
     registry: datagrok
-    prefix: jupyter_kernel_gateway
+    prefix: datagrok/jupyter_kernel_gateway
     tag: latest
     pullPolicy: Always
   ports:
@@ -122,7 +131,7 @@ jupyter_kernel_gateway:
         "queueSettings":
           {
             "useQueue": true,
-            "amqpHost": "rabbitmq",
+            "amqpHost": "datagrok-rabbitmq",
             "amqpUser": "guest",
             "amqpPassword": "guest",
             "amqpPort": 5672,

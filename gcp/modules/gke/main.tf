@@ -1,6 +1,6 @@
 # File: gcp/modules/gke/main.tf
 #
-# Last modified: 2025/07/25 20:55:37
+# Last modified: 2025/07/27 19:19:34
 
 # GKE cluster
 
@@ -8,15 +8,18 @@ resource "google_container_cluster" "this" {
   name     = var.clusterName
   location = var.node_location
 
-  enable_shielded_nodes    = "true"
-  deletion_protection = false
+  enable_shielded_nodes = "true"
+  deletion_protection   = false
 
   remove_default_node_pool = true
   initial_node_count       = 1
 
+  # Specify the Kubernetes version for the control plane
+  min_master_version = var.k8s_version
+
   networking_mode = "VPC_NATIVE"
-  network    = var.network
-  subnetwork = var.subnet
+  network         = var.network
+  subnetwork      = var.subnet
 
   ip_allocation_policy {
     cluster_ipv4_cidr_block  = "/16"
@@ -24,16 +27,16 @@ resource "google_container_cluster" "this" {
   }
 
   private_cluster_config {
-    enable_private_nodes = true
+    enable_private_nodes    = true
     enable_private_endpoint = false
-    master_ipv4_cidr_block = "172.16.0.0/28"
+    master_ipv4_cidr_block  = "172.16.0.0/28"
   }
 
   master_authorized_networks_config {
     cidr_blocks {
-        cidr_block   = "0.0.0.0/0"
-        display_name = "Public Access"
-      }
+      cidr_block   = "0.0.0.0/0"
+      display_name = "Public Access"
+    }
   }
 
   # disk_size_gb             = var.diskSize
@@ -46,7 +49,7 @@ resource "google_container_cluster" "this" {
 
   addons_config {
     http_load_balancing {
-      disabled = false
+      disabled = var.http_load_balancing
     }
   }
 
@@ -71,6 +74,8 @@ resource "google_container_node_pool" "this" {
   cluster    = google_container_cluster.this.name
   node_count = 1
 
+  version = var.k8s_version
+
   management {
     auto_repair  = true
     auto_upgrade = true
@@ -91,11 +96,11 @@ resource "google_container_node_pool" "this" {
     machine_type = var.machineType
 
     labels = {
-      env = var.gcp_project,
+      env         = var.gcp_project,
       clasterName = var.clusterName
     }
 
-    tags         = ["gke-node", var.clusterName]
+    tags = ["gke-node", var.clusterName]
     metadata = {
       disable-legacy-endpoints = "true"
     }
@@ -113,6 +118,14 @@ resource "google_container_node_pool" "this" {
     #   "https://www.googleapis.com/auth/logging.write",
     #   "https://www.googleapis.com/auth/monitoring",
     # ]
-
   }
+
+  lifecycle {
+    ignore_changes = [
+      node_count,
+      autoscaling,
+      node_config[0].machine_type
+    ]
+  }
+
 }

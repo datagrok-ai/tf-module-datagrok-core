@@ -1,7 +1,7 @@
 # File: helm/datagrok/values.yaml
 # rev.0.0.1
 #
-# Last modified: 2025/07/25 18:06:04
+# Last modified: 2025/07/27 22:56:59
 
 certNameOverride: ""
 nameOverride: ""
@@ -49,6 +49,10 @@ datagrok:
     prefix: datagrok
     tag: latest
     pullPolicy: Always
+  storage:
+    credentials: ""
+    project: ""
+    bucket: ""
   environment:
     grok_parameters:
       test: |-

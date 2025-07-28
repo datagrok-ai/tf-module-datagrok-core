@@ -30,7 +30,7 @@ variable "region" {
   description = "The GCP region for this subnetwork."
 }
 
-variable gcp_project_id {
+variable "gcp_project_id" {
   type        = string
   description = "GCP project id"
 }

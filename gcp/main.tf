@@ -1,11 +1,11 @@
 # File: main.tf
-# rev: v0.1.1
+# rev: v0.1.2
 #
-# Last modified: 2025/07/25 21:00:16
+# Last modified: 2025/07/28 05:49:29
 
-resource "random_string" "suffix" {
+resource "random_string" "index" {
   length  = 5
-  upper   = true
+  upper   = false
   lower   = true
   numeric = true
   special = false
@@ -26,11 +26,6 @@ locals {
   #   ]
   # )
   full_cluster_name = var.cluster_name
-}
-
-data "google_container_engine_versions" "gke_version" {
-  location       = var.gcp_region
-  version_prefix = "1.31."
 }
 
 #
@@ -63,23 +58,64 @@ locals {
 
 #
 # Postgres
+
+resource "random_password" "db_user" {
+  length  = 32
+  upper   = true
+  lower   = true
+  numeric = true
+  special = true
+
+  # keepers = {
+  #   id = value
+  # }
+}
+
+
+resource "google_project_service" "cloudsql_admin_api" {
+  project            = var.gcp_project
+  service            = "sqladmin.googleapis.com"
+  disable_on_destroy = true
+}
+
 module "postgres" {
-  source = "./modules/postgres"
-  # gcp_project   = var.gcp_project
-  region = var.gcp_region
+  source      = "./modules/postgres"
+  gcp_project = var.gcp_project
+  region      = var.gcp_region
 
   server_name = "datagrog-postgres"
   vpc_id      = module.vpc.network_id
+
+  db_name     = "datagrok"
+  db_user     = "datagrok"
+  db_password = random_password.db_user.result
 
 }
 
 #
 # GKE
+
+data "google_container_engine_versions" "gke_version" {
+  location       = var.gcp_region
+  version_prefix = "1.31."
+}
+
+
+# Enable GKE API
+resource "google_project_service" "container" {
+  project = var.gcp_project
+  service = "container.googleapis.com"
+}
+
 module "gke" {
   source        = "./modules/gke"
   gcp_project   = var.gcp_project
   gcp_region    = var.gcp_region
   node_location = var.node_location
+
+  k8s_version = "1.33.2-gke.4655000"
+
+  http_load_balancing = true ? false : true
 
   clusterName = local.full_cluster_name
   diskSize    = local.mashineDiskSize

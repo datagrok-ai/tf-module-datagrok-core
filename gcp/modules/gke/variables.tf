@@ -12,19 +12,25 @@ variable "gcp_region" {
 
 #
 
-variable network {
+variable "k8s_version" {
   type        = string
   default     = null
   description = "-"
 }
 
-variable subnet {
+variable "network" {
   type        = string
   default     = null
   description = "-"
 }
 
-variable node_location {
+variable "subnet" {
+  type        = string
+  default     = null
+  description = "-"
+}
+
+variable "node_location" {
   type        = string
   default     = null
   description = "-"
@@ -45,4 +51,10 @@ variable "maxNode" {
 }
 variable "machineType" {
   description = "Node Instance machine type"
+}
+
+variable "http_load_balancing" {
+  type        = bool
+  default     = false
+  description = "-"
 }

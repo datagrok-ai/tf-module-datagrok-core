@@ -45,6 +45,85 @@ app.kubernetes.io/name: {{ include "datagrok.name" . }}
 app.kubernetes.io/instance: {{ .Release.Name }}
 {{- end }}
 
+{{/*
+Create chart name and version as used by the chart label.
+*/}}
+{{- define "datagrok-rabbitmq.labels" -}}
+app.kubernetes.io/component: rabbitmq
+app.kubernetes.io/instance: {{ .Release.Name }}
+app.kubernetes.io/managed-by: {{ .Release.Service }}
+app.kubernetes.io/name: {{ include "datagrok.name" . }}-rabbitmq
+{{- if .Chart.AppVersion }}
+app.kubernetes.io/version: {{ .Chart.AppVersion | quote }}
+{{- end }}
+helm.sh/chart: {{ include "datagrok.chart" . }}
+helm.sh/release-namespace: {{ .Release.Namespace }}
+{{- end }}
+
+{{- define "datagrok-rabbitmq.selectorLabels" -}}
+app.kubernetes.io/name: {{ include "datagrok.name" . }}-rabbitmq
+app.kubernetes.io/instance: {{ .Release.Name }}
+{{- end }}
+
+{{/*
+grok-connect labels
+*/}}
+{{- define "datagrok-grok-connect.labels" -}}
+app.kubernetes.io/component: grok-connect
+app.kubernetes.io/instance: {{ .Release.Name }}
+app.kubernetes.io/managed-by: {{ .Release.Service }}
+app.kubernetes.io/name: {{ include "datagrok.name" . }}-grok-connect
+{{- if .Chart.AppVersion }}
+app.kubernetes.io/version: {{ .Chart.AppVersion | quote }}
+{{- end }}
+helm.sh/chart: {{ include "datagrok.chart" . }}
+helm.sh/release-namespace: {{ .Release.Namespace }}
+{{- end }}
+
+{{- define "datagrok-grok-connect.selectorLabels" -}}
+app.kubernetes.io/name: {{ include "datagrok.name" . }}-grok-connect
+app.kubernetes.io/instance: {{ .Release.Name }}
+{{- end }}
+
+{{/*
+grok-pipe labels
+*/}}
+{{- define "datagrok-grok-pipe.labels" -}}
+app.kubernetes.io/component: grok-pipe
+app.kubernetes.io/instance: {{ .Release.Name }}
+app.kubernetes.io/managed-by: {{ .Release.Service }}
+app.kubernetes.io/name: {{ include "datagrok.name" . }}-grok-pipe
+{{- if .Chart.AppVersion }}
+app.kubernetes.io/version: {{ .Chart.AppVersion | quote }}
+{{- end }}
+helm.sh/chart: {{ include "datagrok.chart" . }}
+helm.sh/release-namespace: {{ .Release.Namespace }}
+{{- end }}
+
+{{- define "datagrok-grok-pipe.selectorLabels" -}}
+app.kubernetes.io/name: {{ include "datagrok.name" . }}-grok-pipe
+app.kubernetes.io/instance: {{ .Release.Name }}
+{{- end }}
+
+{{/*
+jupyter-kernel-gatewaylabels
+*/}}
+{{- define "datagrok-jupyter-kernel-gateway.labels" -}}
+app.kubernetes.io/component: jupyter
+app.kubernetes.io/instance: {{ .Release.Name }}
+app.kubernetes.io/managed-by: {{ .Release.Service }}
+app.kubernetes.io/name: {{ include "datagrok.name" . }}-jupyter-kernel-gateway
+{{- if .Chart.AppVersion }}
+app.kubernetes.io/version: {{ .Chart.AppVersion | quote }}
+{{- end }}
+helm.sh/chart: {{ include "datagrok.chart" . }}
+helm.sh/release-namespace: {{ .Release.Namespace }}
+{{- end }}
+
+{{- define "datagrok-jupyter-kernel-gateway.selectorLabels" -}}
+app.kubernetes.io/name: {{ include "datagrok.name" . }}-jupyter-kernel-gateway
+app.kubernetes.io/instance: {{ .Release.Name }}
+{{- end }}
 
 {{/*
 Create chart name and version as used by the chart label.
@@ -115,3 +194,54 @@ Customs
 {{- end -}}
 {{- end -}}
 {{- end }}
+
+{{/*
+2ref: workaround till develop
+*/}}
+
+{{- define "datagrok.credentialsStorage" -}}
+{{- .Files.Get .Values.datagrok.storage.credentials_json_file | nindent 4 }}
+{{- end -}}
+
+{{- define "datagrok.configJSON" -}}
+{
+  "deployDemo": false,
+  "dbServer": "{{ .Values.datagrok.sql.host }}",
+  "db": "{{ .Values.datagrok.sql.database }}",
+  "dbAdminLogin": "{{ .Values.datagrok.sql.user }}",
+  "dbAdminPassword": "{{ .Values.datagrok.sql.password }}",
+  "dbLogin": "dg",
+  "dbPassword": "dg",
+  "adminPassword": "admin",
+  "adminDevKey": "admin",
+  "isolatesCount": 2,
+  "googleStorageCredentials": {{ include "datagrok.credentialsStorage" . }},
+  "googleStorageProject": "{{ .Values.datagrok.storage.project }}",
+  "googleStorageBucket": "{{ .Values.datagrok.storage.bucket }}",
+  "connectorsSettings": {
+    "dataframeParsingMode":"New Process",
+    "externalDataFrameCompress":true,
+    "grokConnectHost":"grok_connect",
+    "grokConnectPort":1234,
+    "localFileSystemAccess":false,
+    "sambaSpaceEscape":"none",
+    "sambaVersion":"3.0"
+  },
+  "dockerSettings": {
+      "grokSpawnerApiKey": "test-x-api-key",
+      "grokSpawnerHost": "grok_spawner",
+      "grokSpawnerPort": 8000,
+      "imageBuildTimeoutMinutes": 30,
+      "proxyRequestTimeout": 60000
+  },
+  "queueSettings": {
+    "amqpHost": "{{ .Values.datagrok.rabbitmq }}",
+    "amqpPassword": "guest",
+    "amqpPort": 5672,
+    "amqpUser": "guest",
+    "pipeHost": "grok_pipe",
+    "pipeKey": "test-key"
+  }
+}
+
+{{- end -}}

@@ -1,0 +1,111 @@
+# File: .github/workflows/gcp-terraform.yaml
+# rev.0.0.4
+#
+# Last modified: 2025/07/27 22:04:43
+
+# Secrets:
+#   GCP_SERVICE_ACCOUNT_KEY
+#   GCP_PROJECT_STATEFILE_BUCKET
+#   GCP_PROJECT_STATEFILE_PREFIX
+# Variables:
+#   APP_NAME
+#   GCP_PROJECT_ID
+
+name: "GCP Terraform Apply"
+
+on:
+  workflow_call:
+    inputs:
+      working_directory:
+        required: true
+        type: string
+      stage:
+        required: false
+        type: string
+    outputs:
+      cluster_name:
+        description: "K8s cluster name"
+        value: ${{ jobs.terraform.outputs.cluster_name }}
+
+env:
+  TF_WORKSPACE: ${{ inputs.stage || github.ref_name }}
+  GCP_PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
+
+jobs:
+  terraform:
+    runs-on: ubuntu-latest
+    environment: ${{ inputs.stage || github.ref_name }}
+    defaults:
+      run:
+        shell: bash
+        working-directory: "${{ inputs.working_directory || './terraform' }}"
+
+    # Job artifacts
+    outputs:
+      gcp_cluster_name: ${{ steps.root_bucket_name.outputs.gcp_cluster_name }}
+      service_account_credentials_json: ${{ steps.get-credentials.gcp_cluster_name }}
+
+    steps:
+      # Checkut repository
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Authenticate to Google Cloud
+        id: auth
+        uses: google-github-actions/auth@v2
+        with:
+          credentials_json: ${{ secrets.GCP_SERVICE_ACCOUNT_KEY }}
+          project_id: ${{ vars.GCP_PROJECT_ID }}
+
+      - name: Set up Google Cloud SDK
+        uses: google-github-actions/setup-gcloud@v2
+        with:
+          project_id: ${{ vars.GCP_PROJECT_ID }}
+
+          # Terraform
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+
+      - name: Terraform Init
+        run: >
+          terraform init
+          -backend-config="bucket=${{ secrets.GCP_PROJECT_STATEFILE_BUCKET }}"
+          -backend-config="prefix=${{ secrets.GCP_PROJECT_STATEFILE_PREFIX }}"
+
+      - name: Terraform Format(linter)
+        continue-on-error: false
+        run: terraform fmt -check
+
+      - name: Terraform Plan
+        env:
+          TF_VAR_cidrBlock: ${{ vars.VPC_CIDR_BLOCK }}
+          TF_VAR_cluster_name: ${{ vars.CLUSTER_NAME }}
+          TF_VAR_gcp_project: ${{ vars.GCP_PROJECT_ID }}
+        run: terraform plan -input=false
+
+      - name: Terraform Apply
+        # if: success()
+        if: false
+        run: terraform apply -auto-approve -input=false
+
+      - name: Get cluster name
+        id: cluster_name
+        if: success()
+        run: |
+          #Get cluster name
+          NAME=$(terraform output -raw cluster_name)
+          echo "GCP GKE cluster name is ${NAME}" | tee -a "$GITHUB_STEP_SUMMARY"
+          echo "cluster_name=${NAME}" >> "$GITHUB_OUTPUT"
+
+      - name: Get Service Account Credentials
+        id: gcp-storage-credentials
+        run: |
+          # Get Service Account Credentials
+          terraform output -raw service_account_credentials_json > gcp-storage-credentials.json
+
+      - name: Upload Credentials Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: gcp-storage-credentials
+          path: ${{ inputs.working_directory }}/gcp-storage-credentials.json
+          retention-days: 1
