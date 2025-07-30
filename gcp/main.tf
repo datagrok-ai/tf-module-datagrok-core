@@ -1,7 +1,7 @@
 # File: main.tf
-# rev: v0.1.2
+# rev: v0.1.5
 #
-# Last modified: 2025/07/28 05:49:29
+# Last modified: 2025/07/30 15:43:47
 
 resource "random_string" "index" {
   length  = 5
@@ -31,14 +31,9 @@ locals {
 #
 # VPC
 module "vpc" {
-  # invoke vpc_and_subnets module under modules directory
-  source = "./modules/vpc"
-
-  # count = 0
-
+  source         = "./modules/vpc"
   gcp_project_id = var.gcp_project
 
-  # create vpc and subnet with the same name as cluster name
   vpc_name    = "vpc-${local.full_cluster_name}"
   subnet_name = "subnet-${local.full_cluster_name}"
 
@@ -52,8 +47,7 @@ locals {
   machineType     = "n2-standard-2"
   mashineDiskSize = 30
   clusterMaxNodes = 3
-  # clusterName     = "gke-test-1"
-
+  gcpSunbet       = "10.20.0.0/16"
 }
 
 #
@@ -83,8 +77,9 @@ module "postgres" {
   gcp_project = var.gcp_project
   region      = var.gcp_region
 
-  server_name = "datagrog-postgres"
-  vpc_id      = module.vpc.network_id
+  server_name   = "datagrog-postgres"
+  vpc_id        = module.vpc.network_id
+  ip_cidr_range = var.cidrSQL
 
   db_name     = "datagrok"
   db_user     = "datagrok"
@@ -99,7 +94,6 @@ data "google_container_engine_versions" "gke_version" {
   location       = var.gcp_region
   version_prefix = "1.31."
 }
-
 
 # Enable GKE API
 resource "google_project_service" "container" {

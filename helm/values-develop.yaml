@@ -1,7 +1,7 @@
 # File: helm/datagrok/values.yaml
 # rev.0.0.1
 #
-# Last modified: 2025/07/28 07:28:07
+# Last modified: 2025/07/30 14:41:04
 
 certNameOverride: ""
 nameOverride: ""
@@ -30,7 +30,7 @@ ingress:
   enable: true
   cors: false
   subdomain: develop
-  fqdn: public.datagrok.ai
+  fqdn: gcp.datagrok.ai
 
 # Horizontal pods autoscalling
 hpa:
@@ -47,7 +47,7 @@ datagrok:
   image:
     docker_image: datagrok/datagrok
     prefix: datagrok
-    tag: latest # :${DATAGROK_VERSION:-latest}
+    tag: bleeding-edge
     pullPolicy: Always
   ports:
     api:
@@ -60,7 +60,7 @@ datagrok:
     host: "34.89.193.223"
     server: "ornate-unity-466209-q1:europe-west3:datagrog-postgres"
   db_admin_user: postgres
-  db_admin_password: postgres_password
+  db_admin_password: "bX-?r%yG8B*{L:tRfluXVg=L2FJEn&9_"
   storage:
     bucket: datagrok-bucket-test-dkt23
     credentials_json_file: gcp-storage-credentials.json
@@ -117,11 +117,11 @@ grok_connect:
 jupyter_kernel_gateway:
   enable: true
   image:
-    docker_image: datagrok/gjupyter_kernel_gateway
+    docker_image: datagrok/jupyter_kernel_gateway
     registry: datagrok
     prefix: datagrok/jupyter_kernel_gateway
     tag: latest
-    pullPolicy: Always
+    pullPolicy: IfNotPresent
   ports:
     service:
       port: 1234

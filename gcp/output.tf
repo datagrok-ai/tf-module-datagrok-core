@@ -14,19 +14,25 @@ output "database_instance_ip" {
   value       = module.postgres.database_instance_ip
 }
 
-output "database_name" {
-  description = "Name of the database"
-  value       = module.postgres.database_name
-}
+# output "database_name" {
+#   description = "Name of the database"
+#   value       = module.postgres.database_name
+# }
 
-output "database_user" {
-  description = "Database user"
-  value       = module.postgres.database_user
-  sensitive   = false
-}
+# output "database_user" {
+#   description = "Database user"
+#   value       = module.postgres.database_user
+#   sensitive   = false
+# }
 
 # output "database_password" {
 #   description = "Database user password"
 #   value       = nonsensitive(random_password.db_user.result)
+#   sensitive   = false
+# }
+
+# output "database_admin_password" {
+#   description = "Database admin password"
+#   value       = nonsensitive(module.postgres.database_admin_password)
 #   sensitive   = false
 # }

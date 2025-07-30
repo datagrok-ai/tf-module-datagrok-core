@@ -39,15 +39,6 @@ spec:
             - name: service
               containerPort: {{ .Values.grok_connect.ports.service.port }}
               protocol: TCP
-          securityContext:
-            allowPrivilegeEscalation: false
-            readOnlyRootFilesystem: true
-            runAsNonRoot: true
-            runAsUser: {{ .Values.security.userNameId }}
-            capabilities:
-              drop:
-                - all
-              add: ["MKNOD"]
           {{- if .Values.livenessProbe.enabled }}
           livenessProbe:
             {{- toYaml (omit .Values.livenessProbe "enabled") | nindent 12 }}
@@ -62,8 +53,6 @@ spec:
           {{- end }}
           resources:
 {{ toYaml .Values.resources | indent 12 }}
-      securityContext:
-        fsGroup: {{ .Values.security.userGroupId }}
     {{- with .Values.nodeSelector }}
       nodeSelector:
 {{ toYaml . | indent 8 }}

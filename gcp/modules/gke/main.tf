@@ -1,8 +1,17 @@
 # File: gcp/modules/gke/main.tf
+# rev.0.1.1
 #
-# Last modified: 2025/07/27 19:19:34
+# Last modified: 2025/07/28 17:29:18
 
 # GKE cluster
+
+# 2ref: workaround till develop
+resource "google_compute_subnetwork" "subnet" {
+  name          = "gke-public-subnet"
+  ip_cidr_range = "10.20.0.0/16"
+  region        = var.gcp_region
+  network       = var.network
+}
 
 resource "google_container_cluster" "this" {
   name     = var.clusterName
@@ -17,20 +26,10 @@ resource "google_container_cluster" "this" {
   # Specify the Kubernetes version for the control plane
   min_master_version = var.k8s_version
 
-  networking_mode = "VPC_NATIVE"
-  network         = var.network
-  subnetwork      = var.subnet
+  network    = var.network
+  subnetwork = google_compute_subnetwork.subnet.name
 
-  ip_allocation_policy {
-    cluster_ipv4_cidr_block  = "/16"
-    services_ipv4_cidr_block = "/22"
-  }
-
-  private_cluster_config {
-    enable_private_nodes    = true
-    enable_private_endpoint = false
-    master_ipv4_cidr_block  = "172.16.0.0/28"
-  }
+  ip_allocation_policy {}
 
   master_authorized_networks_config {
     cidr_blocks {
@@ -39,13 +38,9 @@ resource "google_container_cluster" "this" {
     }
   }
 
-  # disk_size_gb             = var.diskSize
-
   release_channel {
     channel = "STABLE"
   }
-
-  # version = data.google_container_engine_versions.gke_version.release_channel_default_version["STABLE"]
 
   addons_config {
     http_load_balancing {
@@ -103,6 +98,7 @@ resource "google_container_node_pool" "this" {
     tags = ["gke-node", var.clusterName]
     metadata = {
       disable-legacy-endpoints = "true"
+      block-project-ssh-keys   = "true"
     }
 
     oauth_scopes = [

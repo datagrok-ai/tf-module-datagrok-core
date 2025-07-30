@@ -9,6 +9,11 @@ variable "vpc_id" {
   default     = null
   description = "-"
 }
+variable "ip_cidr_range" {
+  type        = string
+  default     = null
+  description = "-"
+}
 
 variable "server_name" {
   type        = string

@@ -10,6 +10,12 @@ variable "gcp_region" {
   default     = null
 }
 
+variable "node_location" {
+  type        = string
+  default     = null
+  description = "-"
+}
+
 #
 
 variable "k8s_version" {
@@ -29,13 +35,6 @@ variable "subnet" {
   default     = null
   description = "-"
 }
-
-variable "node_location" {
-  type        = string
-  default     = null
-  description = "-"
-}
-
 
 variable "clusterName" {
   description = "Name of our Cluster"

@@ -8,7 +8,6 @@ metadata:
   annotations:
     kubernetes.io/ingress.allow-http: "true"
 spec:
-  ingressClassName: gce
   {{- if .Values.custom_cert }}
   tls:
     - hosts:
