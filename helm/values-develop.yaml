@@ -1,7 +1,7 @@
 # File: helm/datagrok/values.yaml
 # rev.0.0.1
 #
-# Last modified: 2025/07/30 14:41:04
+# Last modified: 2025/07/30 15:58:09
 
 certNameOverride: ""
 nameOverride: ""
@@ -53,6 +53,8 @@ datagrok:
     api:
       port: 8080
   rabbitmq: datagrok-rabbitmq
+  grok_connect: "datagrok-grok-connect"
+  grok_spawner_host: "grok_spawner"
   sql:
     user: datagrok
     password: "1FAI:M?mF0BDcYUV)n%m%iI!)VINas]N"

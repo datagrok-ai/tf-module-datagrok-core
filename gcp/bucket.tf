@@ -1,7 +1,7 @@
 # File: gcp/bucket.tf
 # rev.0.0.1
 #
-# Last modified: 2025/07/27 20:49:16
+# Last modified: 2025/08/01 13:55:48
 
 # Variables for sensitive data
 # variable "gcp_service_account_key" {
@@ -53,6 +53,12 @@ resource "google_storage_bucket" "datagrok_data" {
       storage_class = "NEARLINE"
     }
   }
+
+  force_destroy = true
+
+  # lifecycle {
+  #   prevent_destroy = true
+  # }
 
   versioning {
     enabled = false

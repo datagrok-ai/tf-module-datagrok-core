@@ -17,15 +17,15 @@
   "connectorsSettings": {
     "dataframeParsingMode":"New Process",
     "externalDataFrameCompress":true,
-    "grokConnectHost":"datagrok-grok-connect",
-    "grokConnectPort":1234,
+    "grokConnectHost": "{{ .Values.datagrok.grok_connect_host }}",
+    "grokConnectPort": 1234,
     "localFileSystemAccess":false,
     "sambaSpaceEscape":"none",
     "sambaVersion":"3.0"
   },
   "dockerSettings": {
       "grokSpawnerApiKey": "test-x-api-key",
-      "grokSpawnerHost": "grok_spawner",
+      "grokSpawnerHost": "{{ .Values.datagrok.grok_spawner_host }}",
       "grokSpawnerPort": 8000,
       "imageBuildTimeoutMinutes": 30,
       "proxyRequestTimeout": 60000

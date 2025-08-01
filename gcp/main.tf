@@ -1,7 +1,7 @@
 # File: main.tf
 # rev: v0.1.5
 #
-# Last modified: 2025/07/30 15:43:47
+# Last modified: 2025/08/01 14:02:07
 
 resource "random_string" "index" {
   length  = 5
@@ -48,6 +48,7 @@ locals {
   mashineDiskSize = 30
   clusterMaxNodes = 3
   gcpSunbet       = "10.20.0.0/16"
+  # clusterName     = "gke-test-1"
 }
 
 #
@@ -70,6 +71,9 @@ resource "google_project_service" "cloudsql_admin_api" {
   project            = var.gcp_project
   service            = "sqladmin.googleapis.com"
   disable_on_destroy = true
+  lifecycle {
+    prevent_destroy = true
+  }
 }
 
 module "postgres" {
@@ -99,6 +103,9 @@ data "google_container_engine_versions" "gke_version" {
 resource "google_project_service" "container" {
   project = var.gcp_project
   service = "container.googleapis.com"
+  lifecycle {
+    prevent_destroy = true
+  }
 }
 
 module "gke" {

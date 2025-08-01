@@ -36,6 +36,8 @@ variable "subnet" {
   description = "-"
 }
 
+
+
 variable "clusterName" {
   description = "Name of our Cluster"
 }
