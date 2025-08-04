@@ -1,0 +1,193 @@
+# File: helm/datagrok/values.yaml
+# rev.0.0.1
+#
+# Last modified: 2025/07/30 15:58:09
+
+certNameOverride: ""
+nameOverride: ""
+fullnameOverride: ""
+
+replicaCount: 1
+minAvailable: 1
+
+# Environment
+stage: develop
+environment: develop
+custom_cert: false
+custom_cert_sync: false
+domain: ""
+
+security:
+  userGroupId: 10101
+  userNameId: 10101
+  readOnlyRootFS: true
+
+# Internal
+env_domain: ""
+
+# Ingress
+ingress:
+  enable: true
+  cors: false
+  subdomain: develop
+  fqdn: gcp.datagrok.ai
+
+# Horizontal pods autoscalling
+hpa:
+  enable: false
+  min_replicas: 2
+  max_replicas: 5
+  max_cpu: 80
+  max_memory: 80
+
+# Services
+
+datagrok:
+  enable: true
+  image:
+    docker_image: datagrok/datagrok
+    prefix: datagrok
+    tag: bleeding-edge
+    pullPolicy: Always
+  ports:
+    api:
+      port: 8080
+  rabbitmq: datagrok-rabbitmq
+  grok_connect: "datagrok-grok-connect"
+  grok_spawner_host: "grok_spawner"
+  sql:
+    user: datagrok
+    password: "1FAI:M?mF0BDcYUV)n%m%iI!)VINas]N"
+    database: datagrok
+    host: "34.89.193.223"
+    server: "ornate-unity-466209-q1:europe-west3:datagrog-postgres"
+  db_admin_user: postgres
+  db_admin_password: "bX-?r%yG8B*{L:tRfluXVg=L2FJEn&9_"
+  storage:
+    bucket: datagrok-bucket-test-dkt23
+    credentials_json_file: gcp-storage-credentials.json
+  environment:
+    grok_parameters:
+      test: |-
+        {
+          "test": "test"
+        }
+
+rabbitmq:
+  enable: true
+  image:
+    docker_image: rabbitmq
+    prefix: rabbitmq
+    tag: 4.0.5-management
+    pullPolicy: Always
+  ports:
+    amqp:
+      port: 5672
+    mgmt:
+      port: 15672
+
+grok_pipe:
+  enable: true
+  image:
+    docker_image: datagrok/grok_pipe
+    registry: datagrok
+    prefix: datagrok/grok_pipe
+    tag: 1.0.1
+    pullPolicy: Always
+  ports:
+    service:
+      port: 3000
+  environment:
+    API_KEY: test-key
+
+grok_connect:
+  enable: true
+  image:
+    docker_image: datagrok/grok_connect
+    registry: datagrok
+    prefix: datagrok/grok_connect
+    tag: 2.3.30
+    pullPolicy: Always
+  ports:
+    service:
+      port: 1234
+  environment:
+    CONNECTION_POOL_MAXIMUM_SIZE: 50
+    CONNECTION_POOL_IDLE_TIMEOUT: 300000
+    GROK_CONNECT_PORT: 1234
+
+jupyter_kernel_gateway:
+  enable: true
+  image:
+    docker_image: datagrok/jupyter_kernel_gateway
+    registry: datagrok
+    prefix: datagrok/jupyter_kernel_gateway
+    tag: latest
+    pullPolicy: IfNotPresent
+  ports:
+    service:
+      port: 1234
+  environment:
+    GROK_PARAMETERS: |-
+      {
+        "queueSettings":
+          {
+            "useQueue": true,
+            "amqpHost": "datagrok-rabbitmq",
+            "amqpUser": "guest",
+            "amqpPassword": "guest",
+            "amqpPort": 5672,
+            "pipeHost": "grok_pipe",
+            "pipePort": 3000,
+            "pipeKey": "test-key",
+            "maxConcurrentCalls": 4
+          }
+      }
+
+# Environment ConfigMap
+env:
+  DOMAIN_LINK: ""
+
+# Service port
+service:
+  type: ClusterIP
+  port: 80
+
+# Application port
+ports:
+  api:
+    port: 8080
+
+# Healthcheck
+livenessProbe:
+  enabled: false
+  httpGet:
+    path: /version
+    port: http
+  initialDelaySeconds: 20
+  timeoutSeconds: 1
+  periodSeconds: 10
+  successThreshold: 1
+  failureThreshold: 5
+
+readinessProbe:
+  enabled: false
+  tcpSocket:
+    port: http
+  initialDelaySeconds: 5
+  timeoutSeconds: 1
+  periodSeconds: 10
+  successThreshold: 1
+  failureThreshold: 3
+
+startupProbe:
+  enabled: false
+
+# Containers resources
+resources:
+  limits:
+    cpu: 500m
+    memory: 800Mi
+  requests:
+    cpu: 250m
+    memory: 500Mi

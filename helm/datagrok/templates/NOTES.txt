@@ -1,0 +1,2 @@
+Datagrok Image: "{{ .Values.datagrok.image.docker_image }}:{{ .Values.datagrok.image.tag }}"
+FQDN: {{ .Values.ingress.fqdn }}

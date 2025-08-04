@@ -1,0 +1,109 @@
+# File: helm/datagrok/values.yaml
+# rev.0.0.1
+#
+# Last modified: 2025/07/27 22:56:59
+
+certNameOverride: ""
+nameOverride: ""
+fullnameOverride: ""
+
+replicaCount: 1
+minAvailable: 1
+
+# Environment
+stage: develop
+environment: develop
+custom_cert: false
+custom_cert_sync: false
+domain: ""
+
+security:
+  userGroupId: 10101
+  userNameId: 10101
+  readOnlyRootFS: true
+
+# Interal
+env_domain: ""
+
+# Ingress
+ingress:
+  enable: true
+  cors: false
+  subdomain: develop
+  frontendId: ""
+
+# Horizontal pods autoscalling
+hpa:
+  enable: false
+  min_replicas: 2
+  max_replicas: 5
+  max_cpu: 80
+  max_memory: 80
+
+# Services
+
+datagrok:
+  enable: true
+  image:
+    docker_image: datagrok/datagrok:${DATAGROK_VERSION:-latest}
+    prefix: datagrok
+    tag: latest
+    pullPolicy: Always
+  storage:
+    credentials: ""
+    project: ""
+    bucket: ""
+  environment:
+    grok_parameters:
+      test: |-
+        {
+          "test"": "test"
+        }
+
+# Environment ConfigMap
+env:
+  DOMAIN_LINK: ""
+
+# Service port
+service:
+  type: ClusterIP
+  port: 80
+
+# Application port
+ports:
+  api:
+    port: 8080
+
+# Healthcheck
+livenessProbe:
+  enabled: false
+  httpGet:
+    path: /version
+    port: http
+  initialDelaySeconds: 20
+  timeoutSeconds: 1
+  periodSeconds: 10
+  successThreshold: 1
+  failureThreshold: 5
+
+readinessProbe:
+  enabled: false
+  tcpSocket:
+    port: http
+  initialDelaySeconds: 5
+  timeoutSeconds: 1
+  periodSeconds: 10
+  successThreshold: 1
+  failureThreshold: 3
+
+startupProbe:
+  enabled: false
+
+# Containers resources
+resources:
+  limits:
+    cpu: 500m
+    memory: 800Mi
+  requests:
+    cpu: 250m
+    memory: 500Mi

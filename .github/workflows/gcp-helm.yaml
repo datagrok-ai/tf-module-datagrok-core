@@ -1,0 +1,107 @@
+# File: .github/workflows/gcp-helm.yaml
+# rev.0.0.4
+
+# Secrets:
+#   GCP_SERVICE_ACCOUNT_KEY
+#   GCP_PROJECT_ID
+# Variables:
+#   APP_NAME
+
+name: "[reusable] Deploy App with Helm chart"
+
+on:
+  workflow_call:
+    inputs:
+      working_directory:
+        required: true
+        type: string
+      stage:
+        required: true
+        type: string
+      app_name:
+        required: false
+        type: string
+      helm-version:
+        default: latest
+        required: false
+        type: string
+      subdomain:
+        required: true
+        type: string
+      cluster_name:
+        required: true
+        type: string
+      cluster_location:
+        required: true
+        type: string
+      service_account_credentials_json:
+        required: false
+        type: string
+
+env:
+  PREFIX: datagrok
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    name: "Branch: ${{ github.ref_name }}, Stage: ${{ inputs.stage }}"
+    environment: ${{ inputs.stage }}
+
+    env:
+      STAGE: ${{ inputs.stage }}
+      APP_NAME: ${{ inputs.app_name || vars.APP_NAME }}
+      # CLUSTER_NAME: ${{ inputs.cluster_name }}
+      # CLUSTER_LOCATION: ${{ inputs.cluster_location }}
+
+    steps:
+      - uses: actions/checkout@v4
+      - name: Authenticate to Google Cloud
+        id: auth
+        uses: google-github-actions/auth@v2
+        with:
+          credentials_json: ${{ secrets.GCP_SERVICE_ACCOUNT_KEY }}
+          project_id: ${{ vars.GCP_PROJECT_ID }}
+
+      - name: Set up Google Cloud SDK
+        uses: google-github-actions/setup-gcloud@v2
+        with:
+          project_id: ${{ vars.GCP_PROJECT_ID }}
+
+      - name: Get GKE Credentials
+        uses: google-github-actions/get-gke-credentials@v2
+        with:
+          cluster_name: ${{ inputs.cluster_name }}
+          location: ${{ inputs.cluster_location }}
+
+      - name: Download Credentials Artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: gcp-storage-credentials
+          path: .
+
+      # Debug
+      - name: Debug
+        continue-on-error: true
+        run: |
+          # Debug
+          cat ./gcp-storage-credentials.json
+
+      # Deploy app to stage
+      - name: Deploy application
+        working-directory: ${{ inputs.working_directory }}
+        env:
+          NAMESPACE: ${{ env.APP_NAME }}-${{ env.STAGE }}
+          SUBDOMAIN: "${{ inputs.subdomain }}"
+          VALUE_FILE_NAME: "values-${{ env.STAGE }}.yaml"
+
+        run: >-
+          # Deploy
+
+          echo "[INFO] Deploy to $STAGE with ${{ github.ref_name }} image"
+
+          helm upgrade --install $APP_NAME ./$APP_NAME
+          --namespace $NAMESPACE --create-namespace
+          --values ./$VALUE_FILE_NAME
+          --set ingress_subdomain=$SUBDOMAIN
+          --set datagrok.storage.project=${{ vars.GCP_PROJECT_ID }}
+          --set datagrok.storage.credentials_json_file=./gcp-storage-credentials.json

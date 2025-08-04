@@ -1,0 +1,100 @@
+{{- if .Values.grok_connect.enable }}
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ template "datagrok.fullname" . }}-grok-connect
+  labels:
+  {{- include "datagrok-grok-connect.labels" . | nindent 4 }}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      {{- include "datagrok-grok-connect.selectorLabels" . | nindent 6 }}
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 25%
+      maxSurge: 25%
+  revisionHistoryLimit: 5
+  progressDeadlineSeconds: 120
+  template:
+    metadata:
+      annotations:
+      {{- if .Values.podAnnotations }}
+        {{ toYaml .Values.podAnnotations | nindent 8 }}
+      {{- end }}
+      labels:
+        {{- include "datagrok-grok-connect.labels" . | nindent 8 }}
+    spec:
+      containers:
+        - name: grok-connect
+          image: {{ .Values.grok_connect.image.prefix }}:{{ .Values.grok_connect.image.tag }}
+          imagePullPolicy: {{ .Values.grok_connect.image.pullPolicy }}
+          envFrom:
+          - configMapRef:
+              name: {{ template "datagrok.fullname" $ }}-grok-connect-cm
+              optional: false
+          ports:
+            - name: service
+              containerPort: {{ .Values.grok_connect.ports.service.port }}
+              protocol: TCP
+          {{- if .Values.livenessProbe.enabled }}
+          livenessProbe:
+            {{- toYaml (omit .Values.livenessProbe "enabled") | nindent 12 }}
+          {{- end }}
+          {{- if .Values.readinessProbe.enabled }}
+          readinessProbe:
+            {{- toYaml (omit .Values.readinessProbe "enabled") | nindent 12 }}
+          {{- end }}
+          {{- if .Values.startupProbe.enabled }}
+          startupProbe:
+            {{- toYaml (omit .Values.startupProbe "enabled") | nindent 12 }}
+          {{- end }}
+          resources:
+{{ toYaml .Values.resources | indent 12 }}
+    {{- with .Values.nodeSelector }}
+      nodeSelector:
+{{ toYaml . | indent 8 }}
+    {{- end }}
+    {{- with .Values.affinity }}
+      affinity:
+{{ toYaml . | indent 8 }}
+    {{- end }}
+    {{- with .Values.tolerations }}
+      tolerations:
+{{ toYaml . | indent 8 }}
+    {{- end }}
+
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  annotations:
+    name: {{ template "datagrok.fullname" $ }}-grok-connect-cm
+  labels:
+    {{- include "datagrok-grok-connect.labels" . | nindent 4 }}
+  name: {{ template "datagrok.fullname" $ }}-grok-connect-cm
+data:
+  {{- range $key, $val := .Values.grok_connect.environment }}
+  {{ $key }}: {{ $val | quote }}
+  {{- end }}
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    {{- include "datagrok-grok-connect.labels" . | nindent 4 }}
+  name: {{ template "datagrok.fullname" $ }}-grok-connect
+spec:
+  ports:
+  - protocol: TCP
+    port: {{ .Values.grok_connect.ports.service.port }}
+    targetPort: service
+    name: service
+  selector:
+  {{- include "datagrok-grok-connect.selectorLabels" . | nindent 4 }}
+
+{{- end }}
+

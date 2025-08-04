@@ -1,0 +1,14 @@
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    {{- include "datagrok.labels" . | nindent 4 }}
+  name: {{ template "datagrok.fullname" $ }}
+spec:
+  ports:
+  - protocol: TCP
+    port: 80
+    targetPort: http
+    name: http
+  selector:
+  {{- include "datagrok.selectorLabels" . | nindent 4 }}
