@@ -202,3 +202,38 @@ output "db_dg_password" {
   description = "The password to the Datagrok DB"
   value       = try(random_password.db_datagrok_password[0].result, var.rds_dg_password)
 }
+
+output "rabbitmq_name" {
+  description = "The address of the Datagrok RabbitMQ"
+  value       = "rabbitmq.${local.ecs_name}.local"
+}
+
+output "rabbitmq_password" {
+  description = "The password of the Datagrok RabbitMQ"
+  value       = var.rabbitmq_password
+}
+
+output "rabbitmq_port" {
+  description = "The port of the Datagrok RabbitMQ"
+  value       = var.amqpPort
+}
+
+output "rabbitmq_user" {
+  description = "The user of the Datagrok RabbitMQ"
+  value       = var.rabbitmq_username
+}
+
+output "pipe_host" {
+  description = "The address of the Datagrok Pipe"
+  value       = "${aws_route53_record.grok_pipe.fqdn}"
+}
+
+output "pipe_key" {
+  description = "The address of the Datagrok RabbitMQ"
+  value       = var.pipeKey
+}
+
+output "amqpTLS" {
+  description = "The address of the Datagrok RabbitMQ"
+  value       = var.amqpTLS
+}
