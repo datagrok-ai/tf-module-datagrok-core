@@ -1006,7 +1006,7 @@ resource "aws_iam_role" "grok_spawner_task" {
           "Action" : [
             "logs:GetLogEvents",
             "logs:DescribeLogStreams",
-            "logs:DescribeLogGroups"]
+          "logs:DescribeLogGroups"]
           "Resource" : [
             "arn:aws:logs:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:log-group:/aws/ecs/*",
           ]
