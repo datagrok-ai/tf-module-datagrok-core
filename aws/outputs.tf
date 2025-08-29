@@ -225,7 +225,7 @@ output "rabbitmq_user" {
 
 output "pipe_host" {
   description = "The address of the Datagrok Pipe"
-  value       = "${aws_route53_record.grok_pipe.fqdn}"
+  value       = aws_route53_record.grok_pipe.fqdn
 }
 
 output "pipe_key" {
