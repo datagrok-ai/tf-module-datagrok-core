@@ -296,6 +296,7 @@ module "datagrok_core" {
 |------|-------------|
 | <a name="output_alb_external_arn"></a> [alb\_external\_arn](#output\_alb\_external\_arn) | The ARN of the external Application Load balancer |
 | <a name="output_alb_internal_arn"></a> [alb\_internal\_arn](#output\_alb\_internal\_arn) | The ARN of the external Application Load balancer |
+| <a name="output_amqpTLS"></a> [amqpTLS](#output\_amqpTLS) | The address of the Datagrok RabbitMQ |
 | <a name="output_cloudwatch_log_group_arn"></a> [cloudwatch\_log\_group\_arn](#output\_cloudwatch\_log\_group\_arn) | The ARN of the CloudWatch Log group |
 | <a name="output_cloudwatch_log_group_name"></a> [cloudwatch\_log\_group\_name](#output\_cloudwatch\_log\_group\_name) | The name of the CloudWatch Log group |
 | <a name="output_database_subnet_group"></a> [database\_subnet\_group](#output\_database\_subnet\_group) | ID of database subnet group |
@@ -315,9 +316,15 @@ module "datagrok_core" {
 | <a name="output_lb_name"></a> [lb\_name](#output\_lb\_name) | The Load Balancer name of a stand. |
 | <a name="output_log_bucket"></a> [log\_bucket](#output\_log\_bucket) | The ID of the S3 bucket for logs |
 | <a name="output_name"></a> [name](#output\_name) | The name for a stand. |
+| <a name="output_pipe_host"></a> [pipe\_host](#output\_pipe\_host) | The address of the Datagrok Pipe |
+| <a name="output_pipe_key"></a> [pipe\_key](#output\_pipe\_key) | The address of the Datagrok RabbitMQ |
 | <a name="output_private_subnets"></a> [private\_subnets](#output\_private\_subnets) | List of IDs of private subnets |
 | <a name="output_public_subnets"></a> [public\_subnets](#output\_public\_subnets) | List of IDs of public subnets |
 | <a name="output_r53_record"></a> [r53\_record](#output\_r53\_record) | The Route53 record for a stand. |
+| <a name="output_rabbitmq_name"></a> [rabbitmq\_name](#output\_rabbitmq\_name) | The address of the Datagrok RabbitMQ |
+| <a name="output_rabbitmq_password"></a> [rabbitmq\_password](#output\_rabbitmq\_password) | The password of the Datagrok RabbitMQ |
+| <a name="output_rabbitmq_port"></a> [rabbitmq\_port](#output\_rabbitmq\_port) | The port of the Datagrok RabbitMQ |
+| <a name="output_rabbitmq_user"></a> [rabbitmq\_user](#output\_rabbitmq\_user) | The user of the Datagrok RabbitMQ |
 | <a name="output_rds_name"></a> [rds\_name](#output\_rds\_name) | The RDS name of a stand. |
 | <a name="output_route53_external_cloudwatch_log_group_arn"></a> [route53\_external\_cloudwatch\_log\_group\_arn](#output\_route53\_external\_cloudwatch\_log\_group\_arn) | The ARN of the CloudWatch Log group for External Route53 Zone |
 | <a name="output_route53_external_cloudwatch_log_group_name"></a> [route53\_external\_cloudwatch\_log\_group\_name](#output\_route53\_external\_cloudwatch\_log\_group\_name) | The name of the CloudWatch Log group for External Route53 Zone |
