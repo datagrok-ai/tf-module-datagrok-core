@@ -1346,9 +1346,6 @@ resource "aws_ecs_task_definition" "grok_spawner_kaniko" {
   task_role_arn            = aws_iam_role.grok_spawner_kaniko_task.arn
   requires_compatibilities = ["FARGATE"]
   depends_on               = [null_resource.ecr_push]
-  ephemeral_storage = {
-    size_in_gib = 100
-  }
 }
 resource "aws_service_discovery_service" "grok_spawner" {
   count       = var.ecs_launch_type == "FARGATE" ? 1 : 0
