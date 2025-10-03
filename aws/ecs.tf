@@ -341,7 +341,7 @@ resource "aws_ecs_task_definition" "datagrok" {
                   dbPassword : try(random_password.db_datagrok_password[0].result, var.rds_dg_password),
                   dbAdminLogin : var.rds_master_username,
                   dbAdminPassword : module.db.db_instance_password,
-                  dbSsl : false,
+                  dbSsl : true,
                   deployDemo : false,
                   deployTestDemo : false
                   }, var.set_admin_password ? {
