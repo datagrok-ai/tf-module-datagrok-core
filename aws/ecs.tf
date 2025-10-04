@@ -344,20 +344,20 @@ resource "aws_ecs_task_definition" "datagrok" {
                   deployDemo          = false
                   deployTestDemo      = false
                   connectorsSettings = {
-                    dataframeParsingMode = "New Process",
+                    dataframeParsingMode      = "New Process",
                     externalDataFrameCompress = true,
-                    grokConnectHost = "grok_connect",
-                    grokConnectPort = 1234
-                    localFileSystemAccess = false
-                    sambaSpaceEscape = "none"
-                    sambaVersion = "3.0"
+                    grokConnectHost           = "grok_connect",
+                    grokConnectPort           = 1234
+                    localFileSystemAccess     = false
+                    sambaSpaceEscape          = "none"
+                    sambaVersion              = "3.0"
                   }
                   dockerSettings = {
-                    grokSpawnerApiKey = "test-x-api-key"
-                    grokSpawnerHost = "grok_spawner"
-                    grokSpawnerPort = 8000
+                    grokSpawnerApiKey        = "test-x-api-key"
+                    grokSpawnerHost          = "grok_spawner"
+                    grokSpawnerPort          = 8000
                     imageBuildTimeoutMinutes = 30
-                    proxyRequestTimeout = 60000
+                    proxyRequestTimeout      = 60000
                   }
                   queueSettings = {
                     useQueue     = true
@@ -1023,7 +1023,7 @@ resource "aws_iam_role" "grok_spawner_task" {
           "Action" : [
             "logs:GetLogEvents",
             "logs:DescribeLogStreams",
-            "logs:DescribeLogGroups"]
+          "logs:DescribeLogGroups"]
           "Resource" : [
             "arn:aws:logs:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:log-group:/aws/ecs/*",
           ]
@@ -1771,20 +1771,20 @@ resource "aws_ssm_parameter" "grok_parameters" {
         deployDemo          = false
         deployTestDemo      = false
         connectorsSettings = {
-          dataframeParsingMode = "New Process",
+          dataframeParsingMode      = "New Process",
           externalDataFrameCompress = true,
-          grokConnectHost = "grok_connect",
-          grokConnectPort = 1234
-          localFileSystemAccess = false
-          sambaSpaceEscape = "none"
-          sambaVersion = "3.0"
+          grokConnectHost           = "grok_connect",
+          grokConnectPort           = 1234
+          localFileSystemAccess     = false
+          sambaSpaceEscape          = "none"
+          sambaVersion              = "3.0"
         }
         dockerSettings = {
-          grokSpawnerApiKey = "test-x-api-key"
-          grokSpawnerHost = "grok_spawner"
-          grokSpawnerPort = 8000
+          grokSpawnerApiKey        = "test-x-api-key"
+          grokSpawnerHost          = "grok_spawner"
+          grokSpawnerPort          = 8000
           imageBuildTimeoutMinutes = 30
-          proxyRequestTimeout = 60000
+          proxyRequestTimeout      = 60000
         }
         queueSettings = {
           amqpHost     = "rabbitmq.${local.ecs_name}.local"
