@@ -340,10 +340,27 @@ resource "aws_ecs_task_definition" "datagrok" {
                   dbPassword          = try(random_password.db_datagrok_password[0].result, var.rds_dg_password)
                   dbAdminLogin        = var.rds_master_username
                   dbAdminPassword     = module.db.db_instance_password
-                  dbSsl               = false
+                  dbSsl               = true
                   deployDemo          = false
                   deployTestDemo      = false
-                  queuePluginSettings = {
+                  connectorsSettings = {
+                    dataframeParsingMode = "New Process",
+                    externalDataFrameCompress = true,
+                    grokConnectHost = "grok_connect",
+                    grokConnectPort = 1234
+                    localFileSystemAccess = false
+                    sambaSpaceEscape = "none"
+                    sambaVersion = "3.0"
+                  }
+                  dockerSettings = {
+                    grokSpawnerApiKey = "test-x-api-key"
+                    grokSpawnerHost = "grok_spawner"
+                    grokSpawnerPort = 8000
+                    imageBuildTimeoutMinutes = 30
+                    proxyRequestTimeout = 60000
+                  }
+                  queueSettings = {
+                    useQueue     = true
                     amqpHost     = "rabbitmq.${local.ecs_name}.local"
                     amqpPassword = var.rabbitmq_password
                     amqpPort     = var.amqpPort
@@ -1750,10 +1767,26 @@ resource "aws_ssm_parameter" "grok_parameters" {
         dbPassword          = try(random_password.db_datagrok_password[0].result, var.rds_dg_password)
         dbAdminLogin        = var.rds_master_username
         dbAdminPassword     = module.db.db_instance_password
-        dbSsl               = false
+        dbSsl               = true
         deployDemo          = false
         deployTestDemo      = false
-        queuePluginSettings = {
+        connectorsSettings = {
+          dataframeParsingMode = "New Process",
+          externalDataFrameCompress = true,
+          grokConnectHost = "grok_connect",
+          grokConnectPort = 1234
+          localFileSystemAccess = false
+          sambaSpaceEscape = "none"
+          sambaVersion = "3.0"
+        }
+        dockerSettings = {
+          grokSpawnerApiKey = "test-x-api-key"
+          grokSpawnerHost = "grok_spawner"
+          grokSpawnerPort = 8000
+          imageBuildTimeoutMinutes = 30
+          proxyRequestTimeout = 60000
+        }
+        queueSettings = {
           amqpHost     = "rabbitmq.${local.ecs_name}.local"
           amqpPassword = var.rabbitmq_password
           amqpPort     = 5672
