@@ -40,6 +40,12 @@ hpa:
   max_cpu: 80
   max_memory: 80
 
+serviceAccount:
+  # -- Create a service account for the application 
+  enable: true
+  # -- Annotations applied to created service account
+  annotations: {}
+
 # Services
 
 datagrok:
