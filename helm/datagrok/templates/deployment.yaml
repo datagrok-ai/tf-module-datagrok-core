@@ -25,6 +25,10 @@ spec:
       labels:
         {{- include "datagrok.labels" . | nindent 8 }}
     spec:
+      {{- if .Values.serviceAccount.enable }}
+      serviceAccountName: {{ template "datagrok.fullname" . }}-sa
+      {{- end }}
+      
       containers:
         - name: {{ .Chart.Name }}
           image: "{{ .Values.datagrok.image.docker_image }}:{{ .Values.datagrok.image.tag }}"
