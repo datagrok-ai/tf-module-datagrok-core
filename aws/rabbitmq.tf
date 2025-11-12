@@ -1,4 +1,3 @@
-
 resource "aws_service_discovery_private_dns_namespace" "rabbitmq_ns" {
   name        = "${local.ecs_name}.local"
   description = "Namespace for RabbitMQ"
@@ -118,6 +117,6 @@ resource "aws_security_group" "rabbitmq_sg" {
     from_port   = 0
     to_port     = 0
     protocol    = "-1"
-    cidr_blocks = [try(module.vpc[0].vpc_cidr_block, var.cidr)]
+    cidr_blocks = ["0.0.0.0/0"]
   }
 }
