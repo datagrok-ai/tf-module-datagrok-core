@@ -23,31 +23,8 @@ variable "lb_subnets" {
   type        = list(string)
 }
 
-variable "docker_datagrok_image" {
-  description = "Docker image for Datagrok"
-  type        = string
-  default     = "datagrok/datagrok"
-}
-
 variable "docker_datagrok_container_tag" {
   description = "Docker tag for Datagrok container"
-  type        = string
-}
-
-variable "docker_hub_credentials" {
-  description = "Docker Hub credentials ARN (AWS Secrets Manager)"
-  type        = string
-  default     = null
-}
-
-variable "create_route53_external_zone" {
-  description = "Whether to create Route53 external zone"
-  type        = bool
-  default     = false
-}
-
-variable "domain_name" {
-  description = "Domain name for the application"
   type        = string
 }
 
@@ -61,30 +38,6 @@ variable "lb_access_cidr_blocks" {
   description = "CIDR blocks allowed to access load balancer"
   type        = list(string)
   default     = ["0.0.0.0/0"]
-}
-
-variable "cpu" {
-  description = "CPU units for ECS task (256, 512, 1024, 2048, 4096)"
-  type        = number
-  default     = 2048
-}
-
-variable "memory" {
-  description = "Memory (MiB) for ECS task"
-  type        = number
-  default     = 4096
-}
-
-variable "desired_count" {
-  description = "Desired number of ECS tasks"
-  type        = number
-  default     = 1
-}
-
-variable "log_retention_days" {
-  description = "CloudWatch log retention in days"
-  type        = number
-  default     = 7
 }
 
 variable "tags" {
@@ -125,12 +78,6 @@ variable "s3_vpc_endpoint" {
   default     = ""
 }
 
-variable "docker_grok_connect_image" {
-  description = "Docker image for Grok Connect"
-  type        = string
-  default     = "datagrok/grok_connect"
-}
-
 variable "docker_grok_connect_tag" {
   description = "Docker tag for Grok Connect container"
   type        = string
@@ -139,12 +86,6 @@ variable "docker_grok_connect_tag" {
     condition     = can(regex("^([0-9]+\\.[0-9]+\\.[0-9]+)|latest|bleeding-edge$", var.docker_grok_connect_tag))
     error_message = "Tag must be a semantic version (x.y.z), 'latest', or 'bleeding-edge'."
   }
-}
-
-variable "docker_grok_pipe_image" {
-  description = "Docker image for Grok Pipe"
-  type        = string
-  default     = "datagrok/grok_pipe"
 }
 
 variable "docker_grok_pipe_tag" {
@@ -157,12 +98,6 @@ variable "docker_grok_pipe_tag" {
   }
 }
 
-variable "docker_grok_spawner_image" {
-  description = "Docker image for Grok Spawner"
-  type        = string
-  default     = "datagrok/grok_spawner"
-}
-
 variable "docker_grok_spawner_tag" {
   description = "Docker tag for Grok Spawner container"
   type        = string
@@ -173,12 +108,6 @@ variable "docker_grok_spawner_tag" {
   }
 }
 
-variable "docker_jkg_image" {
-  description = "Docker image for Jupyter Kernel Gateway"
-  type        = string
-  default     = "datagrok/jupyter_kernel_gateway"
-}
-
 variable "docker_jkg_tag" {
   description = "Docker tag for Jupyter Kernel Gateway container"
   type        = string
@@ -187,12 +116,6 @@ variable "docker_jkg_tag" {
     condition     = can(regex("^([0-9]+\\.[0-9]+\\.[0-9]+)|latest|bleeding-edge$", var.docker_jkg_tag))
     error_message = "Tag must be a semantic version (x.y.z), 'latest', or 'bleeding-edge'."
   }
-}
-
-variable "docker_rabbitmq_image" {
-  description = "Docker image for RabbitMQ"
-  type        = string
-  default     = "rabbitmq"
 }
 
 variable "docker_rabbitmq_tag" {
@@ -255,32 +178,3 @@ variable "postfix" {
   default     = ""
 }
 
-variable "db_instance_class" {
-  description = "RDS instance class"
-  type        = string
-  default     = "db.t3.large"
-}
-
-variable "db_allocated_storage" {
-  description = "Allocated storage for RDS instance (GB)"
-  type        = number
-  default     = 50
-}
-
-variable "db_backup_retention_days" {
-  description = "Number of days to retain RDS backups"
-  type        = number
-  default     = 3
-}
-
-variable "db_multi_az" {
-  description = "Enable Multi-AZ deployment for RDS"
-  type        = bool
-  default     = false
-}
-
-variable "db_engine_version" {
-  description = "PostgreSQL engine version"
-  type        = string
-  default     = "17"
-}

@@ -1,4 +1,3 @@
-data "aws_region" "current" {}
 
 resource "aws_cloudformation_stack" "datagrok" {
   name = "${var.name}-${var.environment}"
