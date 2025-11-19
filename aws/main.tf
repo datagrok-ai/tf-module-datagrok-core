@@ -2,7 +2,7 @@
 resource "aws_cloudformation_stack" "datagrok" {
   name = "${var.name}-${var.environment}"
 
-  template_url = "https://datagrok-data.s3.us-east-2.amazonaws.com/deployment/vpc-fargate-dns-basic.yml"
+  template_url = "https://datagrok-data.s3.us-east-2.amazonaws.com/deployment/vpc-fargate-dns-basic-1.26.8.yml"
 
   parameters = {
     # Network configuration
