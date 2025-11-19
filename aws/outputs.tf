@@ -4,6 +4,6 @@ output "lb_dns_name" {
 }
 
 output "admin_password" {
-  description = "Admin password for first login"
+  description = "Link to admin password for first login"
   value       = lookup(aws_cloudformation_stack.datagrok.outputs, "DatagrokAdminPassword", "")
 }

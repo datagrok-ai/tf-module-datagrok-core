@@ -1,3 +1,42 @@
+/**
+  * # Datagrok AWS Module
+  *
+  * Terraform module that serves as an adapter for a CloudFormation template.
+  * Deploys Datagrok.ai platform to AWS using AWS CloudFormation stack.
+  * 
+  * This module wraps the Datagrok CloudFormation template and provides a Terraform
+  * interface for deployment, allowing infrastructure-as-code management of the
+  * Datagrok platform on AWS.
+  * 
+  * ```mermaid
+  * graph LR
+  *     subgraph Terraform
+  *         subgraph Variables["Module Input Variables"]
+  *             A1[VPC]
+  *             A2[Subnets]
+  *             A3[NAT Gateway]
+  *             A4[Datagrok Components Versions]
+  *         end
+  *         Variables --> B[Terraform Module]
+  *     end
+  *
+  *     CF[CloudFormation Template] --> B
+  *
+  *     subgraph AWS
+  *         CFS[CloudFormation Stack]
+  *         ECS[ECS Cluster]
+  *         Services[ECS Datagrok Services]
+  *         RDS[RDS Database]
+  *         S3[S3 Bucket]
+  *     end
+  *
+  *     B --> CFS
+  *     CFS --> ECS
+  *     CFS --> Services
+  *     CFS --> RDS
+  *     CFS --> S3
+  * ```
+  */
 
 resource "aws_cloudformation_stack" "datagrok" {
   name = "${var.name}-${var.environment}"

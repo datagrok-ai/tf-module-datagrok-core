@@ -47,8 +47,9 @@ variable "tags" {
 }
 
 variable "iam_role_arn" {
-  description = "IAM Role ARN for CloudFormation stack"
+  description = "IAM Role ARN for CloudFormation stack (should have IAMFullAccess and PowerUserAccess policies)"
   type        = string
+  default     = null
 }
 
 variable "cidr" {

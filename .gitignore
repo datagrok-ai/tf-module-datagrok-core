@@ -29,3 +29,4 @@ override.tf.json
 # example: *tfplan*
 
 .DS_Store
+aws/examples/vpc/terraform.tfvars
