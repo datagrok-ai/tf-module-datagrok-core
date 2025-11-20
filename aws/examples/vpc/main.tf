@@ -20,7 +20,6 @@ variable "environment" {
   default = "datagrok"
 }
 
-
 variable "domain_name" {
   type    = string
   default = "vpc-test.datagrok.ai"

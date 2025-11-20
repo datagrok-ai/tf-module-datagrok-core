@@ -61,7 +61,6 @@ variable "environment" {
   default = "datagrok"
 }
 
-
 variable "domain_name" {
   type    = string
   default = "vpc-test.datagrok.ai"
@@ -146,9 +145,9 @@ resource "aws_route53_record" "datagrok" {
   name    = var.domain_name
   type    = "CNAME"
   ttl     = 300
-  records = [module.datagrok_core_anatol.lb_dns_name]
+  records = [module.datagrok.lb_dns_name]
 
-  depends_on = [module.datagrok_core_anatol]
+  depends_on = [module.datagrok]
 }
 
 data "aws_route53_zone" "main" {
@@ -157,7 +156,7 @@ data "aws_route53_zone" "main" {
 }
 
 output "admin_password" {
-  value = module.datagrok_core_anatol.admin_password
+  value = module.datagrok.admin_password
 }
 ```
 
@@ -166,7 +165,7 @@ output "admin_password" {
 | Name | Description | Type | Default | Required |
 |------|-------------|------|---------|:--------:|
 | <a name="input_acm_cert_arn"></a> [acm\_cert\_arn](#input\_acm\_cert\_arn) | ACM certificate ARN for HTTPS | `string` | `null` | no |
-| <a name="input_cidr"></a> [cidr](#input\_cidr) | VPC CIDR block to allow communication inside VPC | `string` | `"10.0.0.0/17"` | no |
+| <a name="input_cidr"></a> [cidr](#input\_cidr) | VPC CIDR block to allow communication inside VPC. It will be added to security group rules for ECS services. | `string` | `"10.0.0.0/17"` | no |
 | <a name="input_data_subnet_ids"></a> [data\_subnet\_ids](#input\_data\_subnet\_ids) | List of subnet IDs for data tier (RDS) | `list(string)` | n/a | yes |
 | <a name="input_docker_datagrok_container_tag"></a> [docker\_datagrok\_container\_tag](#input\_docker\_datagrok\_container\_tag) | Docker tag for Datagrok container | `string` | n/a | yes |
 | <a name="input_docker_grok_connect_tag"></a> [docker\_grok\_connect\_tag](#input\_docker\_grok\_connect\_tag) | Docker tag for Grok Connect container | `string` | `"2.5.2"` | no |

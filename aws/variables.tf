@@ -53,7 +53,7 @@ variable "iam_role_arn" {
 }
 
 variable "cidr" {
-  description = "VPC CIDR block to allow communication inside VPC"
+  description = "VPC CIDR block to allow communication inside VPC. It will be added to security group rules for ECS services."
   type        = string
   default     = "10.0.0.0/17"
   validation {
