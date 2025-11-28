@@ -96,6 +96,8 @@ module "datagrok" {
     Environment = var.environment
   }
 
+  #db_snapshot_identifier = "arn:aws:rds:us-east-1:766822877060:snapshot:mds-snapshot"
+
   depends_on = [module.vpc]
 }
 

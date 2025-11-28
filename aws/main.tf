@@ -53,7 +53,7 @@
 resource "aws_cloudformation_stack" "datagrok" {
   name = "${var.name}-${var.environment}"
 
-  template_url = "https://datagrok-data.s3.us-east-2.amazonaws.com/deployment/vpc-fargate-dns-basic-1.26.8.yml"
+  template_url = "https://datagrok-data.s3.us-east-2.amazonaws.com/deployment/vpc-fargate-dns-basic-snapshot.yml"
 
   parameters = {
     # Network configuration
@@ -85,6 +85,8 @@ resource "aws_cloudformation_stack" "datagrok" {
     RabbitmqVersion    = var.docker_rabbitmq_tag
     GrokSpawnerVersion = var.docker_grok_spawner_tag
     JKGVersion         = var.docker_jkg_tag
+    # DB snapshot (optional)
+    DBSnapshotIdentifier = var.db_snapshot_identifier
     # Advanced
     Postfix = var.postfix
   }

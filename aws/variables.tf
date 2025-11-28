@@ -179,3 +179,9 @@ variable "postfix" {
   default     = ""
 }
 
+variable "db_snapshot_identifier" {
+  description = "Optional RDS DB snapshot identifier to restore from. Leave empty to skip restoring from snapshot."
+  type        = string
+  default     = ""
+}
+
