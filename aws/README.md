@@ -8,32 +8,44 @@ interface for deployment, allowing infrastructure-as-code management of the
 Datagrok platform on AWS.
 
 ```mermaid
-graph LR
-    subgraph Terraform
-        subgraph Variables["Module Input Variables"]
-            A1[VPC]
-            A2[Subnets]
-            A3[NAT Gateway]
-            A4[Datagrok Components Versions]
-        end
-        Variables --> B[Terraform Module]
-    end
+erDiagram
+    "Existing VPC" {
+        string  vpc_id
+        string[]  subnet_ids
+        string  nat_gateway
+        _ _
+    }
 
-    CF[CloudFormation Template] --> B
+    "Terraform Module" {
+        string  vpc_id
+        string[]  subnet_ids
+        string  nat_gateway
+        string[]  datagrok_components_versions
+        string acm_cert_arn
+        _ _
+    }
+    "CloudFormation Template" {
+    }
+    "ACM Certificate" {
+        string arn
+    }
+    "CloudFormation Stack" {}
+    "ECS cluster" {}
+    "ECS services" {}
+    "RDS database" {}
+    "S3 bucket" {}
+    "Load Balancer" {}
 
-    subgraph AWS
-        CFS[CloudFormation Stack]
-        ECS[ECS Cluster]
-        Services[ECS Datagrok Services]
-        RDS[RDS Database]
-        S3[S3 Bucket]
-    end
-
-    B --> CFS
-    CFS --> ECS
-    CFS --> Services
-    CFS --> RDS
-    CFS --> S3
+    "Terraform Module" ||..|| "Existing VPC" : uses
+    "Terraform Module" ||..|| "ACM Certificate" : uses
+    "Terraform Module" ||--||  "CloudFormation Template" : uses
+    "Terraform Module" ||--|| "CloudFormation Stack" : instantiates
+    "CloudFormation Stack" ||--|| "ECS cluster" : maintains
+    "CloudFormation Stack" ||--|| "ECS services" : maintains
+    "CloudFormation Stack" ||--|| "RDS database" : maintains
+    "CloudFormation Stack" ||--|| "S3 bucket" : maintains
+    "CloudFormation Stack" ||--|| "Load Balancer" : maintains
+    "Load Balancer" ||--|| "ACM Certificate" : uses
 ```
 
 ## Example
