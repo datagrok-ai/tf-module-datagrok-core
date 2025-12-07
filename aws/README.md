@@ -361,6 +361,8 @@ module "datagrok" {
     Environment = var.environment
   }
 
+  #db_snapshot_identifier = "arn:aws:rds:us-east-1:766822877060:snapshot:mds-snapshot"
+
   depends_on = [module.vpc]
 }
 
@@ -391,6 +393,7 @@ output "admin_password" {
 | <a name="input_acm_cert_arn"></a> [acm\_cert\_arn](#input\_acm\_cert\_arn) | ACM certificate ARN for HTTPS | `string` | `null` | no |
 | <a name="input_cidr"></a> [cidr](#input\_cidr) | VPC CIDR block to allow communication inside VPC. It will be added to security group rules for ECS services. | `string` | `"10.0.0.0/17"` | no |
 | <a name="input_data_subnet_ids"></a> [data\_subnet\_ids](#input\_data\_subnet\_ids) | List of subnet IDs for data tier (RDS) | `list(string)` | n/a | yes |
+| <a name="input_db_snapshot_identifier"></a> [db\_snapshot\_identifier](#input\_db\_snapshot\_identifier) | Optional RDS DB snapshot identifier to restore from. Leave empty to skip restoring from snapshot. | `string` | `""` | no |
 | <a name="input_docker_datagrok_container_tag"></a> [docker\_datagrok\_container\_tag](#input\_docker\_datagrok\_container\_tag) | Docker tag for Datagrok container | `string` | n/a | yes |
 | <a name="input_docker_grok_connect_tag"></a> [docker\_grok\_connect\_tag](#input\_docker\_grok\_connect\_tag) | Docker tag for Grok Connect container | `string` | `"2.5.2"` | no |
 | <a name="input_docker_grok_pipe_tag"></a> [docker\_grok\_pipe\_tag](#input\_docker\_grok\_pipe\_tag) | Docker tag for Grok Pipe container | `string` | `"1.0.1"` | no |
